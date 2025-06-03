@@ -13,6 +13,14 @@
         "**/generated/**",
         "storybook-static/**",
         ".react-email/**"
+      ],
+      "globalPassThroughEnv": ["BASEHUB_TOKEN"]
+    },
+    "build:web": {
+      "dependsOn": ["^build:web"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
       ]
     },
     "test": {
