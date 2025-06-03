@@ -26,7 +26,20 @@ const createMockStripe = () => ({
     list: () => Promise.resolve({ data: [] }),
   },
   webhooks: {
-    constructEvent: () => ({}),
+    constructEvent: () => ({
+      id: 'mock_event',
+      object: 'event',
+      api_version: '2025-04-30.basil',
+      created: Date.now(),
+      type: 'checkout.session.completed',
+      data: {
+        object: {},
+        previous_attributes: {},
+      },
+      livemode: false,
+      pending_webhooks: 0,
+      request: { id: null, idempotency_key: null },
+    }),
   },
 });
 
