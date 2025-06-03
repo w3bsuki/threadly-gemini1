@@ -1,10 +1,10 @@
 import { authMiddleware } from '@repo/auth/middleware';
+import { createRouteMatcher } from '@repo/auth/server';
 import {
   noseconeMiddleware,
   noseconeOptions,
   noseconeOptionsWithToolbar,
 } from '@repo/security/middleware';
-import { createRouteMatcher } from '@clerk/nextjs/server';
 import type { NextMiddleware } from 'next/server';
 import { env } from './env';
 
