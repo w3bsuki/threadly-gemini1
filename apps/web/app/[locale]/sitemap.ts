@@ -9,8 +9,31 @@ const pages = appFolders
   .filter((folder) => !folder.name.startsWith('_'))
   .filter((folder) => !folder.name.startsWith('('))
   .map((folder) => folder.name);
-const blogs = (await blog.getPosts()).map((post) => post._slug);
-const legals = (await legal.getPosts()).map((post) => post._slug);
+
+// Conditionally fetch CMS data with fallbacks
+const getBlogSlugs = async (): Promise<string[]> => {
+  try {
+    const posts = await blog.getPosts();
+    return posts.map((post) => post._slug);
+  } catch (error) {
+    console.warn('Failed to fetch blog posts for sitemap:', error);
+    return [];
+  }
+};
+
+const getLegalSlugs = async (): Promise<string[]> => {
+  try {
+    const posts = await legal.getPosts();
+    return posts.map((post) => post._slug);
+  } catch (error) {
+    console.warn('Failed to fetch legal posts for sitemap:', error);
+    return [];
+  }
+};
+
+const blogs = await getBlogSlugs();
+const legals = await getLegalSlugs();
+
 const protocol = env.VERCEL_PROJECT_PRODUCTION_URL?.startsWith('https')
   ? 'https'
   : 'http';

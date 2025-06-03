@@ -1,27 +1,45 @@
-import { basehub as basehubClient, fragmentOn } from 'basehub';
 import { keys } from './keys';
 
-const basehub = basehubClient({
-  token: keys().BASEHUB_TOKEN,
-});
+// Conditional imports and initialization
+let basehubClient: any = null;
+let fragmentOn: any = null;
+let basehub: any = null;
+
+const env = keys();
+const hasToken = env.BASEHUB_TOKEN && env.BASEHUB_TOKEN.length > 0;
+
+if (hasToken) {
+  try {
+    const basehubModule = require('basehub');
+    basehubClient = basehubModule.basehub;
+    fragmentOn = basehubModule.fragmentOn;
+    
+    basehub = basehubClient({
+      token: env.BASEHUB_TOKEN,
+    });
+  } catch (error) {
+    console.warn('BaseHub not available:', error);
+    hasToken && console.warn('CMS functionality will be disabled');
+  }
+}
 
 /* -------------------------------------------------------------------------------------------------
  * Common Fragments
  * -----------------------------------------------------------------------------------------------*/
 
-const imageFragment = fragmentOn('BlockImage', {
+const imageFragment = hasToken && fragmentOn ? fragmentOn('BlockImage', {
   url: true,
   width: true,
   height: true,
   alt: true,
   blurDataURL: true,
-});
+}) : null;
 
 /* -------------------------------------------------------------------------------------------------
  * Blog Fragments & Queries
  * -----------------------------------------------------------------------------------------------*/
 
-const postMetaFragment = fragmentOn('PostsItem', {
+const postMetaFragment = hasToken && fragmentOn ? fragmentOn('PostsItem', {
   _slug: true,
   _title: true,
   authors: {
@@ -35,9 +53,9 @@ const postMetaFragment = fragmentOn('PostsItem', {
   date: true,
   description: true,
   image: imageFragment,
-});
+}) : null;
 
-const postFragment = fragmentOn('PostsItem', {
+const postFragment = hasToken && fragmentOn ? fragmentOn('PostsItem', {
   ...postMetaFragment,
   body: {
     plainText: true,
@@ -47,21 +65,37 @@ const postFragment = fragmentOn('PostsItem', {
     },
     readingTime: true,
   },
-});
+}) : null;
 
-export type PostMeta = fragmentOn.infer<typeof postMetaFragment>;
-export type Post = fragmentOn.infer<typeof postFragment>;
+// Type definitions with fallbacks
+export type PostMeta = {
+  _slug: string;
+  _title: string;
+  authors: any[];
+  categories: any[];
+  date: string;
+  description: string;
+  image: any;
+};
+
+export type Post = PostMeta & {
+  body: {
+    plainText: string;
+    json: any;
+    readingTime: number;
+  };
+};
 
 export const blog = {
-  postsQuery: fragmentOn('Query', {
+  postsQuery: hasToken && fragmentOn ? fragmentOn('Query', {
     blog: {
       posts: {
         items: postMetaFragment,
       },
     },
-  }),
+  }) : null,
 
-  latestPostQuery: fragmentOn('Query', {
+  latestPostQuery: hasToken && fragmentOn ? fragmentOn('Query', {
     blog: {
       posts: {
         __args: {
@@ -70,9 +104,9 @@ export const blog = {
         item: postFragment,
       },
     },
-  }),
+  }) : null,
 
-  postQuery: (slug: string) => ({
+  postQuery: (slug: string) => hasToken && fragmentOn ? ({
     blog: {
       posts: {
         __args: {
@@ -83,25 +117,49 @@ export const blog = {
         item: postFragment,
       },
     },
-  }),
+  }) : null,
 
   getPosts: async (): Promise<PostMeta[]> => {
-    const data = await basehub.query(blog.postsQuery);
-
-    return data.blog.posts.items;
+    if (!hasToken || !basehub) {
+      return [];
+    }
+    
+    try {
+      const data = await basehub.query(blog.postsQuery);
+      return data.blog.posts.items;
+    } catch (error) {
+      console.warn('Failed to fetch blog posts:', error);
+      return [];
+    }
   },
 
-  getLatestPost: async () => {
-    const data = await basehub.query(blog.latestPostQuery);
-
-    return data.blog.posts.item;
+  getLatestPost: async (): Promise<Post | null> => {
+    if (!hasToken || !basehub) {
+      return null;
+    }
+    
+    try {
+      const data = await basehub.query(blog.latestPostQuery);
+      return data.blog.posts.item;
+    } catch (error) {
+      console.warn('Failed to fetch latest blog post:', error);
+      return null;
+    }
   },
 
-  getPost: async (slug: string) => {
-    const query = blog.postQuery(slug);
-    const data = await basehub.query(query);
-
-    return data.blog.posts.item;
+  getPost: async (slug: string): Promise<Post | null> => {
+    if (!hasToken || !basehub) {
+      return null;
+    }
+    
+    try {
+      const query = blog.postQuery(slug);
+      const data = await basehub.query(query);
+      return data.blog.posts.item;
+    } catch (error) {
+      console.warn('Failed to fetch blog post:', error);
+      return null;
+    }
   },
 };
 
@@ -109,13 +167,13 @@ export const blog = {
  * Legal Fragments & Queries
  * -----------------------------------------------------------------------------------------------*/
 
-const legalPostMetaFragment = fragmentOn('LegalPagesItem', {
+const legalPostMetaFragment = hasToken && fragmentOn ? fragmentOn('LegalPagesItem', {
   _slug: true,
   _title: true,
   description: true,
-});
+}) : null;
 
-const legalPostFragment = fragmentOn('LegalPagesItem', {
+const legalPostFragment = hasToken && fragmentOn ? fragmentOn('LegalPagesItem', {
   ...legalPostMetaFragment,
   body: {
     plainText: true,
@@ -125,28 +183,40 @@ const legalPostFragment = fragmentOn('LegalPagesItem', {
     },
     readingTime: true,
   },
-});
+}) : null;
 
-export type LegalPostMeta = fragmentOn.infer<typeof legalPostMetaFragment>;
-export type LegalPost = fragmentOn.infer<typeof legalPostFragment>;
+// Type definitions with fallbacks
+export type LegalPostMeta = {
+  _slug: string;
+  _title: string;
+  description: string;
+};
+
+export type LegalPost = LegalPostMeta & {
+  body: {
+    plainText: string;
+    json: any;
+    readingTime: number;
+  };
+};
 
 export const legal = {
-  postsQuery: fragmentOn('Query', {
+  postsQuery: hasToken && fragmentOn ? fragmentOn('Query', {
     legalPages: {
       items: legalPostFragment,
     },
-  }),
+  }) : null,
 
-  latestPostQuery: fragmentOn('Query', {
+  latestPostQuery: hasToken && fragmentOn ? fragmentOn('Query', {
     legalPages: {
       __args: {
         orderBy: '_sys_createdAt__DESC',
       },
       item: legalPostFragment,
     },
-  }),
+  }) : null,
 
-  postQuery: (slug: string) =>
+  postQuery: (slug: string) => hasToken && fragmentOn ? 
     fragmentOn('Query', {
       legalPages: {
         __args: {
@@ -156,24 +226,48 @@ export const legal = {
         },
         item: legalPostFragment,
       },
-    }),
+    }) : null,
 
   getPosts: async (): Promise<LegalPost[]> => {
-    const data = await basehub.query(legal.postsQuery);
-
-    return data.legalPages.items;
+    if (!hasToken || !basehub) {
+      return [];
+    }
+    
+    try {
+      const data = await basehub.query(legal.postsQuery);
+      return data.legalPages.items;
+    } catch (error) {
+      console.warn('Failed to fetch legal posts:', error);
+      return [];
+    }
   },
 
-  getLatestPost: async () => {
-    const data = await basehub.query(legal.latestPostQuery);
-
-    return data.legalPages.item;
+  getLatestPost: async (): Promise<LegalPost | null> => {
+    if (!hasToken || !basehub) {
+      return null;
+    }
+    
+    try {
+      const data = await basehub.query(legal.latestPostQuery);
+      return data.legalPages.item;
+    } catch (error) {
+      console.warn('Failed to fetch latest legal post:', error);
+      return null;
+    }
   },
 
-  getPost: async (slug: string) => {
-    const query = legal.postQuery(slug);
-    const data = await basehub.query(query);
-
-    return data.legalPages.item;
+  getPost: async (slug: string): Promise<LegalPost | null> => {
+    if (!hasToken || !basehub) {
+      return null;
+    }
+    
+    try {
+      const query = legal.postQuery(slug);
+      const data = await basehub.query(query);
+      return data.legalPages.item;
+    } catch (error) {
+      console.warn('Failed to fetch legal post:', error);
+      return null;
+    }
   },
 };

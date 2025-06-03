@@ -4,26 +4,30 @@ import { z } from 'zod';
 export const keys = () =>
   createEnv({
     server: {
-      CLERK_SECRET_KEY: z.string().startsWith('sk_'),
-      CLERK_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
+      CLERK_SECRET_KEY: z.string().startsWith('sk_').optional(),
+      CLERK_WEBHOOK_SECRET: z.string().min(1).startsWith('whsec_').optional(),
     },
     client: {
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
-      NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().startsWith('/'),
-      NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().startsWith('/'),
-      NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().startsWith('/'),
-      NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().startsWith('/'),
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().startsWith('pk_').optional(),
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().startsWith('/').optional(),
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().startsWith('/').optional(),
+      NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().startsWith('/').optional(),
+      NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().startsWith('/').optional(),
     },
     runtimeEnv: {
       CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-      CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+      CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET || undefined,
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
         process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-      NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-      NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || undefined,
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || undefined,
       NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL:
-        process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
+        process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || undefined,
       NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL:
-        process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
+        process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || undefined,
     },
+    skipValidation: !!(
+      process.env.SKIP_ENV_VALIDATION ||
+      process.env.npm_lifecycle_event === 'lint'
+    ),
   });
