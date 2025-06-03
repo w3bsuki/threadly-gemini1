@@ -1,118 +1,65 @@
-import { env } from '@/env';
-import { legal } from '@repo/cms';
-import { Feed } from '@repo/cms/components/feed';
-import { Status } from '@repo/observability/status';
 import Link from 'next/link';
 
-export const Footer = () => (
-  <Feed queries={[legal.postsQuery]}>
-    {async ([data]) => {
-      'use server';
-
-      const navigationItems = [
-        {
-          title: 'Home',
-          href: '/',
-          description: '',
-        },
-        {
-          title: 'Pages',
-          description: 'Managing a small business today is already tough.',
-          items: [
-            {
-              title: 'Blog',
-              href: '/blog',
-            },
-          ],
-        },
-        {
-          title: 'Legal',
-          description: 'We stay on top of the latest legal requirements.',
-          items: data.legalPages.items.map((post) => ({
-            title: post._title,
-            href: `/legal/${post._slug}`,
-          })),
-        },
-      ];
-
-      if (env.NEXT_PUBLIC_DOCS_URL) {
-        navigationItems.at(1)?.items?.push({
-          title: 'Docs',
-          href: env.NEXT_PUBLIC_DOCS_URL,
-        });
-      }
-
-      return (
-        <section className="dark border-foreground/10 border-t">
-          <div className="w-full bg-background py-20 text-foreground lg:py-40">
-            <div className="container mx-auto">
-              <div className="grid items-center gap-10 lg:grid-cols-2">
-                <div className="flex flex-col items-start gap-8">
-                  <div className="flex flex-col gap-2">
-                    <h2 className="max-w-xl text-left font-regular text-3xl tracking-tighter md:text-5xl">
-                      next-forge
-                    </h2>
-                    <p className="max-w-lg text-left text-foreground/75 text-lg leading-relaxed tracking-tight">
-                      This is the start of something new.
-                    </p>
-                  </div>
-                  <Status />
-                </div>
-                <div className="grid items-start gap-10 lg:grid-cols-3">
-                  {navigationItems.map((item) => (
-                    <div
-                      key={item.title}
-                      className="flex flex-col items-start gap-1 text-base"
-                    >
-                      <div className="flex flex-col gap-2">
-                        {item.href ? (
-                          <Link
-                            href={item.href}
-                            className="flex items-center justify-between"
-                            target={
-                              item.href.includes('http') ? '_blank' : undefined
-                            }
-                            rel={
-                              item.href.includes('http')
-                                ? 'noopener noreferrer'
-                                : undefined
-                            }
-                          >
-                            <span className="text-xl">{item.title}</span>
-                          </Link>
-                        ) : (
-                          <p className="text-xl">{item.title}</p>
-                        )}
-                        {item.items?.map((subItem) => (
-                          <Link
-                            key={subItem.title}
-                            href={subItem.href}
-                            className="flex items-center justify-between"
-                            target={
-                              subItem.href.includes('http')
-                                ? '_blank'
-                                : undefined
-                            }
-                            rel={
-                              subItem.href.includes('http')
-                                ? 'noopener noreferrer'
-                                : undefined
-                            }
-                          >
-                            <span className="text-foreground/75">
-                              {subItem.title}
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+export const Footer = () => {
+  return (
+    <footer className="bg-white border-t border-gray-200 mt-16">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Main Footer Links */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Threadly</h3>
+            <ul className="space-y-2">
+              <li><Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">About</Link></li>
+              <li><Link href="/how-it-works" className="text-sm text-gray-600 hover:text-gray-900">How it works</Link></li>
+              <li><Link href="/careers" className="text-sm text-gray-600 hover:text-gray-900">Careers</Link></li>
+              <li><Link href="/press" className="text-sm text-gray-600 hover:text-gray-900">Press</Link></li>
+            </ul>
           </div>
-        </section>
-      );
-    }}
-  </Feed>
-);
+
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Discover</h3>
+            <ul className="space-y-2">
+              <li><Link href="/women" className="text-sm text-gray-600 hover:text-gray-900">Women</Link></li>
+              <li><Link href="/men" className="text-sm text-gray-600 hover:text-gray-900">Men</Link></li>
+              <li><Link href="/kids" className="text-sm text-gray-600 hover:text-gray-900">Kids</Link></li>
+              <li><Link href="/categories/home" className="text-sm text-gray-600 hover:text-gray-900">Home</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Selling</h3>
+            <ul className="space-y-2">
+              <li><Link href="/sell" className="text-sm text-gray-600 hover:text-gray-900">Sell now</Link></li>
+              <li><Link href="/help/selling" className="text-sm text-gray-600 hover:text-gray-900">Selling guide</Link></li>
+              <li><Link href="/help/fees" className="text-sm text-gray-600 hover:text-gray-900">Fees</Link></li>
+              <li><Link href="/help/shipping" className="text-sm text-gray-600 hover:text-gray-900">Shipping</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Help</h3>
+            <ul className="space-y-2">
+              <li><Link href="/help" className="text-sm text-gray-600 hover:text-gray-900">Help centre</Link></li>
+              <li><Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900">Contact us</Link></li>
+              <li><Link href="/help/sizing" className="text-sm text-gray-600 hover:text-gray-900">Size guide</Link></li>
+              <li><Link href="/help/returns" className="text-sm text-gray-600 hover:text-gray-900">Returns</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="mt-8 pt-8 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4 md:mb-0">
+            <Link href="/legal/terms" className="hover:text-gray-900">Terms</Link>
+            <Link href="/legal/privacy" className="hover:text-gray-900">Privacy</Link>
+            <Link href="/legal/cookies" className="hover:text-gray-900">Cookies</Link>
+          </div>
+          
+          <div className="text-sm text-gray-600">
+            © 2024 Threadly. All rights reserved.
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};

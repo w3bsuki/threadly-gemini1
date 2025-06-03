@@ -1,6 +1,6 @@
 'use client';
 
-import { OrganizationSwitcher, UserButton } from '@repo/auth/client';
+import { UserButton } from '@repo/auth/client';
 import { ModeToggle } from '@repo/design-system/components/mode-toggle';
 import { Button } from '@repo/design-system/components/ui/button';
 import {
@@ -51,6 +51,12 @@ import {
   ShareIcon,
   SquareTerminalIcon,
   Trash2Icon,
+  ShoppingBagIcon,
+  SearchIcon,
+  MessageCircleIcon,
+  UserIcon,
+  PlusIcon,
+  HeartIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -68,123 +74,114 @@ const data = {
   },
   navMain: [
     {
-      title: 'Playground',
-      url: '#',
-      icon: SquareTerminalIcon,
-      isActive: true,
+      title: 'Browse',
+      url: '/browse',
+      icon: SearchIcon,
+      isActive: false,
       items: [
         {
-          title: 'History',
-          url: '#',
+          title: 'All Items',
+          url: '/browse',
         },
         {
-          title: 'Starred',
-          url: '#',
+          title: 'Women',
+          url: '/browse?category=women',
         },
         {
-          title: 'Settings',
-          url: '#',
+          title: 'Men',
+          url: '/browse?category=men',
+        },
+        {
+          title: 'Kids',
+          url: '/browse?category=kids',
         },
       ],
     },
     {
-      title: 'Models',
-      url: '#',
-      icon: BotIcon,
+      title: 'Selling',
+      url: '/selling',
+      icon: PlusIcon,
       items: [
         {
-          title: 'Genesis',
-          url: '#',
+          title: 'Sell an Item',
+          url: '/selling/new',
         },
         {
-          title: 'Explorer',
-          url: '#',
+          title: 'My Listings',
+          url: '/selling/listings',
         },
         {
-          title: 'Quantum',
-          url: '#',
+          title: 'Sales History',
+          url: '/selling/history',
         },
       ],
     },
     {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpenIcon,
+      title: 'Buying',
+      url: '/buying',
+      icon: ShoppingBagIcon,
       items: [
         {
-          title: 'Introduction',
-          url: '#',
+          title: 'My Orders',
+          url: '/buying/orders',
         },
         {
-          title: 'Get Started',
-          url: '#',
+          title: 'Favorites',
+          url: '/buying/favorites',
         },
         {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
+          title: 'Cart',
+          url: '/buying/cart',
         },
       ],
     },
     {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2Icon,
+      title: 'Messages',
+      url: '/messages',
+      icon: MessageCircleIcon,
       items: [
         {
-          title: 'General',
-          url: '#',
+          title: 'All Messages',
+          url: '/messages',
         },
         {
-          title: 'Team',
-          url: '#',
+          title: 'Buying',
+          url: '/messages?type=buying',
         },
         {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
+          title: 'Selling',
+          url: '/messages?type=selling',
         },
       ],
     },
   ],
   navSecondary: [
     {
-      title: 'Webhooks',
-      url: '/webhooks',
-      icon: AnchorIcon,
+      title: 'Profile',
+      url: '/profile',
+      icon: UserIcon,
     },
     {
       title: 'Support',
-      url: '#',
+      url: '/support',
       icon: LifeBuoyIcon,
     },
     {
       title: 'Feedback',
-      url: '#',
+      url: '/feedback',
       icon: SendIcon,
     },
   ],
   projects: [
     {
-      name: 'Design Engineering',
-      url: '#',
-      icon: FrameIcon,
+      name: 'My Favorites',
+      url: '/favorites',
+      icon: HeartIcon,
     },
     {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChartIcon,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: MapIcon,
+      name: 'Following',
+      url: '/following',
+      icon: UserIcon,
     },
   ],
 };
@@ -204,10 +201,10 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
                   sidebar.open ? '' : '-mx-1'
                 )}
               >
-                <OrganizationSwitcher
-                  hidePersonal
-                  afterSelectOrganizationUrl="/"
-                />
+                <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
+                  <ShoppingBagIcon className="h-6 w-6" />
+                  <span>Threadly</span>
+                </Link>
               </div>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -215,7 +212,7 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
         <Search />
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>Marketplace</SidebarGroupLabel>
             <SidebarMenu>
               {data.navMain.map((item) => (
                 <Collapsible
@@ -259,7 +256,7 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Projects</SidebarGroupLabel>
+            <SidebarGroupLabel>Personal</SidebarGroupLabel>
             <SidebarMenu>
               {data.projects.map((item) => (
                 <SidebarMenuItem key={item.name}>
@@ -283,27 +280,21 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
                     >
                       <DropdownMenuItem>
                         <FolderIcon className="text-muted-foreground" />
-                        <span>View Project</span>
+                        <span>View</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <ShareIcon className="text-muted-foreground" />
-                        <span>Share Project</span>
+                        <span>Share</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
                         <Trash2Icon className="text-muted-foreground" />
-                        <span>Delete Project</span>
+                        <span>Remove</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <MoreHorizontalIcon />
-                  <span>More</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup className="mt-auto">

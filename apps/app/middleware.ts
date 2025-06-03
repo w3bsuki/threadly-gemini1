@@ -11,9 +11,31 @@ const securityHeaders = env.FLAGS_SECRET
   ? noseconeMiddleware(noseconeOptionsWithToolbar)
   : noseconeMiddleware(noseconeOptions);
 
-export default authMiddleware(() =>
-  securityHeaders()
-) as unknown as NextMiddleware;
+export default authMiddleware({
+  // Public routes that don't require authentication
+  publicRoutes: [
+    '/',
+    '/sign-in(.*)',
+    '/sign-up(.*)',
+    '/browse(.*)',
+    '/product(.*)',
+    '/api/webhooks(.*)',
+  ],
+  // Routes that should redirect to sign-in if not authenticated
+  afterAuth: (auth, req) => {
+    // Allow public routes
+    if (auth.isPublicRoute) {
+      return;
+    }
+
+    // If user is not signed in and trying to access a protected route
+    if (!auth.userId) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+  },
+  // Apply security headers
+  beforeAuth: () => securityHeaders(),
+}) as unknown as NextMiddleware;
 
 export const config = {
   matcher: [
