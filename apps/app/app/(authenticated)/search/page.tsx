@@ -22,13 +22,47 @@ export const generateMetadata = async ({
 
 const SearchPage = async ({ searchParams }: SearchPageProperties) => {
   const { q } = await searchParams;
-  const pages = await database.page.findMany({
+  const products = await database.product.findMany({
     where: {
-      name: {
-        contains: q,
+      OR: [
+        {
+          title: {
+            contains: q,
+            mode: 'insensitive',
+          },
+        },
+        {
+          description: {
+            contains: q,
+            mode: 'insensitive',
+          },
+        },
+        {
+          brand: {
+            contains: q,
+            mode: 'insensitive',
+          },
+        },
+      ],
+      status: 'AVAILABLE',
+    },
+    include: {
+      images: {
+        take: 1,
+        orderBy: {
+          order: 'asc',
+        },
+      },
+      seller: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
       },
     },
+    take: 20, // Limit results
   });
+  
   const { orgId } = await auth();
 
   if (!orgId) {
@@ -41,16 +75,40 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
 
   return (
     <>
-      <Header pages={['Building Your Application']} page="Search" />
+      <Header pages={['Search']} page={`Results for "${q}"`} />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-          {pages.map((page) => (
-            <div key={page.id} className="aspect-video rounded-xl bg-muted/50">
-              {page.name}
+        <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {products.length > 0 ? (
+            products.map((product) => (
+              <div key={product.id} className="group cursor-pointer rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div className="aspect-square relative bg-muted">
+                  {product.images[0] ? (
+                    <img
+                      src={product.images[0].imageUrl}
+                      alt={product.images[0].alt || product.title}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <h3 className="font-medium text-sm truncate">{product.title}</h3>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {product.seller.firstName} {product.seller.lastName}
+                  </p>
+                  <p className="font-semibold text-sm mt-1">£{product.price.toFixed(2)}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <p className="text-muted-foreground">No products found for "{q}"</p>
             </div>
-          ))}
+          )}
         </div>
-        <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
       </div>
     </>
   );
