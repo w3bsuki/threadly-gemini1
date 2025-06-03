@@ -4,6 +4,7 @@ import {
   noseconeOptions,
   noseconeOptionsWithToolbar,
 } from '@repo/security/middleware';
+import { createRouteMatcher } from '@clerk/nextjs/server';
 import type { NextMiddleware } from 'next/server';
 import { env } from './env';
 
@@ -11,30 +12,31 @@ const securityHeaders = env.FLAGS_SECRET
   ? noseconeMiddleware(noseconeOptionsWithToolbar)
   : noseconeMiddleware(noseconeOptions);
 
-export default authMiddleware({
-  // Public routes that don't require authentication
-  publicRoutes: [
-    '/',
-    '/sign-in(.*)',
-    '/sign-up(.*)',
-    '/browse(.*)',
-    '/product(.*)',
-    '/api/webhooks(.*)',
-  ],
-  // Routes that should redirect to sign-in if not authenticated
-  afterAuth: (auth, req) => {
-    // Allow public routes
-    if (auth.isPublicRoute) {
-      return;
-    }
+// Define public routes using the new Clerk API
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/browse(.*)',
+  '/product(.*)',
+  '/api/webhooks(.*)',
+]);
 
-    // If user is not signed in and trying to access a protected route
-    if (!auth.userId) {
-      return new Response('Unauthorized', { status: 401 });
-    }
-  },
-  // Apply security headers
-  beforeAuth: () => securityHeaders(),
+export default authMiddleware((auth, req) => {
+  // Apply security headers first
+  const securityResponse = securityHeaders();
+  
+  // Allow public routes
+  if (isPublicRoute(req)) {
+    return securityResponse;
+  }
+
+  // If user is not signed in and trying to access a protected route
+  if (!auth().userId) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  
+  return securityResponse;
 }) as unknown as NextMiddleware;
 
 export const config = {
