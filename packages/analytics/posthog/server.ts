@@ -6,8 +6,15 @@ import { keys } from '../keys';
 const createMockAnalytics = () => ({
   capture: () => Promise.resolve(),
   identify: () => Promise.resolve(),
+  groupIdentify: () => Promise.resolve(),
   flush: () => Promise.resolve(),
   shutdown: () => Promise.resolve(),
+  // Add any other PostHog methods that might be used
+  alias: () => Promise.resolve(),
+  getFeatureFlag: () => Promise.resolve(undefined),
+  getFeatureFlagPayload: () => Promise.resolve(undefined),
+  isFeatureEnabled: () => Promise.resolve(false),
+  reloadFeatureFlags: () => Promise.resolve(),
 });
 
 const env = keys();
