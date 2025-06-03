@@ -1,17 +1,13 @@
-import { database } from '@repo/database';
-
 export const GET = async () => {
-  const newPage = await database.page.create({
-    data: {
-      name: 'cron-temp',
-    },
+  // Simple keep-alive endpoint to prevent API from sleeping
+  return new Response(JSON.stringify({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'API is alive'
+  }), { 
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   });
-
-  await database.page.delete({
-    where: {
-      id: newPage.id,
-    },
-  });
-
-  return new Response('OK', { status: 200 });
 };
