@@ -33,7 +33,21 @@ const createMockStripe = () => ({
       created: Date.now(),
       type: 'checkout.session.completed',
       data: {
-        object: {},
+        object: {
+          id: 'cs_mock_session',
+          object: 'checkout.session',
+          customer: 'cus_mock_customer',
+          // Add other required Session properties that might be needed
+          mode: 'subscription',
+          status: 'complete',
+          success_url: 'https://example.com/success',
+          cancel_url: 'https://example.com/cancel',
+          created: Date.now(),
+          currency: 'usd',
+          metadata: {},
+          payment_status: 'paid',
+          url: null,
+        },
         previous_attributes: {},
       },
       livemode: false,
