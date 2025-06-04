@@ -46,8 +46,8 @@ CLERK_SECRET_KEY=sk_test_your-secret-key-here
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your-publishable-key-here
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=https://threadly.com
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=https://threadly.com
 
 # Database (REQUIRED)
 DATABASE_URL=postgresql://username:password@host:5432/database?sslmode=require
