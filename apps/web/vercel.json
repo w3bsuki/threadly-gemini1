@@ -1,4 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "echo 'Skipping build for this app'"
+  "ignoreCommand": "node scripts/skip-ci.js"
 }
