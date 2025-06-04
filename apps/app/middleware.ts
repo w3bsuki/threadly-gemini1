@@ -22,7 +22,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
 ]);
 
-export default authMiddleware((auth, req) => {
+export default authMiddleware(async (auth, req) => {
   // Apply security headers first
   const securityResponse = securityHeaders();
   
@@ -32,7 +32,8 @@ export default authMiddleware((auth, req) => {
   }
 
   // If user is not signed in and trying to access a protected route
-  if (!auth().userId) {
+  const { userId } = await auth();
+  if (!userId) {
     return new Response('Unauthorized', { status: 401 });
   }
   
