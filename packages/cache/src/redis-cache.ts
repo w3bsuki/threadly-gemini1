@@ -22,7 +22,7 @@ export class RedisCache implements CacheService {
     try {
       const result = await withRetry(
         () => this.redis.get(key),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
 
       if (result === null) {
@@ -45,7 +45,7 @@ export class RedisCache implements CacheService {
       
       await withRetry(
         () => this.redis.setex(key, ttl, JSON.stringify(value)),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
 
       // Store tags for cache invalidation
@@ -64,7 +64,7 @@ export class RedisCache implements CacheService {
     try {
       await withRetry(
         () => this.redis.del(key),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
     } catch (error) {
       console.error(`Cache delete error for key ${key}:`, error);
@@ -75,7 +75,7 @@ export class RedisCache implements CacheService {
     try {
       const result = await withRetry(
         () => this.redis.exists(key),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
       return result === 1;
     } catch (error) {
@@ -88,7 +88,7 @@ export class RedisCache implements CacheService {
     try {
       await withRetry(
         () => this.redis.expire(key, ttl),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
     } catch (error) {
       console.error(`Cache expire error for key ${key}:`, error);
@@ -99,7 +99,7 @@ export class RedisCache implements CacheService {
     try {
       await withRetry(
         () => this.redis.flushall(),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
     } catch (error) {
       console.error('Cache clear error:', error);
@@ -172,7 +172,7 @@ export class RedisCache implements CacheService {
     try {
       const results = await withRetry(
         () => this.redis.mget(...keys),
-        { retries: 3, delay: 100 }
+        { retries: 3, minTimeout: 100 }
       );
 
       return results.map((result, index) => {
