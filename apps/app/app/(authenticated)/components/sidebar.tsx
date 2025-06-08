@@ -61,6 +61,7 @@ import {
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Search } from './search';
+import { CartDropdown } from './cart-dropdown';
 
 type GlobalSidebarProperties = {
   readonly children: ReactNode;
@@ -85,15 +86,15 @@ const data = {
         },
         {
           title: 'Women',
-          url: '/browse?category=women',
+          url: '/browse?category=cmbl7f4ub0002w74xtex8coxd',
         },
         {
           title: 'Men',
-          url: '/browse?category=men',
+          url: '/browse?category=cmbl7gbj1000dw7wd0zemrn5b',
         },
         {
           title: 'Kids',
-          url: '/browse?category=kids',
+          url: '/browse?category=cmbl7gc6w000kw7wdq2jg6k07',
         },
       ],
     },
@@ -102,6 +103,10 @@ const data = {
       url: '/selling',
       icon: PlusIcon,
       items: [
+        {
+          title: 'Seller Onboarding',
+          url: '/selling/onboarding',
+        },
         {
           title: 'Sell an Item',
           url: '/selling/new',
@@ -328,6 +333,7 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
                 }}
               />
               <div className="flex shrink-0 items-center gap-px">
+                <CartDropdown />
                 <ModeToggle />
                 <Button
                   variant="ghost"

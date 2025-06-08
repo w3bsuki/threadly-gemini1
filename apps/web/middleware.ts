@@ -14,8 +14,8 @@ import {
 
 export const config = {
   // matcher tells Next.js which routes to run the middleware on. This runs the
-  // middleware on all routes except for static assets and Posthog ingest
-  matcher: ['/((?!_next/static|_next/image|ingest|favicon.ico).*)'],
+  // middleware on all routes except for static assets, API routes, and Posthog ingest
+  matcher: ['/((?!api|_next/static|_next/image|ingest|favicon.ico).*)'],
 };
 
 const securityHeaders = env.FLAGS_SECRET
@@ -23,11 +23,13 @@ const securityHeaders = env.FLAGS_SECRET
   : noseconeMiddleware(noseconeOptions);
 
 export default async function middleware(request: NextRequest) {
+  // Handle internationalization first
   const i18nResponse = internationalizationMiddleware(request);
   if (i18nResponse) {
     return i18nResponse;
   }
 
+  // Continue with security middleware if no i18n redirect/rewrite needed
   if (!env.ARCJET_KEY) {
     return securityHeaders();
   }

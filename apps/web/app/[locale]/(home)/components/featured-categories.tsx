@@ -2,65 +2,72 @@ import { Button } from '@repo/design-system/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { database } from '@repo/database';
 
-const categories = [
-  {
-    id: 'womens',
-    name: "Women's Fashion",
-    description: 'Dresses, tops, jeans & more',
-    image: '/api/placeholder/400/500',
-    href: '/categories/womens',
-    color: 'from-pink-500 to-rose-500',
-    count: '15.2k items'
-  },
-  {
-    id: 'mens',
-    name: "Men's Fashion", 
-    description: 'Shirts, pants, jackets & more',
-    image: '/api/placeholder/400/500',
-    href: '/categories/mens',
-    color: 'from-blue-500 to-indigo-500',
-    count: '8.7k items'
-  },
-  {
-    id: 'accessories',
-    name: 'Accessories',
-    description: 'Bags, jewelry, watches & more',
-    image: '/api/placeholder/400/500', 
-    href: '/categories/accessories',
-    color: 'from-purple-500 to-violet-500',
-    count: '12.1k items'
-  },
-  {
-    id: 'shoes',
-    name: 'Shoes',
-    description: 'Sneakers, heels, boots & more',
-    image: '/api/placeholder/400/500',
-    href: '/categories/shoes',
-    color: 'from-orange-500 to-red-500',
-    count: '9.8k items'
-  },
-  {
-    id: 'vintage',
-    name: 'Vintage',
-    description: 'Unique retro & vintage finds',
-    image: '/api/placeholder/400/500',
-    href: '/categories/vintage',
-    color: 'from-emerald-500 to-teal-500',
-    count: '4.5k items'
-  },
-  {
-    id: 'designer',
-    name: 'Designer',
-    description: 'Luxury & high-end brands',
-    image: '/api/placeholder/400/500',
-    href: '/categories/designer',
-    color: 'from-amber-500 to-yellow-500',
-    count: '2.3k items'
-  }
+const colorSchemes = [
+  'from-pink-500 to-rose-500',
+  'from-blue-500 to-indigo-500', 
+  'from-purple-500 to-violet-500',
+  'from-orange-500 to-red-500',
+  'from-emerald-500 to-teal-500',
+  'from-amber-500 to-yellow-500'
 ];
 
-export const FeaturedCategories = () => {
+export const FeaturedCategories = async () => {
+  try {
+    // Fetch categories with product counts and sample images
+    const categories = await database.category.findMany({
+      where: {
+        parentId: null, // Only top-level categories
+      },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: {
+                status: 'AVAILABLE',
+              },
+            },
+          },
+        },
+        products: {
+          where: {
+            status: 'AVAILABLE',
+          },
+          include: {
+            images: {
+              orderBy: { order: 'asc' },
+              take: 1,
+            },
+          },
+          take: 1, // Get one product for the category image
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+      take: 6, // Limit to 6 featured categories
+    });
+
+    const transformedCategories = categories.map((category, index) => ({
+      id: category.id,
+      name: category.name,
+      description: category.description || `Discover ${category.name.toLowerCase()}`,
+      image: category.products[0]?.images[0]?.imageUrl || null,
+      href: `/${category.slug}`,
+      color: colorSchemes[index % colorSchemes.length],
+      count: `${category._count.products.toLocaleString()} items`
+    }));
+
+    if (transformedCategories.length === 0) {
+      return (
+        <section className="w-full py-16 lg:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-gray-500">No categories found</p>
+          </div>
+        </section>
+      );
+    }
   return (
     <section className="w-full py-16 lg:py-24">
       <div className="container mx-auto px-4">
@@ -76,7 +83,7 @@ export const FeaturedCategories = () => {
 
         {/* Categories Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
+          {transformedCategories.map((category) => (
             <Link
               key={category.id}
               href={category.href}
@@ -84,13 +91,22 @@ export const FeaturedCategories = () => {
             >
               {/* Background Image */}
               <div className="aspect-[4/5] overflow-hidden">
-                <Image
-                  src={category.image}
-                  alt={category.name}
-                  width={400}
-                  height={500}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+                {category.image ? (
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    width={400}
+                    height={500}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className={`h-full w-full bg-gradient-to-br ${category.color} flex items-center justify-center text-white transition-transform duration-500 group-hover:scale-110`}>
+                    <div className="text-center">
+                      <div className="text-4xl font-bold mb-2">{category.name.charAt(0)}</div>
+                      <div className="text-sm opacity-80">{category.name}</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Gradient Overlay */}
@@ -121,8 +137,8 @@ export const FeaturedCategories = () => {
             className="gap-2 border-gray-200 px-8 py-6 text-lg hover:bg-gray-50"
             asChild
           >
-            <Link href="/categories">
-              View All Categories
+            <Link href="/products">
+              View All Products
               <ArrowRight className="h-5 w-5" />
             </Link>
           </Button>
@@ -130,4 +146,14 @@ export const FeaturedCategories = () => {
       </div>
     </section>
   );
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+    return (
+      <section className="w-full py-16 lg:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-500">Unable to load categories</p>
+        </div>
+      </section>
+    );
+  }
 }; 

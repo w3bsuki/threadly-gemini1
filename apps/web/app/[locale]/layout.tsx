@@ -21,7 +21,7 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
 
   return (
     <html
-      lang="en"
+      lang={locale}
       className={cn(fonts, 'scroll-smooth')}
       suppressHydrationWarning
     >

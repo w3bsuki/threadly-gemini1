@@ -1,0 +1,21 @@
+{
+  "name": "@repo/error-handling",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentry/nextjs": "^8.45.0",
+    "p-retry": "^5.1.2",
+    "circuit-breaker-js": "^1.0.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "catalog:react",
+    "typescript": "catalog:"
+  }
+}

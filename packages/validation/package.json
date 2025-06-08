@@ -1,0 +1,35 @@
+{
+  "name": "@repo/validation",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./schemas": "./schemas/index.ts",
+    "./schemas/product": "./schemas/product.ts",
+    "./schemas/user": "./schemas/user.ts",
+    "./schemas/message": "./schemas/message.ts",
+    "./schemas/common": "./schemas/common.ts",
+    "./sanitize": "./sanitize.ts",
+    "./middleware": "./middleware.ts",
+    "./validators": "./validators.ts"
+  },
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8",
+    "validator": "^13.12.0",
+    "isomorphic-dompurify": "^2.16.0",
+    "bad-words": "^3.0.4"
+  },
+  "devDependencies": {
+    "@types/validator": "^13.12.2",
+    "@types/bad-words": "^3.0.3",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  },
+  "peerDependencies": {
+    "next": "*"
+  }
+}

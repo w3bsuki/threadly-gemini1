@@ -2,14 +2,53 @@
   "name": "@repo/testing",
   "version": "0.0.0",
   "private": true,
-  "main": "./index.js",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./helpers": {
+      "types": "./src/helpers/index.ts",
+      "default": "./dist/helpers/index.js"
+    },
+    "./mocks": {
+      "types": "./src/mocks/index.ts",
+      "default": "./dist/mocks/index.js"
+    }
+  },
   "scripts": {
+    "build": "tsup",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
+  "dependencies": {
+    "@repo/database": "workspace:*",
+    "@repo/cache": "workspace:*",
+    "@repo/error-handling": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.5.3",
+    "jsdom": "^26.1.0",
+    "msw": "^2.8.4",
+    "supertest": "^7.0.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vitest": "^3.0.0"
+  },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.5.0",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "22.15.21",
+    "@types/react": "19.1.5",
+    "@types/react-dom": "19.1.5",
+    "@types/supertest": "^6.0.3",
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "19.1.0",
+    "tsup": "^8.4.3",
+    "typescript": "^5.8.3",
     "vitest": "^3.1.4"
   }
 }

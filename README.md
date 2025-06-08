@@ -1,31 +1,101 @@
-# ▲ / next-forge
+# Threadly - Modern C2C Fashion Marketplace
 
-**Production-grade Turborepo template for Next.js apps.**
+A production-ready clothing marketplace built with Next.js, TypeScript, and modern web technologies. Think Vinted, but better.
 
-<div>
-  <img src="https://img.shields.io/npm/dy/next-forge" alt="" />
-  <img src="https://img.shields.io/npm/v/next-forge" alt="" />
-  <img src="https://img.shields.io/github/license/vercel/next-forge" alt="" />
-</div>
+## 🏗️ Architecture
 
-## Overview
+This is a **Turborepo monorepo** with three main applications:
 
-[next-forge](https://github.com/vercel/next-forge) is a [Next.js](https://nextjs.org/) project boilerplate for modern web application. It is designed to be a comprehensive starting point for new apps, providing a solid, opinionated foundation with a minimal amount of configuration.
+```
+apps/
+├── web/        # Public marketplace (threadly.com)
+├── app/        # User dashboard (app.threadly.com)
+└── api/        # Backend services (api.threadly.com)
 
-## Getting Started
-
-Clone the repo using:
-
-```sh
-npx next-forge@latest init
+packages/       # Shared packages
+├── database/   # Prisma ORM & schemas
+├── ui/         # Design system components
+├── auth/       # Clerk authentication
+└── ...         # Other shared utilities
 ```
 
-Then read the [docs](https://www.next-forge.com/docs) for more information.
+## 🚀 Quick Start
 
-## Contributors
+```bash
+# Install dependencies
+pnpm install
 
-<a href="https://github.com/vercel/next-forge/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=vercel/next-forge" />
-</a>
+# Set up environment variables
+cp apps/web/.env.example apps/web/.env.local
+cp apps/app/.env.example apps/app/.env.local
+cp apps/api/.env.example apps/api/.env.local
 
-Made with [contrib.rocks](https://contrib.rocks).
+# Push database schema
+pnpm db:push
+
+# Start development servers
+pnpm dev
+```
+
+### Access Points
+- Web: http://localhost:3001
+- App: http://localhost:3000
+- API: http://localhost:3002
+
+## 📚 Documentation
+
+All documentation is in the `/documentation` folder:
+
+1. **[PROGRESS.md](./PROGRESS.md)** - Current status and task tracking
+2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development guide and patterns
+3. **[API.md](./API.md)** - API endpoints and integration
+4. **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
+5. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical architecture decisions
+
+## 🔧 Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Database**: PostgreSQL + Prisma
+- **Auth**: Clerk
+- **Payments**: Stripe Connect
+- **File Upload**: UploadThing
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State**: Zustand
+- **Monorepo**: Turborepo
+- **Deployment**: Vercel
+
+## 📊 Project Status
+
+**Overall Completion: ~70%**
+
+✅ **Completed**:
+- Database schema and models
+- Authentication system
+- Product browsing and search
+- Shopping cart functionality
+- Basic UI/UX structure
+
+🚧 **In Progress**:
+- Payment processing
+- Order management
+- Messaging system
+- Seller dashboard
+
+❌ **Not Started**:
+- Email notifications
+- Mobile app
+- Admin panel
+- Analytics dashboard
+
+## 🤝 Contributing
+
+1. Check [PROGRESS.md](./PROGRESS.md) for current tasks
+2. Follow patterns in [DEVELOPMENT.md](./DEVELOPMENT.md)
+3. Create feature branch from `main`
+4. Make changes and test thoroughly
+5. Submit PR with clear description
+
+## 📝 License
+
+Private and confidential. All rights reserved.

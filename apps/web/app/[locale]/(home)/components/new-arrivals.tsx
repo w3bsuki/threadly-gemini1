@@ -2,60 +2,78 @@ import { Button } from '@repo/design-system/components/ui/button';
 import { Clock, Heart, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { database } from '@repo/database';
 
-// Mock data for new arrivals
-const newArrivals = [
-  {
-    id: 7,
-    title: 'Reformation Silk Slip Dress',
-    brand: 'Reformation',
-    price: 89,
-    condition: 'Like New',
-    size: 'S',
-    images: ['/api/placeholder/400/500'],
-    seller: 'Maya L.',
-    timeAgo: '15 minutes ago',
-    isNew: true
-  },
-  {
-    id: 8,
-    title: 'Acne Studios Wool Scarf',
-    brand: 'Acne Studios',
-    price: 125,
-    condition: 'Very Good',
-    size: 'One Size',
-    images: ['/api/placeholder/400/500'],
-    seller: 'Oliver K.',
-    timeAgo: '32 minutes ago',
-    isNew: true
-  },
-  {
-    id: 9,
-    title: 'Ganni Floral Midi Skirt',
-    brand: 'Ganni',
-    price: 67,
-    condition: 'Good',
-    size: 'M',
-    images: ['/api/placeholder/400/500'],
-    seller: 'Sophie R.',
-    timeAgo: '1 hour ago',
-    isNew: true
-  },
-  {
-    id: 10,
-    title: 'Stone Island Hoodie',
-    brand: 'Stone Island',
-    price: 198,
-    condition: 'Very Good',
-    size: 'L',
-    images: ['/api/placeholder/400/500'],
-    seller: 'James M.',
-    timeAgo: '2 hours ago',
-    isNew: false
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount / 100);
+};
+
+const formatTimeAgo = (date: Date) => {
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minutes ago`;
+  } else if (diffInMinutes < 1440) { // 24 hours
+    const hours = Math.floor(diffInMinutes / 60);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else {
+    const days = Math.floor(diffInMinutes / 1440);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
   }
-];
+};
 
-export const NewArrivals = () => {
+export const NewArrivals = async () => {
+  try {
+    // Fetch recent products
+    const newArrivals = await database.product.findMany({
+      where: {
+        status: 'AVAILABLE',
+      },
+      include: {
+        images: {
+          orderBy: { order: 'asc' },
+          take: 1,
+        },
+        seller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 4,
+    });
+
+    const transformedArrivals = newArrivals.map((product) => ({
+      id: product.id,
+      title: product.title,
+      brand: product.brand || 'Unknown',
+      price: product.price,
+      condition: product.condition,
+      size: product.size || 'One Size',
+      images: product.images.map(img => img.imageUrl).filter(Boolean),
+      seller: product.seller ? `${product.seller.firstName || ''} ${product.seller.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous',
+      timeAgo: formatTimeAgo(product.createdAt),
+      isNew: (new Date().getTime() - product.createdAt.getTime()) < (24 * 60 * 60 * 1000), // Less than 24 hours old
+    }));
+
+    if (transformedArrivals.length === 0) {
+      return (
+        <section className="w-full py-16 lg:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-gray-500">No new arrivals found</p>
+          </div>
+        </section>
+      );
+    }
   return (
     <section className="w-full py-16 lg:py-24">
       <div className="container mx-auto px-4">
@@ -79,21 +97,30 @@ export const NewArrivals = () => {
 
         {/* New Arrivals Grid */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {newArrivals.map((item) => (
+          {transformedArrivals.map((item) => (
             <Link
               key={item.id}
-              href={`/products/${item.id}`}
+              href={`/product/${item.id}`}
               className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2"
             >
               {/* Image Container */}
               <div className="aspect-[4/5] overflow-hidden">
-                <Image
-                  src={item.images[0]}
-                  alt={item.title}
-                  width={400}
-                  height={500}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+                {item.images[0] && !item.images[0].includes('picsum.photos') && !item.images[0].includes('placehold.co') ? (
+                  <Image
+                    src={item.images[0]}
+                    alt={item.title}
+                    width={400}
+                    height={500}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white transition-transform duration-700 group-hover:scale-110">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold mb-1">{item.brand}</div>
+                      <div className="text-sm opacity-80">{item.condition}</div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* New Badge */}
                 {item.isNew && (
@@ -134,7 +161,7 @@ export const NewArrivals = () => {
                 </div>
 
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="font-bold text-xl text-gray-900">£{item.price}</span>
+                  <span className="font-bold text-xl text-gray-900">{formatCurrency(item.price)}</span>
                   <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                     Size {item.size}
                   </span>
@@ -166,4 +193,14 @@ export const NewArrivals = () => {
       </div>
     </section>
   );
+  } catch (error) {
+    console.error('Failed to fetch new arrivals:', error);
+    return (
+      <section className="w-full py-16 lg:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-500">Unable to load new arrivals</p>
+        </div>
+      </section>
+    );
+  }
 }; 

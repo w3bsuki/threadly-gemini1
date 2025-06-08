@@ -2,7 +2,10 @@ import { showBetaFeature } from '@repo/feature-flags';
 import { getDictionary } from '@repo/internationalization';
 import { createMetadata } from '@repo/seo/metadata';
 import type { Metadata } from 'next';
-import { ProductGrid } from './components/product-grid';
+import { ProductGridServer } from './components/product-grid-server';
+import { FeaturedCategories } from './components/featured-categories';
+import { NewArrivals } from './components/new-arrivals';
+import { TrendingProducts } from './components/trending-products';
 
 type HomeProps = {
   params: Promise<{
@@ -28,9 +31,9 @@ const Home = async ({ params }: HomeProps) => {
 
   return (
     <>
-      {/* Simple Product Grid Layout */}
+      {/* Product Grid */}
       <main className="bg-white">
-        <ProductGrid />
+        <ProductGridServer limit={50} />
       </main>
     </>
   );

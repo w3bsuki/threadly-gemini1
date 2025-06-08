@@ -1,5 +1,7 @@
 import { auth, currentUser } from '@repo/auth/server';
 import { authenticate } from '@repo/collaboration/auth';
+import { authRateLimit, checkRateLimit } from '@repo/security';
+import { NextRequest } from 'next/server';
 
 const COLORS = [
   'var(--color-red-500)',
@@ -21,7 +23,19 @@ const COLORS = [
   'var(--color-rose-500)',
 ];
 
-export const POST = async () => {
+export const POST = async (request: NextRequest) => {
+  // Check rate limit for auth operations
+  const rateLimitResult = await checkRateLimit(authRateLimit, request);
+  if (!rateLimitResult.allowed) {
+    return new Response(
+      rateLimitResult.error?.message || 'Rate limit exceeded',
+      { 
+        status: 429,
+        headers: rateLimitResult.headers,
+      }
+    );
+  }
+
   const user = await currentUser();
   const { orgId } = await auth();
 

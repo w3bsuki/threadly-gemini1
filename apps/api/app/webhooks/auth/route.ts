@@ -1,5 +1,6 @@
 import { env } from '@/env';
 import { analytics } from '@repo/analytics/posthog/server';
+import { database } from '@repo/database';
 import type {
   DeletedObjectJSON,
   OrganizationJSON,
@@ -12,50 +13,120 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { Webhook } from 'svix';
 
-const handleUserCreated = (data: UserJSON) => {
-  analytics.identify({
-    distinctId: data.id,
-    properties: {
-      email: data.email_addresses.at(0)?.email_address,
-      firstName: data.first_name,
-      lastName: data.last_name,
-      createdAt: new Date(data.created_at),
-      avatar: data.image_url,
-      phoneNumber: data.phone_numbers.at(0)?.phone_number,
-    },
-  });
+const handleUserCreated = async (data: UserJSON) => {
+  try {
+    // Create or update user in database
+    const email = data.email_addresses.at(0)?.email_address;
+    if (!email) {
+      throw new Error('No email address found for user');
+    }
 
-  analytics.capture({
-    event: 'User Created',
-    distinctId: data.id,
-  });
+    await database.user.upsert({
+      where: { clerkId: data.id },
+      update: {
+        email,
+        firstName: data.first_name || null,
+        lastName: data.last_name || null,
+        imageUrl: data.image_url,
+      },
+      create: {
+        clerkId: data.id,
+        email,
+        firstName: data.first_name || null,
+        lastName: data.last_name || null,
+        imageUrl: data.image_url,
+      },
+    });
 
-  return new Response('User created', { status: 201 });
+    // Track in analytics
+    analytics.identify({
+      distinctId: data.id,
+      properties: {
+        email,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        createdAt: new Date(data.created_at),
+        avatar: data.image_url,
+        phoneNumber: data.phone_numbers.at(0)?.phone_number,
+      },
+    });
+
+    analytics.capture({
+      event: 'User Created',
+      distinctId: data.id,
+    });
+
+    log.info('User created in database', { userId: data.id, email });
+    return new Response('User created', { status: 201 });
+  } catch (error) {
+    log.error('Error creating user in database', { error, userId: data.id });
+    return new Response('Error creating user', { status: 500 });
+  }
 };
 
-const handleUserUpdated = (data: UserJSON) => {
-  analytics.identify({
-    distinctId: data.id,
-    properties: {
-      email: data.email_addresses.at(0)?.email_address,
-      firstName: data.first_name,
-      lastName: data.last_name,
-      createdAt: new Date(data.created_at),
-      avatar: data.image_url,
-      phoneNumber: data.phone_numbers.at(0)?.phone_number,
-    },
-  });
+const handleUserUpdated = async (data: UserJSON) => {
+  try {
+    // Update user in database
+    const email = data.email_addresses.at(0)?.email_address;
+    if (!email) {
+      throw new Error('No email address found for user');
+    }
 
-  analytics.capture({
-    event: 'User Updated',
-    distinctId: data.id,
-  });
+    await database.user.update({
+      where: { clerkId: data.id },
+      data: {
+        email,
+        firstName: data.first_name || null,
+        lastName: data.last_name || null,
+        imageUrl: data.image_url,
+      },
+    });
 
-  return new Response('User updated', { status: 201 });
+    // Track in analytics
+    analytics.identify({
+      distinctId: data.id,
+      properties: {
+        email,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        createdAt: new Date(data.created_at),
+        avatar: data.image_url,
+        phoneNumber: data.phone_numbers.at(0)?.phone_number,
+      },
+    });
+
+    analytics.capture({
+      event: 'User Updated',
+      distinctId: data.id,
+    });
+
+    log.info('User updated in database', { userId: data.id, email });
+    return new Response('User updated', { status: 201 });
+  } catch (error) {
+    log.error('Error updating user in database', { error, userId: data.id });
+    return new Response('Error updating user', { status: 500 });
+  }
 };
 
-const handleUserDeleted = (data: DeletedObjectJSON) => {
-  if (data.id) {
+const handleUserDeleted = async (data: DeletedObjectJSON) => {
+  if (!data.id) {
+    return new Response('No user ID provided', { status: 400 });
+  }
+
+  try {
+    // Check if user exists before trying to delete
+    const user = await database.user.findUnique({
+      where: { clerkId: data.id },
+    });
+
+    if (user) {
+      // Delete user and all related data (cascade delete)
+      await database.user.delete({
+        where: { clerkId: data.id },
+      });
+    }
+
+    // Track in analytics
     analytics.identify({
       distinctId: data.id,
       properties: {
@@ -67,9 +138,13 @@ const handleUserDeleted = (data: DeletedObjectJSON) => {
       event: 'User Deleted',
       distinctId: data.id,
     });
-  }
 
-  return new Response('User deleted', { status: 201 });
+    log.info('User deleted from database', { userId: data.id, userFound: !!user });
+    return new Response('User deleted', { status: 201 });
+  } catch (error) {
+    log.error('Error deleting user in database', { error, userId: data.id });
+    return new Response('Error deleting user', { status: 500 });
+  }
 };
 
 const handleOrganizationCreated = (data: OrganizationJSON) => {
@@ -195,15 +270,15 @@ export const POST = async (request: Request): Promise<Response> => {
 
   switch (eventType) {
     case 'user.created': {
-      response = handleUserCreated(event.data);
+      response = await handleUserCreated(event.data);
       break;
     }
     case 'user.updated': {
-      response = handleUserUpdated(event.data);
+      response = await handleUserUpdated(event.data);
       break;
     }
     case 'user.deleted': {
-      response = handleUserDeleted(event.data);
+      response = await handleUserDeleted(event.data);
       break;
     }
     case 'organization.created': {

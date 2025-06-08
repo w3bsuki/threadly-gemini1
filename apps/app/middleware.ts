@@ -5,7 +5,8 @@ import {
   noseconeOptions,
   noseconeOptionsWithToolbar,
 } from '@repo/security/middleware';
-import type { NextMiddleware } from 'next/server';
+import { csrfMiddleware } from '@repo/security';
+import type { NextMiddleware, NextRequest } from 'next/server';
 import { env } from './env';
 
 const securityHeaders = env.FLAGS_SECRET
@@ -25,6 +26,14 @@ const isPublicRoute = createRouteMatcher([
 export default authMiddleware(async (auth, req) => {
   // Apply security headers first
   const securityResponse = securityHeaders();
+  
+  // Check CSRF for API routes
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    const csrfResponse = await csrfMiddleware(req as NextRequest);
+    if (csrfResponse) {
+      return csrfResponse;
+    }
+  }
   
   // Allow public routes
   if (isPublicRoute(req)) {

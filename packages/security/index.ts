@@ -9,6 +9,31 @@ import { keys } from './keys';
 
 const arcjetKey = keys().ARCJET_KEY;
 
+// Export rate limiting functions and utilities
+export {
+  generalApiLimit,
+  authRateLimit,
+  paymentRateLimit,
+  uploadRateLimit,
+  messageRateLimit,
+  checkRateLimit,
+  type RateLimitResult,
+} from './rate-limits';
+
+// Export CSRF protection functions
+export {
+  generateCSRFToken,
+  setCSRFCookie,
+  getCSRFToken,
+  validateCSRFToken,
+  csrfMiddleware,
+  initializeCSRFProtection,
+  refreshCSRFToken,
+  getCSRFTokenFromCookie,
+  addCSRFHeader,
+  type CSRFConfig,
+} from './csrf';
+
 export const secure = async (
   allow: (ArcjetWellKnownBot | ArcjetBotCategory)[],
   sourceRequest?: Request

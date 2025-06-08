@@ -1,0 +1,164 @@
+import { currentUser } from '@repo/auth/server';
+import { database } from '@repo/database';
+import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { Header } from '../../../components/header';
+import { SalesHistoryContent } from './components/sales-history-content';
+
+const title = 'Sales History';
+const description = 'Track your sales performance and earnings';
+
+export const metadata: Metadata = {
+  title,
+  description,
+};
+
+const SalesHistoryPage = async () => {
+  const user = await currentUser();
+
+  if (!user) {
+    redirect('/sign-in');
+  }
+
+  // Fetch sales data for the seller
+  const [salesData, recentOrders] = await Promise.all([
+    // Get aggregated sales data
+    database.orderItem.aggregate({
+      where: {
+        sellerId: user.id,
+        order: {
+          status: 'COMPLETED',
+        },
+      },
+      _sum: {
+        price: true,
+      },
+      _count: {
+        id: true,
+      },
+    }),
+
+    // Get recent orders with details
+    database.orderItem.findMany({
+      where: {
+        sellerId: user.id,
+      },
+      include: {
+        order: {
+          include: {
+            buyer: true,
+          },
+        },
+        product: {
+          include: {
+            images: {
+              take: 1,
+              orderBy: {
+                displayOrder: 'asc',
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 50, // Limit to recent orders
+    }),
+  ]);
+
+  // Calculate monthly sales for the last 12 months
+  const monthlyStats = await database.$queryRaw<Array<{
+    month: string;
+    total_sales: number;
+    order_count: number;
+  }>>`
+    SELECT 
+      DATE_FORMAT(o.created_at, '%Y-%m') as month,
+      COALESCE(SUM(oi.price), 0) as total_sales,
+      COUNT(DISTINCT o.id) as order_count
+    FROM orders o
+    INNER JOIN order_items oi ON o.id = oi.order_id
+    WHERE oi.seller_id = ${user.id}
+      AND o.status = 'COMPLETED'
+      AND o.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+    GROUP BY DATE_FORMAT(o.created_at, '%Y-%m')
+    ORDER BY month DESC
+  `;
+
+  // Get product performance data
+  const topProducts = await database.orderItem.groupBy({
+    by: ['productId'],
+    where: {
+      sellerId: user.id,
+      order: {
+        status: 'COMPLETED',
+      },
+    },
+    _sum: {
+      price: true,
+    },
+    _count: {
+      id: true,
+    },
+    orderBy: {
+      _sum: {
+        price: 'desc',
+      },
+    },
+    take: 10,
+  });
+
+  // Get product details for top performers
+  const topProductsWithDetails = await database.product.findMany({
+    where: {
+      id: {
+        in: topProducts.map(p => p.productId),
+      },
+    },
+    include: {
+      images: {
+        take: 1,
+        orderBy: {
+          displayOrder: 'asc',
+        },
+      },
+    },
+  });
+
+  // Combine top products with sales data
+  const enrichedTopProducts = topProducts.map(productSales => {
+    const productDetails = topProductsWithDetails.find(
+      p => p.id === productSales.productId
+    );
+    return {
+      ...productSales,
+      product: productDetails,
+    };
+  });
+
+  return (
+    <>
+      <Header pages={['Dashboard', 'Selling', 'Sales History']} page="Sales History" />
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Sales History & Analytics</h1>
+            <p className="text-muted-foreground">
+              Track your sales performance, earnings, and top-selling products
+            </p>
+          </div>
+          
+          <SalesHistoryContent 
+            salesData={salesData}
+            recentOrders={recentOrders}
+            monthlyStats={monthlyStats}
+            topProducts={enrichedTopProducts}
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default SalesHistoryPage;

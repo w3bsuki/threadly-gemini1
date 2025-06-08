@@ -4,8 +4,10 @@ import { env } from '@/env';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Search, Heart, Menu, X, User, ShoppingBag, Crown, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Dictionary } from '@repo/internationalization';
+import { CartDropdown } from './cart-dropdown';
 
 type HeaderProps = {
   dictionary: Dictionary;
@@ -36,10 +38,110 @@ const collections = [
   { name: "Home", href: "/collections/home", icon: "🏠" },
 ];
 
+interface SearchSuggestion {
+  id: string;
+  title: string;
+  type: 'product' | 'brand' | 'category';
+  brand?: string;
+  category?: string;
+}
+
 export const Header = ({ dictionary }: HeaderProps) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSubCategories, setShowSubCategories] = useState(true);
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
+  const router = useRouter();
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSuggestions(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    if (suggestion.type === 'product') {
+      router.push(`/product/${suggestion.id}`);
+    } else if (suggestion.type === 'brand') {
+      router.push(`/search?q=${encodeURIComponent(suggestion.title)}`);
+    } else if (suggestion.type === 'category') {
+      router.push(`/search?q=${encodeURIComponent(suggestion.title)}`);
+    }
+    setShowSuggestions(false);
+    setSearchQuery('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestion(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestion(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[selectedSuggestion]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSelectedSuggestion(-1);
+    }
+  };
+
+  // Debounced search suggestions
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        console.log('Fetching suggestions for:', searchQuery); // Debug log
+        const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(searchQuery.trim())}`);
+        console.log('Response status:', response.status); // Debug log
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Suggestions data:', data); // Debug log
+          setSuggestions(data || []);
+          setShowSuggestions(data && data.length > 0);
+          setSelectedSuggestion(-1);
+        } else {
+          console.error('Suggestions API error:', response.status);
+        }
+      } catch (error) {
+        console.error('Failed to fetch suggestions:', error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSuggestions, 1);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setSelectedSuggestion(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -62,26 +164,80 @@ export const Header = ({ dictionary }: HeaderProps) => {
 
             {/* Center: Search Bar (Desktop) */}
             <div className="flex-1 max-w-2xl mx-8 hidden md:block">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for items, brands, or members"
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm"
-                />
-                {searchQuery && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="text-gray-400 hover:text-gray-600"
-                      aria-label="Clear search"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+              <div ref={searchRef} className="relative">
+                <form onSubmit={handleSearch}>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={dictionary.web?.marketplace?.searchPlaceholder || "Search for items, brands, or members"}
+                      className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm"
+                    />
+                    {searchQuery && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setShowSuggestions(false);
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                          aria-label="Clear search"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </form>
+
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={`${suggestion.type}-${suggestion.id}`}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 border-b border-gray-100 last:border-b-0 ${
+                          selectedSuggestion === index ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="flex-shrink-0">
+                          {suggestion.type === 'product' && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                          {suggestion.type === 'brand' && (
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          )}
+                          {suggestion.type === 'category' && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {suggestion.title}
+                          </div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {suggestion.type === 'product' && suggestion.brand && (
+                              <span>by {suggestion.brand}</span>
+                            )}
+                            {suggestion.type === 'product' && suggestion.category && (
+                              <span> in {suggestion.category}</span>
+                            )}
+                            {suggestion.type === 'brand' && <span>Brand</span>}
+                            {suggestion.type === 'category' && <span>Category</span>}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -91,15 +247,17 @@ export const Header = ({ dictionary }: HeaderProps) => {
             <div className="flex items-center space-x-4">
               {/* Desktop Actions */}
               <div className="hidden md:flex items-center space-x-4">
+                <CartDropdown dictionary={dictionary} />
+                
                 <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black">
                   <Heart className="h-5 w-5 mr-1" />
-                  Favourites
+                  {dictionary.web?.marketplace?.favourites || "Favourites"}
                 </Button>
                 
                 <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black" asChild>
                   <Link href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`}>
                     <User className="h-5 w-5 mr-1" />
-                    Sign in
+                    {dictionary.web.header.signIn}
                   </Link>
                 </Button>
                 
@@ -109,7 +267,7 @@ export const Header = ({ dictionary }: HeaderProps) => {
                   asChild
                 >
                   <Link href="/sell">
-                    Sell now
+                    {dictionary.web?.marketplace?.sellNow || "Sell now"}
                   </Link>
                 </Button>
               </div>
@@ -251,6 +409,11 @@ export const Header = ({ dictionary }: HeaderProps) => {
             <div className="px-4 py-4 space-y-4">
               {/* Mobile Actions */}
               <div className="space-y-2">
+                <div className="flex items-center justify-between px-3">
+                  <span className="text-gray-700">Cart</span>
+                  <CartDropdown dictionary={dictionary} />
+                </div>
+                
                 <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
                   <Link href="/favourites">
                     <Heart className="h-5 w-5 mr-2" />

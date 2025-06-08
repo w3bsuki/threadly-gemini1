@@ -1,6 +1,7 @@
 import { env } from '@/env';
 import { analytics } from '@repo/analytics/posthog/server';
 import { clerkClient } from '@repo/auth/server';
+import { database } from '@repo/database';
 import { parseError } from '@repo/observability/error';
 import { log } from '@repo/observability/log';
 import { stripe } from '@repo/payments';
@@ -61,6 +62,82 @@ const handleSubscriptionScheduleCanceled = async (
   });
 };
 
+const handlePaymentIntentSucceeded = async (
+  paymentIntent: Stripe.PaymentIntent
+) => {
+  try {
+    log.info('Payment intent succeeded', { 
+      paymentIntentId: paymentIntent.id,
+      amount: paymentIntent.amount,
+      metadata: paymentIntent.metadata 
+    });
+
+    // Extract order details from metadata
+    const { buyerId, productId, sellerId, orderId } = paymentIntent.metadata;
+
+    if (!orderId) {
+      log.error('No orderId in payment intent metadata', { paymentIntentId: paymentIntent.id });
+      return;
+    }
+
+    // Start a transaction to update order, product, and create payment
+    const result = await database.$transaction(async (tx) => {
+      // Update order status to PAID
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: { 
+          status: 'PAID',
+        },
+      });
+
+      // Mark product as SOLD
+      await tx.product.update({
+        where: { id: productId },
+        data: { 
+          status: 'SOLD',
+        },
+      });
+
+      // Create payment record
+      const payment = await tx.payment.create({
+        data: {
+          orderId: order.id,
+          stripePaymentId: paymentIntent.id,
+          amount: paymentIntent.amount / 100, // Convert from cents
+          status: 'completed',
+        },
+      });
+
+      return { order, payment };
+    });
+
+    // Track in analytics
+    analytics.capture({
+      event: 'Order Paid',
+      distinctId: buyerId,
+      properties: {
+        orderId: result.order.id,
+        amount: paymentIntent.amount / 100,
+        productId,
+        sellerId,
+      },
+    });
+
+    log.info('Order payment processed successfully', { 
+      orderId: result.order.id,
+      productId,
+      buyerId,
+      sellerId 
+    });
+  } catch (error) {
+    log.error('Error processing payment intent', { 
+      error, 
+      paymentIntentId: paymentIntent.id 
+    });
+    throw error;
+  }
+};
+
 export const POST = async (request: Request): Promise<Response> => {
   if (!env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ message: 'Not configured', ok: false });
@@ -82,6 +159,10 @@ export const POST = async (request: Request): Promise<Response> => {
     );
 
     switch (event.type) {
+      case 'payment_intent.succeeded': {
+        await handlePaymentIntentSucceeded(event.data.object);
+        break;
+      }
       case 'checkout.session.completed': {
         await handleCheckoutSessionCompleted(event.data.object);
         break;

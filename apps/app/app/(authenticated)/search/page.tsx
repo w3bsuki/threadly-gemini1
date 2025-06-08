@@ -2,6 +2,7 @@ import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { notFound, redirect } from 'next/navigation';
 import { Header } from '../components/header';
+import { AddToCartButton } from '@/components/add-to-cart-button';
 
 type SearchPageProperties = {
   searchParams: Promise<{
@@ -84,8 +85,8 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
                 <div className="aspect-square relative bg-muted">
                   {product.images[0] ? (
                     <img
-                      src={product.images[0].imageUrl}
-                      alt={product.images[0].alt || product.title}
+                      src={product.images[0].url}
+                      alt={product.images[0].altText || product.title}
                       className="object-cover w-full h-full"
                     />
                   ) : (
@@ -99,7 +100,14 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
                   <p className="text-xs text-muted-foreground truncate">
                     {product.seller.firstName} {product.seller.lastName}
                   </p>
-                  <p className="font-semibold text-sm mt-1">£{product.price.toFixed(2)}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="font-semibold text-sm">${product.price.toFixed(2)}</p>
+                    <AddToCartButton 
+                      product={product} 
+                      size="sm" 
+                      showText={false}
+                    />
+                  </div>
                 </div>
               </div>
             ))

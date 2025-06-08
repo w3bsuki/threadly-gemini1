@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "basehub dev",
+    "dev": "node scripts/conditional-dev.js",
     "build": "node scripts/conditional-build.js",
     "analyze": "basehub",
     "clean": "git clean -xdf .cache .turbo dist node_modules",

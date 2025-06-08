@@ -7,10 +7,36 @@ import type { NextConfig } from 'next';
 
 let nextConfig: NextConfig = withToolbar(withLogging(config));
 
-nextConfig.images?.remotePatterns?.push({
-  protocol: 'https',
-  hostname: 'assets.basehub.com',
-});
+// Override images config to include all needed domains
+nextConfig.images = {
+  formats: ['image/avif', 'image/webp'],
+  remotePatterns: [
+    {
+      protocol: 'https',
+      hostname: 'img.clerk.com',
+    },
+    {
+      protocol: 'https',
+      hostname: 'assets.basehub.com',
+    },
+    {
+      protocol: 'https',
+      hostname: 'placehold.co',
+    },
+    {
+      protocol: 'https',
+      hostname: 'utfs.io',
+    },
+    {
+      protocol: 'https',
+      hostname: 'picsum.photos',
+    },
+    {
+      protocol: 'https',
+      hostname: 'images.unsplash.com',
+    },
+  ],
+};
 
 if (process.env.NODE_ENV === 'production') {
   const redirects: NextConfig['redirects'] = async () => [
