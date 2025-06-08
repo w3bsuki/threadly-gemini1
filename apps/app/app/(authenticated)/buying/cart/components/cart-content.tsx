@@ -1,6 +1,6 @@
 'use client';
 
-import { useCartStore } from '@/lib/stores/cart-store';
+import { useCartStore } from '../../../../../lib/stores/cart-store';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Separator } from '@repo/design-system/components/ui/separator';

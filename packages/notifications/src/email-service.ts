@@ -23,7 +23,7 @@ export class EmailService {
 
     if (!buyer?.email) return;
 
-    const prefs = buyer.notificationPreferences as NotificationPreferences;
+    const prefs = buyer.notificationPreferences as any as NotificationPreferences;
     if (!prefs?.email?.orderUpdates) return;
 
     const { data, error } = await this.resend.emails.send({
@@ -65,7 +65,7 @@ export class EmailService {
 
     if (!recipient?.email) return;
 
-    const prefs = recipient.notificationPreferences as NotificationPreferences;
+    const prefs = recipient.notificationPreferences as any as NotificationPreferences;
     if (!prefs?.email?.newMessages) return;
 
     const { data, error } = await this.resend.emails.send({
@@ -96,7 +96,7 @@ export class EmailService {
 
     if (!seller?.email) return;
 
-    const prefs = seller.notificationPreferences as NotificationPreferences;
+    const prefs = seller.notificationPreferences as any as NotificationPreferences;
     if (!prefs?.email?.paymentReceived) return;
 
     const { data, error } = await this.resend.emails.send({
@@ -128,7 +128,7 @@ export class EmailService {
 
     if (!seller?.email) return;
 
-    const prefs = seller.notificationPreferences as NotificationPreferences;
+    const prefs = seller.notificationPreferences as any as NotificationPreferences;
     if (!prefs?.email?.weeklyReport) return;
 
     const { data, error } = await this.resend.emails.send({

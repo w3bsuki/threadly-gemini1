@@ -144,7 +144,7 @@ export const handlers = [
   }),
 
   http.post('/api/orders', async ({ request }) => {
-    const orderData = await request.json();
+    const orderData = await request.json() as any;
     
     const newOrder = {
       id: `order_${Date.now()}`,
@@ -173,7 +173,7 @@ export const handlers = [
   }),
 
   http.post('/api/conversations/:id/messages', async ({ params, request }) => {
-    const messageData = await request.json();
+    const messageData = await request.json() as any;
     
     const newMessage = {
       id: `msg_${Date.now()}`,

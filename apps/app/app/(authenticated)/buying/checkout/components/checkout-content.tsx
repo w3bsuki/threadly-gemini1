@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCartStore } from '@/lib/stores/cart-store';
+import { useCartStore } from '../../../../../lib/stores/cart-store';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Input } from '@repo/design-system/components/ui/input';
@@ -21,7 +21,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createOrder } from '../actions/create-order';
 import { loadStripe } from '@stripe/stripe-js';
-import { env } from '@/env';
+import { env } from '../../../../../env';
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 

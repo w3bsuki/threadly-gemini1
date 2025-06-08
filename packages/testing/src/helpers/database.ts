@@ -1,5 +1,5 @@
 import { database } from '@repo/database';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@repo/database';
 
 // Test database helpers
 export class TestDatabase {
@@ -81,7 +81,6 @@ export class TestDatabase {
           data: {
             productId: product.id,
             imageUrl: `https://example.com/image-${index + 1}.jpg`,
-            altText: `Test image ${index + 1}`,
             displayOrder: index,
           },
         })

@@ -1,5 +1,5 @@
-import { render as rtlRender, type RenderOptions } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render as rtlRender, type RenderOptions, type RenderResult } from '@testing-library/react';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { ReactElement, ReactNode } from 'react';
 
 // Custom providers wrapper
@@ -20,19 +20,47 @@ function Providers({ children }: ProvidersProps) {
 function customRender(
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
-) {
+): RenderResult & { user: UserEvent } {
   return {
     user: userEvent.setup(),
     ...rtlRender(ui, { wrapper: Providers, ...options }),
   };
 }
 
-// Re-export everything
-export * from '@testing-library/react';
+// Export specific items to avoid conflicts
+export {
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+  within,
+  cleanup,
+  queryByTestId,
+  findByTestId,
+  getByRole,
+  queryByRole,
+  findByRole,
+  getByText,
+  queryByText,
+  findByText,
+  getByLabelText,
+  queryByLabelText,
+  findByLabelText,
+  getByPlaceholderText,
+  queryByPlaceholderText,
+  findByPlaceholderText,
+  getByDisplayValue,
+  queryByDisplayValue,
+  findByDisplayValue
+} from '@testing-library/react';
+
 export { customRender as render };
 
 // Helper to render with user event
-export function renderWithUser(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
+export function renderWithUser(
+  ui: ReactElement, 
+  options?: Omit<RenderOptions, 'wrapper'>
+): RenderResult & { user: UserEvent } {
   return {
     user: userEvent.setup(),
     ...rtlRender(ui, { wrapper: Providers, ...options }),
@@ -40,7 +68,10 @@ export function renderWithUser(ui: ReactElement, options?: Omit<RenderOptions, '
 }
 
 // Helper to render async components
-export async function renderAsync(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
+export async function renderAsync(
+  ui: ReactElement, 
+  options?: Omit<RenderOptions, 'wrapper'>
+): Promise<RenderResult & { user: UserEvent }> {
   const result = customRender(ui, options);
   
   // Wait for any async operations to complete
@@ -54,7 +85,7 @@ export function renderWithViewport(
   ui: ReactElement,
   viewport: { width: number; height: number },
   options?: Omit<RenderOptions, 'wrapper'>
-) {
+): RenderResult & { user: UserEvent } {
   // Mock window dimensions
   Object.defineProperty(window, 'innerWidth', {
     writable: true,
@@ -79,7 +110,7 @@ export function renderWithRouter(
   ui: ReactElement,
   initialRoute = '/',
   options?: Omit<RenderOptions, 'wrapper'>
-) {
+): RenderResult & { user: UserEvent } {
   // This would be implemented with Next.js router mock
   // For now, just render normally
   return customRender(ui, options);
