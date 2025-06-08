@@ -21,7 +21,7 @@ export function ErrorPage({ error, errorId, level, onReset }: ErrorPageProps) {
   return <ComponentErrorPage error={error} errorId={errorId} onReset={onReset} isDevelopment={isDevelopment} />;
 }
 
-function AppErrorPage({ error, errorId, onReset, isDevelopment }: ErrorPageProps & { isDevelopment: boolean }) {
+function AppErrorPage({ error, errorId, onReset, isDevelopment }: Omit<ErrorPageProps, 'level'> & { isDevelopment: boolean }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="mx-auto max-w-md text-center">
@@ -82,7 +82,7 @@ function AppErrorPage({ error, errorId, onReset, isDevelopment }: ErrorPageProps
   );
 }
 
-function PageErrorPage({ error, errorId, onReset, isDevelopment }: ErrorPageProps & { isDevelopment: boolean }) {
+function PageErrorPage({ error, errorId, onReset, isDevelopment }: Omit<ErrorPageProps, 'level'> & { isDevelopment: boolean }) {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="mx-auto max-w-2xl">
@@ -148,7 +148,7 @@ function PageErrorPage({ error, errorId, onReset, isDevelopment }: ErrorPageProp
   );
 }
 
-function ComponentErrorPage({ error, errorId, onReset, isDevelopment }: ErrorPageProps & { isDevelopment: boolean }) {
+function ComponentErrorPage({ error, errorId, onReset, isDevelopment }: Omit<ErrorPageProps, 'level'> & { isDevelopment: boolean }) {
   return (
     <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-6">
       <div className="flex items-center gap-3 mb-3">

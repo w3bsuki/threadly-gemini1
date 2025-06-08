@@ -1,4 +1,4 @@
-import pRetry, { AbortError } from 'p-retry';
+import pRetry, { AbortError, type FailedAttemptError } from 'p-retry';
 import { logError } from './error-logger';
 
 export interface RetryOptions {
@@ -7,7 +7,7 @@ export interface RetryOptions {
   maxTimeout?: number;
   factor?: number;
   randomize?: boolean;
-  onFailedAttempt?: (error: pRetry.FailedAttemptError) => void | Promise<void>;
+  onFailedAttempt?: (error: FailedAttemptError) => void | Promise<void>;
   shouldRetry?: (error: any) => boolean;
 }
 
