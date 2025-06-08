@@ -43,7 +43,7 @@ export class PusherClient implements RealTimeClient {
       channel: channelName,
       unsubscribe: () => {
         channel?.unbind(event, callback);
-        if (channel && !channel.callbacks.size) {
+        if (channel && !(channel as any).callbacks?.size) {
           this.pusher.unsubscribe(channelName);
           this.channels.delete(channelName);
         }
@@ -68,7 +68,7 @@ export class PusherClient implements RealTimeClient {
           throw new Error(`Failed to trigger event: ${response.statusText}`);
         }
       },
-      { retries: 3, delay: 1000 }
+      { retries: 3, minTimeout: 1000 }
     );
   }
 
