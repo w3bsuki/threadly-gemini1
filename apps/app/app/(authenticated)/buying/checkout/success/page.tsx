@@ -13,14 +13,15 @@ export const metadata: Metadata = {
 };
 
 interface CheckoutSuccessPageProps {
-  searchParams: {
+  searchParams: Promise<{
     payment_intent?: string;
     payment_intent_client_secret?: string;
     redirect_status?: string;
-  };
+  }>;
 }
 
 const CheckoutSuccessPage = async ({ searchParams }: CheckoutSuccessPageProps) => {
+  const params = await searchParams;
   const user = await currentUser();
 
   if (!user) {
@@ -28,8 +29,8 @@ const CheckoutSuccessPage = async ({ searchParams }: CheckoutSuccessPageProps) =
   }
 
   // Extract payment intent ID from either parameter
-  const paymentIntentId = searchParams.payment_intent || 
-    searchParams.payment_intent_client_secret?.split('_secret_')[0];
+  const paymentIntentId = params.payment_intent || 
+    params.payment_intent_client_secret?.split('_secret_')[0];
 
   if (!paymentIntentId) {
     redirect('/buying/orders');

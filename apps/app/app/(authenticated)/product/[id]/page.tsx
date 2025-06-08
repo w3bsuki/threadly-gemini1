@@ -2,7 +2,7 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect, notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Header } from '../../../components/header';
+import { Header } from '../../components/header';
 import { ProductDetailContent } from './components/product-detail-content';
 
 interface ProductPageProps {

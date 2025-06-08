@@ -1,7 +1,7 @@
 import { currentUser } from '@repo/auth/server';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Header } from '../../components/header';
+import { Header } from '../components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Input } from '@repo/design-system/components/ui/input';

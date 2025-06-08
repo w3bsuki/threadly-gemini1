@@ -3,7 +3,7 @@ import { auth, currentUser } from '@repo/auth/server';
 import { SidebarProvider } from '@repo/design-system/components/ui/sidebar';
 import { showBetaFeature } from '@repo/feature-flags';
 import { NotificationsProvider } from '@repo/notifications/components/provider';
-import { RealTimeProvider } from '@repo/real-time/client';
+import { RealTimeWrapper } from './components/real-time-wrapper';
 import { secure, initializeCSRFProtection } from '@repo/security';
 import type { ReactNode } from 'react';
 import { PostHogIdentifier } from './components/posthog-identifier';
@@ -30,15 +30,7 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
   await initializeCSRFProtection();
 
   return (
-    <RealTimeProvider
-      config={{
-        pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-        pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-        enablePresence: true,
-        enableTypingIndicators: true,
-      }}
-      userId={user.id}
-    >
+    <RealTimeWrapper userId={user.id}>
       <NotificationsProvider userId={user.id}>
         <SidebarProvider>
           <GlobalSidebar>
@@ -52,7 +44,7 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
           <PostHogIdentifier />
         </SidebarProvider>
       </NotificationsProvider>
-    </RealTimeProvider>
+    </RealTimeWrapper>
   );
 };
 

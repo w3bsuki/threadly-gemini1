@@ -14,12 +14,13 @@ export const metadata: Metadata = {
 };
 
 interface CheckoutPageProps {
-  params: {
+  params: Promise<{
     productId: string;
-  };
+  }>;
 }
 
 const CheckoutPage = async ({ params }: CheckoutPageProps) => {
+  const { productId } = await params;
   const user = await currentUser();
 
   if (!user) {
@@ -29,7 +30,7 @@ const CheckoutPage = async ({ params }: CheckoutPageProps) => {
   // Get product details
   const product = await database.product.findUnique({
     where: {
-      id: params.productId,
+      id: productId,
       status: 'AVAILABLE',
     },
     include: {

@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { PusherClient } from './pusher-client';
 import type { RealTimeClient, RealTimeConfig } from '../types';

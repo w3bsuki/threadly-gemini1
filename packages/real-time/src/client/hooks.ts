@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRealTime } from './provider';
 import type { MessageEvent, TypingEvent, NotificationEvent, PresenceEvent } from '../types';

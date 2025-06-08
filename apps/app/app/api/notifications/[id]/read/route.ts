@@ -1,4 +1,4 @@
-import { auth } from '@repo/auth';
+import { auth } from '@repo/auth/server';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 
