@@ -1,4 +1,4 @@
-import { algoliasearch } from 'algoliasearch';
+import algoliasearch from 'algoliasearch';
 import { withRetry } from '@repo/error-handling';
 import type { 
   SearchConfig, 
@@ -14,7 +14,7 @@ import { SEARCH_FACETS, SEARCH_SETTINGS } from './types';
 
 export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   private client: ReturnType<typeof algoliasearch>;
-  private searchIndex: any; // Algolia v5 has different types
+  private searchIndex: any; // Using any for Algolia index type
   private indexName: string;
 
   constructor(config: SearchConfig) {

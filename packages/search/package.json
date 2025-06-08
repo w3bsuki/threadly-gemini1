@@ -23,7 +23,7 @@
     "@repo/database": "workspace:*",
     "@repo/cache": "workspace:*",
     "@repo/error-handling": "workspace:*",
-    "algoliasearch": "^5.19.0"
+    "algoliasearch": "^4.24.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
