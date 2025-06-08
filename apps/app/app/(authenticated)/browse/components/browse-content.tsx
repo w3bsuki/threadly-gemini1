@@ -143,8 +143,12 @@ export function BrowseContent({
       price: product.price,
       image: product.images[0]?.imageUrl || '/placeholder.png',
       sellerId: product.seller.id,
+      sellerName: product.seller.firstName && product.seller.lastName 
+        ? `${product.seller.firstName} ${product.seller.lastName}` 
+        : product.seller.email,
       condition: product.condition,
       size: product.size,
+      availableQuantity: 1, // Marketplace items are single quantity
     });
   };
 

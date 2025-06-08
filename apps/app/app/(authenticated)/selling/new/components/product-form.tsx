@@ -13,8 +13,8 @@ import { Textarea } from '@repo/design-system/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/design-system/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@repo/design-system/components/ui/form';
 import { createProduct } from '../actions/create-product';
-import { createProductSimple } from '../actions/create-product-simple';
 import { ImageUpload } from './image-upload';
+import { CategorySelector } from './category-selector';
 
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
@@ -56,37 +56,18 @@ export function ProductForm({ userId }: ProductFormProps) {
   const onSubmit = async (data: ProductFormData) => {
     try {
       setIsSubmitting(true);
-      console.log('Submitting product form with data:', data);
       
-      // First test with simple version
-      console.log('Testing with simple server action first...');
-      const testResult = await createProductSimple({
+      const result = await createProduct({
         ...data,
+        price: Math.round(data.price * 100), // Convert dollars to cents
         sellerId: userId,
       });
-      console.log('Simple test result:', testResult);
-      
-      let result;
-      // If test passes, try the real one
-      if (testResult.success) {
-        console.log('Simple test passed, now trying real create product...');
-        result = await createProduct({
-          ...data,
-          sellerId: userId,
-        });
-      } else {
-        result = testResult;
-      }
-
-      console.log('Create product result:', result);
 
       if (result && result.success) {
-        console.log('Product created successfully, redirecting...');
         router.push(`/selling/listings`);
       } else {
-        // Handle error
-        console.error('Failed to create product:', result.error);
-        alert(`Failed to create product: ${result.error}`);
+        // Handle error - show user-friendly message
+        alert(`Failed to create product: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error creating product:', error);
@@ -186,20 +167,13 @@ export function ProductForm({ userId }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="cmbl7f4ub0002w74xtex8coxd">Women's Clothing</SelectItem>
-                        <SelectItem value="cmbl7gbj1000dw7wd0zemrn5b">Men's Clothing</SelectItem>
-                        <SelectItem value="cmbl7gc6w000kw7wdq2jg6k07">Kids' Clothing</SelectItem>
-                        <SelectItem value="cmbl7gd50012w7wdbg3q6w2w">Unisex Accessories</SelectItem>
-                        <SelectItem value="cmbl7gcsr000rw7wdeiv4lsmn">Designer Clothing</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CategorySelector
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select a category"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

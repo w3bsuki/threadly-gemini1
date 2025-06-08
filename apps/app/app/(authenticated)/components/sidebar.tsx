@@ -57,6 +57,7 @@ import {
   UserIcon,
   PlusIcon,
   HeartIcon,
+  StarIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -116,6 +117,10 @@ const data = {
           url: '/selling/listings',
         },
         {
+          title: 'Order Management',
+          url: '/selling/orders',
+        },
+        {
           title: 'Sales History',
           url: '/selling/history',
         },
@@ -158,6 +163,12 @@ const data = {
           url: '/messages?type=selling',
         },
       ],
+    },
+    {
+      title: 'Reviews',
+      url: '/reviews',
+      icon: StarIcon,
+      items: [],
     },
   ],
   navSecondary: [

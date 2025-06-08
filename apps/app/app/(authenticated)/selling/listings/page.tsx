@@ -52,7 +52,7 @@ const MyListingsPage = async () => {
     include: {
       images: {
         orderBy: {
-          order: 'asc',
+          displayOrder: 'asc',
         },
         take: 1, // Only get the first image for listing view
       },
@@ -170,7 +170,7 @@ const MyListingsPage = async () => {
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <h3 className="font-semibold line-clamp-1">{product.title}</h3>
-                    <p className="text-2xl font-bold">${product.price.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">${(product.price / 100).toFixed(2)}</p>
                     
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{getConditionText(product.condition)}</span>
@@ -244,7 +244,7 @@ const MyListingsPage = async () => {
               <CardContent className="p-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold">
-                    ${products.reduce((sum, p) => sum + p.price, 0).toFixed(2)}
+                    ${(products.reduce((sum, p) => sum + p.price, 0) / 100).toFixed(2)}
                   </p>
                   <p className="text-sm text-muted-foreground">Total Value</p>
                 </div>

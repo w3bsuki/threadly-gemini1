@@ -36,6 +36,18 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     if (!user) {
       redirect('/sign-in');
     }
+    
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id }
+    });
+    
+    if (!dbUser) {
+      return {
+        success: false,
+        error: 'User not found in database',
+      };
+    }
 
     // Validate input
     const validatedInput = createOrderSchema.parse(input);
@@ -79,7 +91,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
       // Create individual order for each product
       const order = await database.order.create({
         data: {
-          buyerId: user.id,
+          buyerId: dbUser.id, // Use database user ID, not Clerk ID
           sellerId: product.sellerId,
           productId: item.productId,
           amount: item.price * item.quantity,
@@ -116,8 +128,37 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
       },
     });
 
-    // TODO: Send confirmation email
-    // TODO: Notify sellers
+    // Send confirmation email to buyer
+    // TODO: Implement email notifications when Resend is configured
+    // try {
+    //   const { getEmailService } = await import('@repo/email');
+    //   const emailService = getEmailService();
+    //   await emailService.sendOrderConfirmation({
+    //     ...orders[0],
+    //     items: orders.map(o => ({
+    //       product: o.product,
+    //       quantity: 1,
+    //       price: o.amount,
+    //     })),
+    //     total: validatedInput.total,
+    //     estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    //   });
+    // } catch (error) {
+    //   console.error('Failed to send confirmation email:', error);
+    // }
+
+    // Send notifications to sellers
+    // TODO: Implement real-time notifications
+    // try {
+    //   const { getNotificationService } = await import('@repo/real-time/server');
+    //   const notificationService = getNotificationService();
+    //   
+    //   for (const order of orders) {
+    //     await notificationService.notifyNewOrder(order);
+    //   }
+    // } catch (error) {
+    //   console.error('Failed to send seller notifications:', error);
+    // }
 
     // Return the first order with virtual properties to match expected format
     const primaryOrder = orders[0];

@@ -51,25 +51,23 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
     
     // In production, try UploadThing
     try {
-      console.log("Attempting UploadThing upload...");
       const result = await startUpload(fileArray);
       if (!result || result.length === 0) {
-        console.warn("UploadThing returned no results");
+        // UploadThing failed, fallback to local URLs
         handleFallbackUpload(fileArray);
       }
       // Success handled in onClientUploadComplete
     } catch (error) {
-      console.warn("UploadThing upload failed:", error);
+      // TODO: Add proper error tracking
       handleFallbackUpload(fileArray);
     }
   };
 
   const handleFallbackUpload = (fileArray: File[]) => {
-    console.log("Using local object URLs for development");
     // Create local object URLs for development/preview
+    // WARNING: This will not work in production - UploadThing must be configured
     const localUrls = fileArray.map(file => {
       const url = URL.createObjectURL(file);
-      console.log(`Created local URL for ${file.name}:`, url);
       return url;
     });
     const updatedUrls = [...value, ...localUrls].slice(0, maxFiles);

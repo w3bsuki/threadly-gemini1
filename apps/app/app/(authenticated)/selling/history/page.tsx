@@ -20,18 +20,25 @@ const SalesHistoryPage = async () => {
     redirect('/sign-in');
   }
 
+  // Get database user
+  const dbUser = await database.user.findUnique({
+    where: { clerkId: user.id }
+  });
+
+  if (!dbUser) {
+    redirect('/sign-in');
+  }
+
   // Fetch sales data for the seller
   const [salesData, recentOrders] = await Promise.all([
     // Get aggregated sales data
-    database.orderItem.aggregate({
+    database.order.aggregate({
       where: {
-        sellerId: user.id,
-        order: {
-          status: 'COMPLETED',
-        },
+        sellerId: dbUser.id,
+        status: 'COMPLETED',
       },
       _sum: {
-        price: true,
+        amount: true,
       },
       _count: {
         id: true,
@@ -39,16 +46,12 @@ const SalesHistoryPage = async () => {
     }),
 
     // Get recent orders with details
-    database.orderItem.findMany({
+    database.order.findMany({
       where: {
-        sellerId: user.id,
+        sellerId: dbUser.id,
       },
       include: {
-        order: {
-          include: {
-            buyer: true,
-          },
-        },
+        buyer: true,
         product: {
           include: {
             images: {
@@ -70,40 +73,37 @@ const SalesHistoryPage = async () => {
   // Calculate monthly sales for the last 12 months
   const monthlyStats = await database.$queryRaw<Array<{
     month: string;
-    total_sales: number;
-    order_count: number;
+    total_sales: bigint;
+    order_count: bigint;
   }>>`
     SELECT 
-      DATE_FORMAT(o.created_at, '%Y-%m') as month,
-      COALESCE(SUM(oi.price), 0) as total_sales,
-      COUNT(DISTINCT o.id) as order_count
-    FROM orders o
-    INNER JOIN order_items oi ON o.id = oi.order_id
-    WHERE oi.seller_id = ${user.id}
-      AND o.status = 'COMPLETED'
-      AND o.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-    GROUP BY DATE_FORMAT(o.created_at, '%Y-%m')
+      TO_CHAR(created_at, 'YYYY-MM') as month,
+      COALESCE(SUM(amount), 0) as total_sales,
+      COUNT(DISTINCT id) as order_count
+    FROM "Order"
+    WHERE seller_id = ${dbUser.id}
+      AND status = 'COMPLETED'
+      AND created_at >= NOW() - INTERVAL '12 months'
+    GROUP BY TO_CHAR(created_at, 'YYYY-MM')
     ORDER BY month DESC
   `;
 
   // Get product performance data
-  const topProducts = await database.orderItem.groupBy({
+  const topProducts = await database.order.groupBy({
     by: ['productId'],
     where: {
-      sellerId: user.id,
-      order: {
-        status: 'COMPLETED',
-      },
+      sellerId: dbUser.id,
+      status: 'COMPLETED',
     },
     _sum: {
-      price: true,
+      amount: true,
     },
     _count: {
       id: true,
     },
     orderBy: {
       _sum: {
-        price: 'desc',
+        amount: 'desc',
       },
     },
     take: 10,

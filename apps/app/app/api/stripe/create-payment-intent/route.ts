@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       amount: Math.round(amount * 100), // Convert to cents
       currency,
       metadata: {
-        userId: user.id,
+        buyerId: user.id,
       },
       automatic_payment_methods: {
         enabled: true,
@@ -47,10 +47,21 @@ export async function POST(request: NextRequest) {
 
     // Handle cart purchase
     if (orderItems && orderItems.length > 0) {
-      // For cart purchases, we don't set specific order/product metadata
-      // as multiple orders will be created
+      // For cart purchases, include the order ID if provided
       paymentIntentData.metadata!.type = 'cart';
       paymentIntentData.metadata!.itemCount = orderItems.length.toString();
+      
+      if (orderId) {
+        paymentIntentData.metadata!.orderId = orderId;
+      }
+      
+      // Add product IDs to metadata for webhook processing
+      if (orderItems.length > 0) {
+        paymentIntentData.metadata!.productId = orderItems[0].productId;
+      }
+      
+      // For cart, we'll need to handle multiple sellers differently
+      // For now, we'll process this as a single marketplace transaction
       
       // Calculate platform fee (5% for Threadly)
       const platformFeeAmount = Math.round(amount * 0.05 * 100); // 5% in cents

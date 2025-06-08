@@ -76,12 +76,12 @@ export class EmailService {
         recipientName: recipient.firstName || 'User',
         senderName: `${sender?.firstName} ${sender?.lastName}`.trim(),
         messagePreview: message.content.substring(0, 100),
-        conversationUrl: `https://app.threadly.com/messages/${conversation.id}`,
+        conversationUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.threadly.com'}/messages/${conversation.id}`,
       }),
     });
 
     if (error) {
-      console.error('Failed to send new message email:', error);
+      // TODO: Add proper error tracking service and retry mechanism
     }
 
     return data;

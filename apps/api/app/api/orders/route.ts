@@ -32,13 +32,23 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true }
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Build where clause
     const where: any = {};
     
     if (role === 'buyer') {
-      where.buyerId = user.id;
+      where.buyerId = dbUser.id;
     } else if (role === 'seller') {
-      where.sellerId = user.id;
+      where.sellerId = dbUser.id;
     }
 
     if (status) {
@@ -92,7 +102,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    // TODO: Add proper error tracking service
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }
@@ -111,6 +121,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createOrderSchema.parse(body);
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true }
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Get product details
     const product = await database.product.findUnique({
       where: { id: validatedData.productId },
@@ -128,7 +148,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (product.sellerId === user.id) {
+    if (product.sellerId === dbUser.id) {
       return NextResponse.json(
         { error: 'Cannot purchase your own product' },
         { status: 400 }
@@ -140,7 +160,7 @@ export async function POST(request: NextRequest) {
       // Create the order
       const newOrder = await tx.order.create({
         data: {
-          buyerId: user.id,
+          buyerId: dbUser.id,
           sellerId: product.sellerId,
           productId: product.id,
           amount: validatedData.amount,
@@ -174,7 +194,7 @@ export async function POST(request: NextRequest) {
 
       // Update buyer's total purchases count
       await tx.user.update({
-        where: { id: user.id },
+        where: { id: dbUser.id },
         data: {
           totalPurchases: { increment: 1 },
         },
@@ -192,7 +212,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating order:', error);
+    // TODO: Add proper error tracking service
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }

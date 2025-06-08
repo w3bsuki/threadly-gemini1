@@ -8,7 +8,7 @@ const prisma = new PrismaClient({
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Test endpoint called');
+    // Test endpoint for database connectivity
     
     // Test direct database connection
     const categoryCount = await prisma.category.count();
@@ -37,11 +37,10 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Test endpoint error:', error);
+    // Don't expose error details in production
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      details: error
+      error: 'Database connection failed'
     }, { status: 500 });
   }
 }

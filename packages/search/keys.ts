@@ -4,14 +4,14 @@ import { z } from 'zod';
 export const keys = () =>
   createEnv({
     server: {
-      ALGOLIA_APP_ID: z.string().min(1),
-      ALGOLIA_ADMIN_API_KEY: z.string().min(1),
-      ALGOLIA_INDEX_NAME: z.string().min(1).default('products'),
+      ALGOLIA_APP_ID: z.string().min(1).optional(),
+      ALGOLIA_ADMIN_API_KEY: z.string().min(1).optional(),
+      ALGOLIA_INDEX_NAME: z.string().min(1).default('products').optional(),
     },
     client: {
-      NEXT_PUBLIC_ALGOLIA_APP_ID: z.string().min(1),
-      NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string().min(1),
-      NEXT_PUBLIC_ALGOLIA_INDEX_NAME: z.string().min(1).default('products'),
+      NEXT_PUBLIC_ALGOLIA_APP_ID: z.string().min(1).optional(),
+      NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY: z.string().min(1).optional(),
+      NEXT_PUBLIC_ALGOLIA_INDEX_NAME: z.string().min(1).default('products').optional(),
     },
     runtimeEnv: {
       ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,

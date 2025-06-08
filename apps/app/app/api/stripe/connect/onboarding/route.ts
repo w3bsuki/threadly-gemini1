@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get the origin from the request headers
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    // Get the origin from environment or request headers
+    const origin = env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000';
 
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Stripe Connect onboarding error:', error);
+    // TODO: Add proper error tracking service
 
     if (error instanceof Stripe.errors.StripeError) {
       return NextResponse.json(
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get the origin from the request headers
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    // Get the origin from environment or request headers
+    const origin = env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000';
 
     // Create new account link
     const accountLink = await stripe.accountLinks.create({
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Stripe Connect refresh link error:', error);
+    // TODO: Add proper error tracking service
 
     if (error instanceof Stripe.errors.StripeError) {
       return NextResponse.json(

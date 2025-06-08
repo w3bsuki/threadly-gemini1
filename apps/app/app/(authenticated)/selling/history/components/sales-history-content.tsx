@@ -14,7 +14,7 @@ import Image from 'next/image';
 
 interface SalesData {
   _sum: {
-    price: number | null;
+    amount: number | null;
   };
   _count: {
     id: number;
@@ -24,45 +24,35 @@ interface SalesData {
 interface Order {
   id: string;
   status: string;
-  total: number;
+  amount: number;
   createdAt: Date;
   buyer: {
     id: string;
-    firstName?: string;
-    lastName?: string;
-    imageUrl?: string;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
   };
-}
-
-interface OrderItem {
-  id: string;
-  price: number;
-  quantity: number;
-  title: string;
-  condition: string;
-  createdAt: Date;
-  order: Order;
   product: {
     id: string;
     title: string;
     status: string;
     images: Array<{
-      url: string;
-      altText?: string;
+      imageUrl: string;
+      alt: string | null;
     }>;
   };
 }
 
 interface MonthlyStats {
   month: string;
-  total_sales: number;
-  order_count: number;
+  total_sales: bigint;
+  order_count: bigint;
 }
 
 interface TopProduct {
   productId: string;
   _sum: {
-    price: number | null;
+    amount: number | null;
   };
   _count: {
     id: number;
@@ -73,15 +63,15 @@ interface TopProduct {
     price: number;
     status: string;
     images: Array<{
-      url: string;
-      altText?: string;
+      imageUrl: string;
+      alt: string | null;
     }>;
   };
 }
 
 interface SalesHistoryContentProps {
   salesData: SalesData;
-  recentOrders: OrderItem[];
+  recentOrders: Order[];
   monthlyStats: MonthlyStats[];
   topProducts: TopProduct[];
 }
@@ -94,14 +84,14 @@ export function SalesHistoryContent({
 }: SalesHistoryContentProps) {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
 
-  const totalEarnings = salesData._sum.price || 0;
+  const totalEarnings = salesData._sum.amount || 0;
   const totalSales = salesData._count.id;
 
   // Calculate this month's performance
   const currentMonth = format(new Date(), 'yyyy-MM');
   const thisMonthStats = monthlyStats.find(stat => stat.month === currentMonth);
   const thisMonthEarnings = thisMonthStats?.total_sales || 0;
-  const thisMonthSales = thisMonthStats?.order_count || 0;
+  const thisMonthSales = Number(thisMonthStats?.order_count || 0);
 
   // Calculate average order value
   const averageOrderValue = totalSales > 0 ? totalEarnings / totalSales : 0;
@@ -138,7 +128,7 @@ export function SalesHistoryContent({
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${(totalEarnings / 100).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">All time sales</p>
           </CardContent>
         </Card>
@@ -149,7 +139,7 @@ export function SalesHistoryContent({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${thisMonthEarnings.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${(Number(thisMonthEarnings) / 100).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               {thisMonthSales} sale{thisMonthSales !== 1 ? 's' : ''}
             </p>
@@ -173,7 +163,7 @@ export function SalesHistoryContent({
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${averageOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${(averageOrderValue / 100).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
         </Card>
@@ -221,22 +211,22 @@ export function SalesHistoryContent({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentOrders.map((orderItem) => (
-                      <TableRow key={orderItem.id}>
+                    {recentOrders.map((order) => (
+                      <TableRow key={order.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="relative w-10 h-10 flex-shrink-0">
                               <Image
-                                src={orderItem.product.images[0]?.url || '/placeholder.png'}
-                                alt={orderItem.product.title}
+                                src={order.product.images[0]?.imageUrl || '/placeholder.png'}
+                                alt={order.product.title}
                                 fill
                                 className="object-cover rounded-md"
                               />
                             </div>
                             <div>
-                              <div className="font-medium">{orderItem.title}</div>
+                              <div className="font-medium">{order.product.title}</div>
                               <div className="text-sm text-muted-foreground">
-                                {orderItem.condition}
+                                {order.product.status}
                               </div>
                             </div>
                           </div>
@@ -244,28 +234,28 @@ export function SalesHistoryContent({
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={orderItem.order.buyer.imageUrl} />
+                              <AvatarImage src={order.buyer.imageUrl || undefined} />
                               <AvatarFallback>
-                                {orderItem.order.buyer.firstName?.[0] || 'U'}
+                                {order.buyer.firstName?.[0] || 'U'}
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-sm">
-                              {orderItem.order.buyer.firstName} {orderItem.order.buyer.lastName}
+                              {order.buyer.firstName} {order.buyer.lastName}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          {getStatusBadge(orderItem.order.status)}
+                          {getStatusBadge(order.status)}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(orderItem.createdAt), 'MMM d, yyyy')}
+                          {format(new Date(order.createdAt), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ${(orderItem.price * orderItem.quantity).toFixed(2)}
+                          ${(order.amount / 100).toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/buying/orders/${orderItem.order.id}`}>
+                            <Link href={`/buying/orders/${order.id}`}>
                               <ExternalLink className="h-4 w-4" />
                             </Link>
                           </Button>
@@ -287,31 +277,31 @@ export function SalesHistoryContent({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentOrders.slice(0, 10).map((orderItem) => (
-                  <div key={orderItem.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                {recentOrders.slice(0, 10).map((order) => (
+                  <div key={order.id} className="flex items-center gap-4 p-4 border rounded-lg">
                     <div className="relative w-12 h-12 flex-shrink-0">
                       <Image
-                        src={orderItem.product.images[0]?.url || '/placeholder.png'}
-                        alt={orderItem.product.title}
+                        src={order.product.images[0]?.imageUrl || '/placeholder.png'}
+                        alt={order.product.title}
                         fill
                         className="object-cover rounded-md"
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium">{orderItem.title}</div>
+                      <div className="font-medium">{order.product.title}</div>
                       <div className="text-sm text-muted-foreground">
-                        Order #{orderItem.order.id.slice(-8)}
+                        Order #{order.id.slice(-8)}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="font-medium">
-                        ${(orderItem.price * orderItem.quantity).toFixed(2)}
+                        ${(order.amount / 100).toFixed(2)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {format(new Date(orderItem.createdAt), 'MMM d')}
+                        {format(new Date(order.createdAt), 'MMM d')}
                       </div>
                     </div>
-                    {getStatusBadge(orderItem.order.status)}
+                    {getStatusBadge(order.status)}
                   </div>
                 ))}
               </div>
@@ -345,7 +335,7 @@ export function SalesHistoryContent({
                         <>
                           <div className="relative w-12 h-12 flex-shrink-0">
                             <Image
-                              src={item.product.images[0]?.url || '/placeholder.png'}
+                              src={item.product.images[0]?.imageUrl || '/placeholder.png'}
                               alt={item.product.title}
                               fill
                               className="object-cover rounded-md"
@@ -359,7 +349,7 @@ export function SalesHistoryContent({
                           </div>
                           <div className="text-right">
                             <div className="font-medium">
-                              ${(item._sum.price || 0).toFixed(2)}
+                              ${((item._sum.amount || 0) / 100).toFixed(2)}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               Total earned
@@ -402,18 +392,20 @@ export function SalesHistoryContent({
                   </TableHeader>
                   <TableBody>
                     {monthlyStats.map((stat) => {
-                      const avgOrder = stat.order_count > 0 ? stat.total_sales / stat.order_count : 0;
+                      const orderCount = Number(stat.order_count);
+                      const totalSales = Number(stat.total_sales);
+                      const avgOrder = orderCount > 0 ? totalSales / orderCount : 0;
                       return (
                         <TableRow key={stat.month}>
                           <TableCell>
                             {format(new Date(stat.month + '-01'), 'MMMM yyyy')}
                           </TableCell>
-                          <TableCell>{stat.order_count}</TableCell>
+                          <TableCell>{orderCount}</TableCell>
                           <TableCell className="text-right font-medium">
-                            ${stat.total_sales.toFixed(2)}
+                            ${(totalSales / 100).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right">
-                            ${avgOrder.toFixed(2)}
+                            ${(avgOrder / 100).toFixed(2)}
                           </TableCell>
                         </TableRow>
                       );

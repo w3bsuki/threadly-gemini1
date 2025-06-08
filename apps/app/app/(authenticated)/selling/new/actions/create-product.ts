@@ -120,7 +120,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
           create: sanitizedData.images.map((url, index) => ({
             imageUrl: url,
             alt: `${sanitizedData.title} - Image ${index + 1}`,
-            order: index,
+            displayOrder: index,
           })),
         },
       },

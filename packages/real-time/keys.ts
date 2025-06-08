@@ -4,13 +4,13 @@ import { z } from 'zod';
 export const keys = () =>
   createEnv({
     server: {
-      PUSHER_APP_ID: z.string().min(1),
-      PUSHER_SECRET: z.string().min(1),
+      PUSHER_APP_ID: z.string().min(1).optional(),
+      PUSHER_SECRET: z.string().min(1).optional(),
       RESEND_API_KEY: z.string().min(1).optional(),
     },
     client: {
-      NEXT_PUBLIC_PUSHER_KEY: z.string().min(1),
-      NEXT_PUBLIC_PUSHER_CLUSTER: z.string().min(1),
+      NEXT_PUBLIC_PUSHER_KEY: z.string().min(1).optional(),
+      NEXT_PUBLIC_PUSHER_CLUSTER: z.string().min(1).optional(),
     },
     runtimeEnv: {
       PUSHER_APP_ID: process.env.PUSHER_APP_ID,

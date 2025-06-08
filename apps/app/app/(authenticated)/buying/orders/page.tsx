@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { Package, Eye, ShoppingCart } from 'lucide-react';
+import { Package, Eye, ShoppingCart, Star } from 'lucide-react';
 import { Header } from '../../components/header';
 import Image from 'next/image';
 
@@ -25,10 +25,19 @@ const MyOrdersPage = async () => {
     redirect('/sign-in');
   }
 
+  // Get database user
+  const dbUser = await database.user.findUnique({
+    where: { clerkId: user.id }
+  });
+
+  if (!dbUser) {
+    redirect('/browse');
+  }
+
   // Fetch user's orders
   const orders = await database.order.findMany({
     where: {
-      buyerId: user.id,
+      buyerId: dbUser.id,
     },
     include: {
       product: {
@@ -43,6 +52,7 @@ const MyOrdersPage = async () => {
       },
       seller: true,
       payment: true,
+      review: true, // Check if review exists
     },
     orderBy: {
       createdAt: 'desc',
@@ -156,7 +166,7 @@ const MyOrdersPage = async () => {
                     <div className="relative w-16 h-16 flex-shrink-0">
                       {order.product?.images[0] ? (
                         <Image
-                          src={order.product.images[0].url}
+                          src={order.product.images[0].imageUrl}
                           alt={order.product.title}
                           fill
                           className="object-cover rounded-md"
@@ -175,7 +185,9 @@ const MyOrdersPage = async () => {
                       </p>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-sm text-muted-foreground">
-                          Sold by: {order.seller.displayName || order.seller.email}
+                          Sold by: {order.seller.firstName && order.seller.lastName 
+                            ? `${order.seller.firstName} ${order.seller.lastName}` 
+                            : order.seller.email}
                         </span>
                         <span className="font-medium">
                           ${order.amount.toFixed(2)}
@@ -214,9 +226,19 @@ const MyOrdersPage = async () => {
                       </Link>
                     </Button>
                     
-                    {order.status === 'DELIVERED' && (
-                      <Button variant="outline" size="sm">
-                        Leave Review
+                    {order.status === 'DELIVERED' && !order.review && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/reviews">
+                          <Star className="h-3 w-3 mr-1" />
+                          Leave Review
+                        </Link>
+                      </Button>
+                    )}
+                    
+                    {order.status === 'DELIVERED' && order.review && (
+                      <Button variant="ghost" size="sm" disabled>
+                        <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                        Reviewed
                       </Button>
                     )}
                     

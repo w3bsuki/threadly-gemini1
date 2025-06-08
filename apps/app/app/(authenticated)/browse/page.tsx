@@ -89,7 +89,7 @@ const BrowsePage = async ({ searchParams }: BrowsePageProps) => {
       where,
       include: {
         images: {
-          orderBy: { order: 'asc' },
+          orderBy: { displayOrder: 'asc' },
           take: 1,
         },
         category: true,

@@ -18,7 +18,10 @@
     "boundaries": "turbo boundaries",
     "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker",
     "bump-ui": "npx shadcn@latest add --all --overwrite -c packages/design-system",
-    "migrate": "cd packages/database && npx prisma format && npx prisma generate && npx prisma db push",
+    "migrate": "cd packages/database && npx prisma format && npx prisma generate && npx prisma db push --accept-data-loss",
+    "seed": "tsx scripts/seed-all.ts",
+    "seed:categories": "tsx scripts/seed-categories.ts",
+    "seed:products": "tsx scripts/seed-products.ts",
     "clean": "git clean -xdf node_modules"
   },
   "devDependencies": {
@@ -27,7 +30,9 @@
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.5.3",
     "@types/node": "^22.15.21",
+    "dotenv": "^16.5.0",
     "tsup": "^8.5.0",
+    "tsx": "^4.19.4",
     "turbo": "^2.5.3",
     "typescript": "^5.8.3",
     "ultracite": "^4.2.5",

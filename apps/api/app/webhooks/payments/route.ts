@@ -74,9 +74,28 @@ const handlePaymentIntentSucceeded = async (
 
     // Extract order details from metadata
     const { buyerId, productId, sellerId, orderId } = paymentIntent.metadata;
+    
+    if (!buyerId) {
+      log.error('No buyerId in payment intent metadata', { paymentIntentId: paymentIntent.id });
+      return;
+    }
 
     if (!orderId) {
       log.error('No orderId in payment intent metadata', { paymentIntentId: paymentIntent.id });
+      return;
+    }
+
+    // Get database user from Clerk ID
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: buyerId },
+      select: { id: true }
+    });
+
+    if (!dbUser) {
+      log.error('Database user not found for Clerk ID', { 
+        clerkId: buyerId, 
+        paymentIntentId: paymentIntent.id 
+      });
       return;
     }
 
@@ -114,12 +133,13 @@ const handlePaymentIntentSucceeded = async (
     // Track in analytics
     analytics.capture({
       event: 'Order Paid',
-      distinctId: buyerId,
+      distinctId: buyerId, // Use Clerk ID for analytics consistency
       properties: {
         orderId: result.order.id,
         amount: paymentIntent.amount / 100,
         productId,
         sellerId,
+        databaseUserId: dbUser.id,
       },
     });
 

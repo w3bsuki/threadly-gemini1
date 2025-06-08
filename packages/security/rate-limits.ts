@@ -35,6 +35,7 @@ const getArcjet = () => {
   try {
     return arcjet({
       key: arcjetKey,
+      rules: [], // Add rate limit rules as needed
       characteristics: ['ip.src'],
     });
   } catch (error) {

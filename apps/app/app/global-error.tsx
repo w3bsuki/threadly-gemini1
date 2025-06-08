@@ -1,7 +1,7 @@
 'use client';
 
 import { fonts } from '@repo/design-system/lib/fonts';
-import { ErrorPage } from '@repo/error-handling';
+import { ErrorPage } from '@repo/error-handling/error-pages';
 import type NextError from 'next/error';
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';

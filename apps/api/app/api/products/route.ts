@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
           },
           images: {
             orderBy: {
-              order: 'asc',
+              displayOrder: 'asc',
             },
           },
           _count: {
@@ -352,7 +352,7 @@ export const POST = withValidation(
             ? {
                 create: sanitizedData.images.map((url, index) => ({
                   imageUrl: url,
-                  order: index,
+                  displayOrder: index,
                 })),
               }
             : undefined,
@@ -375,7 +375,7 @@ export const POST = withValidation(
           },
           images: {
             orderBy: {
-              order: 'asc',
+              displayOrder: 'asc',
             },
           },
         },

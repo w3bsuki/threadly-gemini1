@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/categories - List all categories with hierarchy
 export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching categories...');
-    console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+    // Fetch categories with hierarchy
     const categories = await database.category.findMany({
       orderBy: [
         { parentId: 'asc' }, // Parent categories first
@@ -49,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    // Log error without exposing sensitive details
     return NextResponse.json(
       {
         success: false,

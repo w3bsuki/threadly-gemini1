@@ -64,6 +64,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -138,6 +139,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
         body: JSON.stringify({
           amount: total,
           currency: 'usd',
+          orderId: orderResult.order.id, // Pass the created order ID
           orderItems: items.map(item => ({
             productId: item.productId,
             title: item.title,
@@ -183,17 +185,18 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
       });
 
       if (paymentError) {
-        console.error('Payment failed:', paymentError);
+        // TODO: Add proper error tracking service
+        setError('Payment failed. Please try again.');
         return;
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        // For successful payment, redirect will happen automatically
-        // The success page will handle order creation
-        console.log('Payment succeeded, redirecting to success page...');
+        // Payment succeeded, redirect to success page
+        router.push('/buying/checkout/success');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
+      // TODO: Add proper error tracking
+      setError('An unexpected error occurred during checkout.');
     } finally {
       setIsProcessing(false);
     }
@@ -222,6 +225,15 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
       <div className="lg:col-span-2">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Error Display */}
+            {error && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <p className="text-sm text-red-800">{error}</p>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* Contact Information */}
             <Card>
               <CardHeader>

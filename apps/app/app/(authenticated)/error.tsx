@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { ErrorPage } from '@repo/error-handling';
+import { ErrorPage } from '@repo/error-handling/error-pages';
 import * as Sentry from '@sentry/nextjs';
 
 export default function Error({
