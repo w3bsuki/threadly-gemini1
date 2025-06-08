@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       },
       include: {
         images: {
-          orderBy: { order: 'asc' },
+          orderBy: { displayOrder: 'asc' },
           take: 1,
         },
         seller: {

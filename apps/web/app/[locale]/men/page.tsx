@@ -12,7 +12,7 @@ export default function MenPage() {
       />
       
       {/* Product Grid with Men's Filter */}
-      <ProductGrid defaultCategory="men" />
+      <ProductGrid category="men" />
     </div>
   );
 } 

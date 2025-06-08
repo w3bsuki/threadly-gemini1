@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { database } from '@repo/database';
+import { getCacheService } from '@repo/cache';
 
 const colorSchemes = [
   'from-pink-500 to-rose-500',
@@ -14,9 +15,15 @@ const colorSchemes = [
 ];
 
 export const FeaturedCategories = async () => {
+  const cache = getCacheService();
+  
   try {
-    // Fetch categories with product counts and sample images
-    const categories = await database.category.findMany({
+    // Use cache-aside pattern for featured categories
+    const transformedCategories = await cache.remember(
+      'featured-categories',
+      async () => {
+        // Fetch categories with product counts and sample images
+        const categories = await database.category.findMany({
       where: {
         parentId: null, // Only top-level categories
       },
@@ -36,7 +43,7 @@ export const FeaturedCategories = async () => {
           },
           include: {
             images: {
-              orderBy: { order: 'asc' },
+              orderBy: { displayOrder: 'asc' },
               take: 1,
             },
           },
@@ -49,15 +56,19 @@ export const FeaturedCategories = async () => {
       take: 6, // Limit to 6 featured categories
     });
 
-    const transformedCategories = categories.map((category, index) => ({
-      id: category.id,
-      name: category.name,
-      description: category.description || `Discover ${category.name.toLowerCase()}`,
-      image: category.products[0]?.images[0]?.imageUrl || null,
-      href: `/${category.slug}`,
-      color: colorSchemes[index % colorSchemes.length],
-      count: `${category._count.products.toLocaleString()} items`
-    }));
+        return categories.map((category, index) => ({
+          id: category.id,
+          name: category.name,
+          description: `Discover ${category.name.toLowerCase()}`,
+          image: category.products[0]?.images[0]?.imageUrl || null,
+          href: `/${category.slug}`,
+          color: colorSchemes[index % colorSchemes.length],
+          count: `${category._count.products.toLocaleString()} items`
+        }));
+      },
+      600, // Cache for 10 minutes
+      ['categories'] // Cache tags
+    );
 
     if (transformedCategories.length === 0) {
       return (

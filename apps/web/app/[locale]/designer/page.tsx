@@ -1,5 +1,3 @@
-'use client';
-
 import { ProductGrid } from '../(home)/components/product-grid';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
@@ -228,7 +226,7 @@ export default function DesignerPage() {
           </div>
           
           {/* Use existing ProductGrid with designer filter */}
-          <ProductGrid defaultCategory="designer" />
+          <ProductGrid category="designer" />
         </div>
       </div>
     </div>

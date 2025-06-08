@@ -15,19 +15,19 @@ datasource db {
 
 // User model extended for marketplace functionality
 model User {
-  id              String   @id @default(cuid())
-  clerkId         String   @unique
-  email           String   @unique
-  firstName       String?
-  lastName        String?
-  imageUrl        String?
-  bio             String?
-  location        String?
-  joinedAt        DateTime @default(now())
-  verified        Boolean  @default(false)
-  totalSales      Int      @default(0)
-  totalPurchases  Int      @default(0)
-  averageRating   Float?
+  id                      String   @id @default(cuid())
+  clerkId                 String   @unique
+  email                   String   @unique
+  firstName               String?
+  lastName                String?
+  imageUrl                String?
+  bio                     String?
+  location                String?
+  joinedAt                DateTime @default(now())
+  verified                Boolean  @default(false)
+  totalSales              Int      @default(0)
+  totalPurchases          Int      @default(0)
+  averageRating           Float?
   stripeAccountId         String?  @unique
   notificationPreferences Json?
 
@@ -276,14 +276,14 @@ model Follow {
 
 // Notifications
 model Notification {
-  id       String            @id @default(cuid())
-  userId   String
-  title    String
-  message  String
-  type     NotificationType
-  metadata Json              @default("{}")
-  read     Boolean           @default(false)
-  readAt   DateTime?
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  metadata  Json             @default("{}")
+  read      Boolean          @default(false)
+  readAt    DateTime?
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -12,7 +12,7 @@ export default function UnisexPage() {
       />
       
       {/* Product Grid with Unisex Filter */}
-      <ProductGrid defaultCategory="unisex" />
+      <ProductGrid category="unisex" />
     </div>
   );
 } 

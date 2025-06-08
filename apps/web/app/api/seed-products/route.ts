@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       create: {
         clerkId: "test-seller-clerk-id",
         email: "test-seller@example.com",
-        name: "Sarah Johnson",
+        firstName: "Sarah",
+        lastName: "Johnson",
         imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b1a5?w=150&h=150&fit=crop&crop=face",
       },
     });

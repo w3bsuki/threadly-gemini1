@@ -1,11 +1,24 @@
 import { getRedisCache } from './redis-cache';
+import { getMemoryCache } from './memory-cache';
 import { CACHE_KEYS, CACHE_TTL, CACHE_TAGS, type CacheConfig } from './types';
 
 export class MarketplaceCacheService {
-  private cache = getRedisCache();
+  private cache: any;
+  private useMemoryCache: boolean = false;
 
-  constructor(config: CacheConfig) {
-    getRedisCache(config);
+  constructor(config?: CacheConfig) {
+    try {
+      if (config?.url && config?.token) {
+        this.cache = getRedisCache(config);
+      } else {
+        throw new Error('Redis config missing');
+      }
+    } catch (error) {
+      // Fallback to memory cache
+      console.warn('Redis unavailable, using in-memory cache');
+      this.cache = getMemoryCache();
+      this.useMemoryCache = true;
+    }
   }
 
   // Product caching
@@ -262,12 +275,9 @@ export class MarketplaceCacheService {
 let marketplaceCacheService: MarketplaceCacheService | null = null;
 
 export function getCacheService(config?: CacheConfig): MarketplaceCacheService {
-  if (!marketplaceCacheService && config) {
-    marketplaceCacheService = new MarketplaceCacheService(config);
-  }
-  
   if (!marketplaceCacheService) {
-    throw new Error('MarketplaceCacheService not initialized. Call with config first.');
+    // Always create a cache service, even without config (will use memory cache)
+    marketplaceCacheService = new MarketplaceCacheService(config);
   }
   
   return marketplaceCacheService;

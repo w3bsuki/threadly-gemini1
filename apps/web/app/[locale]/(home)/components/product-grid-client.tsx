@@ -2,11 +2,12 @@
 
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { Heart, Filter, Grid, List, ChevronDown, Crown, X } from 'lucide-react';
+import { Heart, Filter, Grid, List, ChevronDown, Crown, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo, useCallback } from 'react';
 import { ProductPlaceholder } from '../../components/product-placeholder';
+import { ProductQuickView } from '../../components/product-quick-view';
 
 // TypeScript interfaces
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'popular';
@@ -69,6 +70,7 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsLiked(!isLiked);
     // TODO: Save to localStorage or user favorites
   };
@@ -88,56 +90,70 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   return (
     <div className="group relative bg-white">
-      <Link href={`/product/${product.id}`} className="block">
-        <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 relative">
-          {product.images.length > 0 && product.images[0] && 
-           !product.images[0].includes('placehold.co') && 
-           !product.images[0].includes('picsum.photos') ? (
-            <Image
-              src={product.images[0]}
-              alt={product.title}
-              fill
-              className="object-cover object-center group-hover:opacity-75 transition-opacity"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            />
-          ) : (
-            <ProductPlaceholder className="h-full w-full object-cover object-center group-hover:opacity-75 transition-opacity" />
-          )}
-          
-          {/* Heart button */}
-          <button 
-            onClick={handleToggleLike}
-            className={`absolute top-2 right-2 p-2 rounded-full transition-all ${
-              isLiked ? 'bg-red-500 text-white' : 'bg-white/80 text-gray-600 hover:bg-white'
-            } backdrop-blur-sm`}
-            aria-label="Add to favourites"
-          >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-          </button>
+      {/* Main card content - opens quick view dialog */}
+      <ProductQuickView 
+        product={product}
+        trigger={
+          <div className="cursor-pointer">
+            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 relative">
+              {product.images.length > 0 && product.images[0] && 
+               !product.images[0].includes('placehold.co') && 
+               !product.images[0].includes('picsum.photos') ? (
+                <Image
+                  src={product.images[0]}
+                  alt={product.title}
+                  fill
+                  className="object-cover object-center group-hover:opacity-75 transition-opacity"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                />
+              ) : (
+                <ProductPlaceholder className="h-full w-full object-cover object-center group-hover:opacity-75 transition-opacity" />
+              )}
+              
+              {/* Heart button */}
+              <button 
+                onClick={handleToggleLike}
+                className={`absolute top-2 right-2 p-2 rounded-full transition-all z-10 ${
+                  isLiked ? 'bg-red-500 text-white' : 'bg-white/80 text-gray-600 hover:bg-white'
+                } backdrop-blur-sm`}
+                aria-label="Add to favourites"
+              >
+                <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+              </button>
 
-          {/* Condition badge */}
-          <div className="absolute top-2 left-2">
-            <Badge variant="secondary" className="text-xs bg-white/90 text-gray-900">
-              {product.condition}
-            </Badge>
-          </div>
-        </div>
+              {/* Quick View indicator - Shows on hover */}
+              <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="w-full bg-black/80 text-white backdrop-blur-sm text-xs py-2 px-3 rounded flex items-center justify-center">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Quick View
+                </div>
+              </div>
 
-        <div className="mt-3 space-y-1">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">{product.brand}</p>
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{product.title}</h3>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-lg font-semibold text-gray-900">${product.price.toFixed(2)}</span>
-            {product.originalPrice && (
-              <span className="text-sm text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-            )}
+              {/* Condition badge */}
+              <div className="absolute top-2 left-2">
+                <Badge variant="secondary" className="text-xs bg-white/90 text-gray-900">
+                  {product.condition}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">{product.brand}</p>
+              <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{product.title}</h3>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-lg font-semibold text-gray-900">${product.price.toFixed(2)}</span>
+                {product.originalPrice && (
+                  <span className="text-sm text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                )}
+              </div>
+              
+              <p className="text-xs text-gray-500">Size {product.size}</p>
+              <p className="text-xs text-gray-400">{product.seller.location} • {timeAgo()}</p>
+            </div>
           </div>
-          
-          <p className="text-xs text-gray-500">Size {product.size}</p>
-          <p className="text-xs text-gray-400">{product.seller.location} • {timeAgo()}</p>
-        </div>
-      </Link>
+        }
+      />
     </div>
   );
 };

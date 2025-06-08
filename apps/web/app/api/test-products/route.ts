@@ -9,7 +9,7 @@ export async function GET() {
       },
       include: {
         images: {
-          orderBy: { order: 'asc' },
+          orderBy: { displayOrder: 'asc' },
           take: 1,
         },
         category: {

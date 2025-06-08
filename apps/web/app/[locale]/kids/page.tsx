@@ -12,7 +12,7 @@ export default function KidsPage() {
       />
       
       {/* Product Grid with Kids' Filter */}
-      <ProductGrid defaultCategory="kids" />
+      <ProductGrid category="kids" />
     </div>
   );
 } 

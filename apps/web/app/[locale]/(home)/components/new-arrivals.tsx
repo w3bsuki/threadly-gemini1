@@ -3,6 +3,7 @@ import { Clock, Heart, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { database } from '@repo/database';
+import { getCacheService } from '@repo/cache';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -27,15 +28,21 @@ const formatTimeAgo = (date: Date) => {
 };
 
 export const NewArrivals = async () => {
+  const cache = getCacheService();
+  
   try {
-    // Fetch recent products
-    const newArrivals = await database.product.findMany({
+    // Use cache-aside pattern for new arrivals
+    const transformedArrivals = await cache.remember(
+      'new-arrivals',
+      async () => {
+        // Fetch recent products
+        const newArrivals = await database.product.findMany({
       where: {
         status: 'AVAILABLE',
       },
       include: {
         images: {
-          orderBy: { order: 'asc' },
+          orderBy: { displayOrder: 'asc' },
           take: 1,
         },
         seller: {
@@ -52,18 +59,22 @@ export const NewArrivals = async () => {
       take: 4,
     });
 
-    const transformedArrivals = newArrivals.map((product) => ({
-      id: product.id,
-      title: product.title,
-      brand: product.brand || 'Unknown',
-      price: product.price,
-      condition: product.condition,
-      size: product.size || 'One Size',
-      images: product.images.map(img => img.imageUrl).filter(Boolean),
-      seller: product.seller ? `${product.seller.firstName || ''} ${product.seller.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous',
-      timeAgo: formatTimeAgo(product.createdAt),
-      isNew: (new Date().getTime() - product.createdAt.getTime()) < (24 * 60 * 60 * 1000), // Less than 24 hours old
-    }));
+        return newArrivals.map((product) => ({
+          id: product.id,
+          title: product.title,
+          brand: product.brand || 'Unknown',
+          price: product.price,
+          condition: product.condition,
+          size: product.size || 'One Size',
+          images: product.images.map(img => img.imageUrl).filter(Boolean),
+          seller: product.seller ? `${product.seller.firstName || ''} ${product.seller.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous',
+          timeAgo: formatTimeAgo(product.createdAt),
+          isNew: (new Date().getTime() - product.createdAt.getTime()) < (24 * 60 * 60 * 1000), // Less than 24 hours old
+        }));
+      },
+      300, // Cache for 5 minutes
+      ['products'] // Cache tags
+    );
 
     if (transformedArrivals.length === 0) {
       return (

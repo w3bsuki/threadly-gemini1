@@ -1,5 +1,20 @@
 import { database } from '@repo/database';
+import { getCacheService } from '@repo/cache';
 import { ProductGridClient } from './product-grid-client';
+
+// Get time ago string
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays === 1) return '1 day ago';
+  return `${diffDays} days ago`;
+}
 
 interface ProductGridServerProps {
   defaultCategory?: string;
@@ -10,18 +25,25 @@ export async function ProductGridServer({
   defaultCategory, 
   limit = 20 
 }: ProductGridServerProps) {
+  const cache = getCacheService();
+  
   try {
-    // Build where clause
-    const where: any = {
-      status: 'AVAILABLE',
-    };
+    // Try to get cached homepage data first
+    const cacheKey = `product-grid:${defaultCategory || 'all'}:${limit}`;
+    const cachedData = await cache.remember(
+      cacheKey,
+      async () => {
+        // Build where clause
+        const where: any = {
+          status: 'AVAILABLE',
+        };
 
-    // Fetch products with all necessary relations
-    const products = await database.product.findMany({
+        // Fetch products with all necessary relations
+        const products = await database.product.findMany({
       where,
       include: {
         images: {
-          orderBy: { order: 'asc' },
+          orderBy: { displayOrder: 'asc' },
           take: 1,
         },
         category: {
@@ -51,32 +73,32 @@ export async function ProductGridServer({
       take: limit,
     });
 
-    // Fetch categories for filters
-    const categories = await database.category.findMany({
-      where: {
-        parent: {
-          isNot: null,
-        },
-      },
-      include: {
-        parent: true,
-        _count: {
-          select: {
-            products: {
-              where: {
-                status: 'AVAILABLE',
+        // Fetch categories for filters
+        const categories = await database.category.findMany({
+          where: {
+            parent: {
+              isNot: null,
+            },
+          },
+          include: {
+            parent: true,
+            _count: {
+              select: {
+                products: {
+                  where: {
+                    status: 'AVAILABLE',
+                  },
+                },
               },
             },
           },
-        },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
+          orderBy: {
+            name: 'asc',
+          },
+        });
 
-    // Transform products to match the expected format
-    const transformedProducts = products.map((product) => ({
+        // Transform products to match the expected format
+        const transformedProducts = products.map((product) => ({
       id: product.id,
       title: product.title,
       brand: product.brand || 'Unknown',
@@ -86,7 +108,7 @@ export async function ProductGridServer({
       condition: product.condition,
       categoryId: product.categoryId,
       categoryName: product.category?.name || 'Unknown',
-      parentCategoryName: product.category?.parent?.name,
+      parentCategoryName: product.category?.parent?.name || 'Unisex',
       images: product.images.map(img => img.imageUrl),
       seller: product.seller ? {
         id: product.seller.id,
@@ -101,12 +123,17 @@ export async function ProductGridServer({
       },
       favoritesCount: product._count.favorites,
       createdAt: product.createdAt,
-    }));
+        }));
+
+        return { transformedProducts, categories };
+      },
+      300 // Cache for 5 minutes
+    );
 
     return (
       <ProductGridClient 
-        initialProducts={transformedProducts}
-        categories={categories}
+        initialProducts={cachedData.transformedProducts}
+        categories={cachedData.categories}
         defaultCategory={defaultCategory}
       />
     );

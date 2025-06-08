@@ -2,7 +2,7 @@
 
 import { env } from '@/env';
 import { Button } from '@repo/design-system/components/ui/button';
-import { Search, Heart, Menu, X, User, ShoppingBag, Crown, ChevronDown } from 'lucide-react';
+import { Search, Heart, Menu, X, User, ShoppingBag, Crown, ChevronDown, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -244,43 +244,60 @@ export const Header = ({ dictionary }: HeaderProps) => {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center space-x-4">
-              {/* Desktop Actions */}
-              <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              {/* Mobile Actions - Simplified */}
+              <div className="flex items-center space-x-2 md:hidden">
                 <CartDropdown dictionary={dictionary} />
                 
-                <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black">
-                  <Heart className="h-5 w-5 mr-1" />
-                  {dictionary.web?.marketplace?.favourites || "Favourites"}
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setMenuOpen(!isMenuOpen)}
+                >
+                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              </div>
+
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center space-x-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-gray-700 hover:text-black hover:bg-gray-50 font-medium px-4"
+                  asChild
+                >
+                  <Link href="/products">
+                    <ShoppingBag className="h-4 w-4 mr-2" />
+                    Browse
+                  </Link>
+                </Button>
+                
+                <CartDropdown dictionary={dictionary} />
+                
+                <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black" asChild>
+                  <Link href="/favorites">
+                    <Heart className="h-4 w-4 mr-1" />
+                    Saved
+                  </Link>
                 </Button>
                 
                 <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black" asChild>
                   <Link href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`}>
-                    <User className="h-5 w-5 mr-1" />
-                    {dictionary.web.header.signIn}
+                    <User className="h-4 w-4 mr-1" />
+                    Sign In
                   </Link>
                 </Button>
                 
                 <Button 
                   size="sm" 
-                  className="bg-black text-white hover:bg-gray-800 font-medium"
+                  className="bg-black text-white hover:bg-gray-800 font-medium px-4"
                   asChild
                 >
-                  <Link href="/sell">
-                    {dictionary.web?.marketplace?.sellNow || "Sell now"}
+                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/selling/new`}>
+                    Sell Now
                   </Link>
                 </Button>
               </div>
-
-              {/* Mobile Menu Button */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="md:hidden"
-                onClick={() => setMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
             </div>
           </div>
 
@@ -407,30 +424,51 @@ export const Header = ({ dictionary }: HeaderProps) => {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 bg-white">
             <div className="px-4 py-4 space-y-4">
-              {/* Mobile Actions */}
+              {/* Primary Actions - Buy/Sell */}
+              <div className="space-y-3 pb-4 border-b border-gray-100">
+                <Button 
+                  className="w-full bg-black text-white hover:bg-gray-800 text-lg py-3" 
+                  asChild
+                >
+                  <Link href="/products">
+                    <ShoppingBag className="h-5 w-5 mr-2" />
+                    Browse Items
+                  </Link>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full border-black text-black hover:bg-gray-50 text-lg py-3" 
+                  asChild
+                >
+                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/selling/new`}>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Start Selling
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Secondary Actions */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between px-3">
-                  <span className="text-gray-700">Cart</span>
+                <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
+                  <Link href="/favorites">
+                    <Heart className="h-5 w-5 mr-3" />
+                    Saved Items
+                  </Link>
+                </Button>
+                
+                <div className="flex items-center justify-between px-3 py-2">
+                  <span className="text-gray-700 flex items-center">
+                    <ShoppingBag className="h-5 w-5 mr-3" />
+                    My Cart
+                  </span>
                   <CartDropdown dictionary={dictionary} />
                 </div>
                 
                 <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
-                  <Link href="/favourites">
-                    <Heart className="h-5 w-5 mr-2" />
-                    Favourites
-                  </Link>
-                </Button>
-                
-                <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
                   <Link href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`}>
-                    <User className="h-5 w-5 mr-2" />
-                    Sign in
-                  </Link>
-                </Button>
-                
-                <Button className="w-full bg-black text-white hover:bg-gray-800" asChild>
-                  <Link href="/sell">
-                    Sell now
+                    <User className="h-5 w-5 mr-3" />
+                    Sign In / Join
                   </Link>
                 </Button>
               </div>

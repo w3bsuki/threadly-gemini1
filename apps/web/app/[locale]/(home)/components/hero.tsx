@@ -1,14 +1,19 @@
+'use client';
+
 import { Button } from '@repo/design-system/components/ui/button';
 import type { Dictionary } from '@repo/internationalization';
 import { Search, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { SignInCTA } from '../../../components/sign-in-cta';
+import { env } from '@/env';
 
 type HeroProps = {
   dictionary: Dictionary;
 };
 
-export const Hero = async ({ dictionary }: HeroProps) => (
-  <div className="w-full bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
+export const Hero = ({ dictionary }: HeroProps) => {
+  return (
+    <div className="w-full bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
     <div className="container mx-auto">
       <div className="flex flex-col items-center justify-center gap-8 py-20 lg:py-32">
         {/* Main Heading */}
@@ -33,22 +38,24 @@ export const Hero = async ({ dictionary }: HeroProps) => (
         </div>
 
         {/* Search Bar */}
-        <div className="w-full max-w-2xl">
+        <form action="/search" method="get" className="w-full max-w-2xl">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
+              name="q"
               placeholder="Search for brands, styles, or categories..."
               className="w-full rounded-full border border-gray-200 bg-white/80 py-4 pl-12 pr-32 text-lg backdrop-blur-sm transition-all focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/20"
             />
             <Button 
+              type="submit"
               size="lg" 
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-white hover:from-purple-700 hover:to-pink-700"
             >
               Search
             </Button>
           </div>
-        </div>
+        </form>
 
         {/* Quick Stats */}
         <div className="flex flex-wrap items-center justify-center gap-8 text-center">
@@ -92,12 +99,15 @@ export const Hero = async ({ dictionary }: HeroProps) => (
             </Link>
           </Button>
           
-          <Button size="lg" variant="outline" className="gap-3 border-purple-200 px-8 py-6 text-lg hover:bg-purple-50" asChild>
-            <Link href="/auth/register">
-              <Sparkles className="h-5 w-5" />
-              Sell Your Items
-            </Link>
-          </Button>
+          <SignInCTA
+            size="lg"
+            variant="outline"
+            className="gap-3 border-purple-200 px-8 py-6 text-lg hover:bg-purple-50"
+            redirectPath="/selling/new"
+          >
+            <Sparkles className="h-5 w-5" />
+            Sell Your Items
+          </SignInCTA>
         </div>
 
         {/* Popular Searches */}
@@ -115,5 +125,6 @@ export const Hero = async ({ dictionary }: HeroProps) => (
         </div>
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
+};

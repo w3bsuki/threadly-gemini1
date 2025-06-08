@@ -15,8 +15,8 @@ const formatCurrency = (amount: number) => {
 export const TrendingProducts = async () => {
   try {
     const cacheService = getCacheService({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      url: process.env.UPSTASH_REDIS_REST_URL || '',
+      token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
       defaultTTL: 1800, // 30 minutes
     });
 

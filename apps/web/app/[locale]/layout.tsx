@@ -7,6 +7,7 @@ import { getDictionary } from '@repo/internationalization';
 import type { ReactNode } from 'react';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
+import { BottomNavMobile } from './components/bottom-nav-mobile';
 
 type RootLayoutProperties = {
   readonly children: ReactNode;
@@ -30,6 +31,7 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
           <Header dictionary={dictionary} />
           {children}
           <Footer />
+          <BottomNavMobile cartCount={0} savedCount={0} />
         </DesignSystemProvider>
         <Toolbar />
       </body>

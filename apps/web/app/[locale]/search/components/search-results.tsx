@@ -161,7 +161,7 @@ export function SearchResults({ query }: SearchResultsProps) {
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
-                  <ProductPlaceholder className="h-full w-full" />
+                  <ProductPlaceholder className="h-full w-full" seed={product.id} />
                 )}
                 
                 {/* Heart Button */}
