@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import React from 'react';
 
 // Mock user data for testing
 export const mockClerkUser = {
@@ -49,18 +50,19 @@ export function mockClerkAuth(isSignedIn = true, user = mockClerkUser) {
       auth: () => Promise.resolve(mockAuth),
       currentUser: () => Promise.resolve(mockAuth.user),
       ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
-      SignInButton: ({ children }: { children: React.ReactNode }) => (
-        <button data-testid="sign-in-button">{children}</button>
-      ),
-      SignUpButton: ({ children }: { children: React.ReactNode }) => (
-        <button data-testid="sign-up-button">{children}</button>
-      ),
-      SignOutButton: ({ children }: { children: React.ReactNode }) => (
-        <button data-testid="sign-out-button" onClick={mockAuth.signOut}>
-          {children}
-        </button>
-      ),
-      UserButton: () => <div data-testid="user-button">User Menu</div>,
+      SignInButton: ({ children }: { children: React.ReactNode }) => {
+        return React.createElement('button', { 'data-testid': 'sign-in-button' }, children);
+      },
+      SignUpButton: ({ children }: { children: React.ReactNode }) => {
+        return React.createElement('button', { 'data-testid': 'sign-up-button' }, children);
+      },
+      SignOutButton: ({ children }: { children: React.ReactNode }) => {
+        return React.createElement('button', { 
+          'data-testid': 'sign-out-button',
+          onClick: mockAuth.signOut 
+        }, children);
+      },
+      UserButton: () => React.createElement('div', { 'data-testid': 'user-button' }, 'User Menu'),
     };
   });
 

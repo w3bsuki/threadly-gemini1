@@ -13,14 +13,14 @@ export class NotificationService {
   private pusherServer = getPusherServer();
 
   // Create and send in-app notification
-  async notify(userId: string, notification: Omit<NotificationEvent['data'], 'id' | 'createdAt' | 'read'>) {
+  async notify(userId: string, notification: Omit<NotificationEvent['data'], 'id' | 'userId' | 'createdAt' | 'read'>) {
     // Save to database
     const savedNotification = await database.notification.create({
       data: {
         userId,
         title: notification.title,
         message: notification.message,
-        type: notification.type,
+        type: notification.type.toUpperCase() as any,
         metadata: notification.metadata || {},
         read: false,
       },
@@ -49,7 +49,7 @@ export class NotificationService {
     });
 
     // Default preferences if not set
-    return user?.notificationPreferences as NotificationPreferences || {
+    return (user?.notificationPreferences as unknown as NotificationPreferences) || {
       email: {
         orderUpdates: true,
         newMessages: true,
@@ -169,11 +169,7 @@ export class NotificationService {
     const order = await database.order.findUnique({
       where: { id: payment.orderId },
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        product: true,
       },
     });
 
