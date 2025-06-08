@@ -179,7 +179,7 @@ export class MarketplaceSearchService {
       }
 
       // Perform search
-      const result = await this.searchEngine.search(filters, page as number, hitsPerPage as number);
+      const result = await this.searchEngine.search(filters, page as any, hitsPerPage as any);
 
       // Cache the result
       await this.cacheService.cacheSearchResults(cacheKey, result);
@@ -198,7 +198,7 @@ export class MarketplaceSearchService {
       
       return this.cacheService.remember(
         cacheKey,
-        () => this.searchEngine.searchSuggestions(query, limit as number),
+        () => this.searchEngine.searchSuggestions(query, limit as any),
         CACHE_TTL.SHORT,
         [CACHE_TAGS.SEARCH]
       );
@@ -215,7 +215,7 @@ export class MarketplaceSearchService {
       
       return this.cacheService.remember(
         cacheKey,
-        () => this.searchEngine.getPopularProducts(limit as number),
+        () => this.searchEngine.getPopularProducts(limit as any),
         CACHE_TTL.LONG,
         [CACHE_TAGS.PRODUCTS]
       );
@@ -232,7 +232,7 @@ export class MarketplaceSearchService {
       
       return this.cacheService.remember(
         cacheKey,
-        () => this.searchEngine.getSimilarProducts(productId, limit as number),
+        () => this.searchEngine.getSimilarProducts(productId, limit as any),
         CACHE_TTL.LONG,
         [CACHE_TAGS.PRODUCTS]
       );
@@ -289,7 +289,7 @@ export class MarketplaceSearchService {
           const result = await this.searchEngine.search(
             { query },
             0,
-            limit as number
+            limit as any
           );
           
           return result.hits.map(hit => ({
@@ -321,7 +321,7 @@ export class MarketplaceSearchService {
           const result = await this.searchEngine.search(
             { query },
             0,
-            0 as number // We only want facets, not hits
+            0 as any // We only want facets, not hits
           );
           
           return result.facets || {};
