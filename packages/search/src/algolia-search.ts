@@ -14,13 +14,13 @@ import { SEARCH_FACETS, SEARCH_SETTINGS } from './types';
 
 export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   private client: ReturnType<typeof algoliasearch>;
-  private searchIndex: ReturnType<ReturnType<typeof algoliasearch>['initIndex']>;
+  private searchIndex: any; // Algolia v5 has different types
   private indexName: string;
 
   constructor(config: SearchConfig) {
     this.client = algoliasearch(config.appId, config.apiKey);
     this.searchIndex = this.client.initIndex(config.indexName);
-    this.searchIndexName = config.indexName;
+    this.indexName = config.indexName;
     
     this.configureIndex();
   }
@@ -98,7 +98,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
       for (const chunk of chunks) {
         await withRetry(
           () => this.searchIndex.saveObjects(chunk.map(p => ({ ...p, objectID: p.id }))),
-          { retries: 3, delay: 1000 }
+          { retries: 3, minTimeout: 1000 }
         );
       }
     } catch (error) {
@@ -111,7 +111,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
     try {
       await withRetry(
         () => this.searchIndex.saveObject({ ...product, objectID: product.id }),
-        { retries: 3, delay: 500 }
+        { retries: 3, minTimeout: 500 }
       );
     } catch (error) {
       console.error(`Failed to update product ${product.id}:`, error);
@@ -123,7 +123,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
     try {
       await withRetry(
         () => this.searchIndex.deleteObject(productId),
-        { retries: 3, delay: 500 }
+        { retries: 3, minTimeout: 500 }
       );
     } catch (error) {
       console.error(`Failed to delete product ${productId}:`, error);
@@ -217,14 +217,14 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
         
         const sortIndex = sortMappings[filters.sortBy];
         if (sortIndex) {
-          searchParams.indexName = `${this.searchIndexName}_${sortIndex}`;
+          searchParams.indexName = `${this.indexName}_${sortIndex}`;
         }
       }
 
       const result = await withRetry(
         () => this.searchIndex.search(filters.query || '', searchParams),
-        { retries: 3, delay: 500 }
-      );
+        { retries: 3, minTimeout: 500 }
+      ) as any;
 
       return {
         hits: result.hits as SearchProduct[],
@@ -269,7 +269,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
             suggestions.push({
               query,
               category,
-              count,
+              count: count as number,
             });
           });
       }
