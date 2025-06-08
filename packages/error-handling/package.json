@@ -11,11 +11,11 @@
   "dependencies": {
     "@sentry/nextjs": "^8.45.0",
     "p-retry": "^5.1.2",
-    "circuit-breaker-js": "^1.0.0"
+    "circuit-breaker-js": "^0.0.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "catalog:react",
-    "typescript": "catalog:"
+    "@types/node": "22.15.21",
+    "typescript": "^5.8.3"
   }
 }

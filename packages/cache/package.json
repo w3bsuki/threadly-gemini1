@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@upstash/redis": "^1.36.0",
+    "@upstash/redis": "^1.35.0",
     "@repo/error-handling": "workspace:*"
   },
   "devDependencies": {
