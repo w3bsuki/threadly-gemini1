@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "node scripts/conditional-build.js",
     "dev": "tsup --watch",
     "lint": "biome lint src/",
     "format": "biome format src/",

@@ -14,20 +14,20 @@ import { SEARCH_FACETS, SEARCH_SETTINGS } from './types';
 
 export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   private client: ReturnType<typeof algoliasearch>;
-  private index: ReturnType<ReturnType<typeof algoliasearch>['initIndex']>;
+  private searchIndex: ReturnType<ReturnType<typeof algoliasearch>['initIndex']>;
   private indexName: string;
 
   constructor(config: SearchConfig) {
     this.client = algoliasearch(config.appId, config.apiKey);
-    this.index = this.client.initIndex(config.indexName);
-    this.indexName = config.indexName;
+    this.searchIndex = this.client.initIndex(config.indexName);
+    this.searchIndexName = config.indexName;
     
     this.configureIndex();
   }
 
   private async configureIndex() {
     try {
-      await this.index.setSettings({
+      await this.searchIndex.setSettings({
         // Searchable attributes with priorities
         searchableAttributes: [
           'title',
@@ -97,7 +97,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
       
       for (const chunk of chunks) {
         await withRetry(
-          () => this.index.saveObjects(chunk.map(p => ({ ...p, objectID: p.id }))),
+          () => this.searchIndex.saveObjects(chunk.map(p => ({ ...p, objectID: p.id }))),
           { retries: 3, delay: 1000 }
         );
       }
@@ -110,7 +110,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   async updateProduct(product: SearchProduct): Promise<void> {
     try {
       await withRetry(
-        () => this.index.saveObject({ ...product, objectID: product.id }),
+        () => this.searchIndex.saveObject({ ...product, objectID: product.id }),
         { retries: 3, delay: 500 }
       );
     } catch (error) {
@@ -122,7 +122,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   async deleteProduct(productId: string): Promise<void> {
     try {
       await withRetry(
-        () => this.index.deleteObject(productId),
+        () => this.searchIndex.deleteObject(productId),
         { retries: 3, delay: 500 }
       );
     } catch (error) {
@@ -133,7 +133,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
 
   async clearIndex(): Promise<void> {
     try {
-      await this.index.clearObjects();
+      await this.searchIndex.clearObjects();
     } catch (error) {
       console.error('Failed to clear index:', error);
       throw error;
@@ -142,7 +142,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
 
   async getIndexStats() {
     try {
-      const stats = await this.index.getTask(0); // This is a simplified approach
+      const stats = await this.searchIndex.getTask(0); // This is a simplified approach
       return {
         objectCount: 0, // Would need to implement proper stats fetching
         fileSize: 0,
@@ -217,12 +217,12 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
         
         const sortIndex = sortMappings[filters.sortBy];
         if (sortIndex) {
-          searchParams.indexName = `${this.indexName}_${sortIndex}`;
+          searchParams.indexName = `${this.searchIndexName}_${sortIndex}`;
         }
       }
 
       const result = await withRetry(
-        () => this.index.search(filters.query || '', searchParams),
+        () => this.searchIndex.search(filters.query || '', searchParams),
         { retries: 3, delay: 500 }
       );
 
@@ -245,7 +245,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
     try {
       if (!query || query.length < 2) return [];
 
-      const result = await this.index.search(query, {
+      const result = await this.searchIndex.search(query, {
         hitsPerPage: 0,
         facets: [SEARCH_FACETS.CATEGORIES],
         maxValuesPerFacet: limit,
@@ -283,7 +283,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
 
   async getPopularProducts(limit = SEARCH_SETTINGS.POPULAR_PRODUCTS_LIMIT): Promise<SearchProduct[]> {
     try {
-      const result = await this.index.search('', {
+      const result = await this.searchIndex.search('', {
         hitsPerPage: limit,
         filters: 'status:"AVAILABLE"',
         // This will use the custom ranking which prioritizes views and favorites
@@ -299,7 +299,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
   async getSimilarProducts(productId: string, limit = SEARCH_SETTINGS.SIMILAR_PRODUCTS_LIMIT): Promise<SearchProduct[]> {
     try {
       // First get the product to find similar ones
-      const product = await this.index.getObject(productId) as SearchProduct;
+      const product = await this.searchIndex.getObject(productId) as SearchProduct;
       
       if (!product) return [];
 
@@ -307,7 +307,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
       const priceMin = product.price * 0.5;
       const priceMax = product.price * 2;
 
-      const result = await this.index.search('', {
+      const result = await this.searchIndex.search('', {
         hitsPerPage: limit + 1, // +1 to exclude the original product
         filters: `status:"AVAILABLE" AND categoryName:"${product.categoryName}" AND price:${priceMin} TO ${priceMax} AND NOT objectID:"${productId}"`,
       });
@@ -321,7 +321,7 @@ export class AlgoliaSearch implements SearchEngine, SearchIndexable {
 
   async getProductsByCategory(category: string, limit = 20): Promise<SearchProduct[]> {
     try {
-      const result = await this.index.search('', {
+      const result = await this.searchIndex.search('', {
         hitsPerPage: limit,
         filters: `status:"AVAILABLE" AND categoryName:"${category}"`,
       });

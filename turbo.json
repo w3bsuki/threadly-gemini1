@@ -3,9 +3,11 @@
   "globalDependencies": ["**/.env.*local"],
   "ui": "tui",
   "envMode": "loose",
+  "globalPassThroughEnv": ["CI", "VERCEL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["CI", "VERCEL"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",

@@ -66,6 +66,8 @@ export interface RealTimeClient {
     getMembers(channel: string): Map<string, any>;
   };
   disconnect(): void;
+  getConnectionState(): string;
+  onConnectionStateChange(callback: (state: string) => void): () => void;
 }
 
 export interface NotificationPreferences {

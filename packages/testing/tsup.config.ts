@@ -8,4 +8,13 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: ['react', 'react-dom', 'vitest'],
+  loader: {
+    '.tsx': 'tsx',
+    '.ts': 'ts',
+  },
+  esbuildOptions(options) {
+    options.jsx = 'transform';
+    options.jsxFactory = 'React.createElement';
+    options.jsxFragment = 'React.Fragment';
+  },
 });
