@@ -48,8 +48,8 @@
   - **Bug Line 129-134**: Real-time updates only trigger router refresh (bad UX)
   
 - **File**: `/apps/app/app/(authenticated)/product/[id]/components/product-detail-content.tsx`
-  - **CRITICAL Bug Line 107**: "Message Seller" navigates to `/messages?user=${id}` but messages page doesn't handle this param
-  - **Missing**: No conversation creation flow
+  - ✅ **FIXED**: "Message Seller" now navigates with both user and product params
+  - ✅ **FIXED**: Messages page handles new conversation creation
   
 - **File**: `/apps/app/app/(authenticated)/messages/actions/message-actions.ts`
   - ✅ **FIXED**: Message content now sanitized with `sanitizeForDisplay()`

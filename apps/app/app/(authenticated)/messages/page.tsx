@@ -16,11 +16,13 @@ export const metadata: Metadata = {
 interface MessagesPageProps {
   searchParams: Promise<{
     type?: 'buying' | 'selling';
+    user?: string; // User ID to start conversation with
+    product?: string; // Product ID for conversation context
   }>;
 }
 
 const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
-  const { type } = await searchParams;
+  const { type, user: targetUserId, product: productId } = await searchParams;
   const user = await currentUser();
 
   if (!user) {
@@ -81,6 +83,46 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
     },
   });
 
+  // Handle starting new conversation
+  let targetUser = null;
+  let targetProduct = null;
+  let existingConversation = null;
+
+  if (targetUserId) {
+    // Get target user details
+    targetUser = await database.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        imageUrl: true,
+      },
+    });
+
+    // Get product details if provided
+    if (productId) {
+      targetProduct = await database.product.findUnique({
+        where: { id: productId },
+        include: {
+          images: {
+            take: 1,
+            orderBy: { displayOrder: 'asc' },
+          },
+        },
+      });
+
+      // Check if conversation already exists for this product
+      existingConversation = await database.conversation.findFirst({
+        where: {
+          productId: productId,
+          buyerId: dbUser.id,
+          sellerId: targetUserId,
+        },
+      });
+    }
+  }
+
   return (
     <>
       <Header pages={['Dashboard', 'Messages']} page="Messages" />
@@ -97,6 +139,9 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
             conversations={conversations}
             currentUserId={dbUser.id}
             filterType={type}
+            targetUser={targetUser}
+            targetProduct={targetProduct}
+            existingConversation={existingConversation}
           />
         </div>
       </div>

@@ -76,11 +76,11 @@
 - [x] Update validation schemas to expect cents
 - [ ] Fix price display formatting (IN PROGRESS)
 
-### 3. Fix Message Seller Flow (3hrs) 
-- [ ] Create conversation creation endpoint
-- [ ] Handle `?user=` param in messages page
-- [ ] Add UI for starting new conversations
-- [ ] Test buyer-seller messaging flow
+### 3. Fix Message Seller Flow (3hrs) ✅
+- [x] Create conversation creation endpoint
+- [x] Handle `?user=` param in messages page
+- [x] Add UI for starting new conversations
+- [x] Test buyer-seller messaging flow
 
 ### 4. Fix Image Upload in Development (2hrs)
 - [ ] Configure UploadThing for dev environment

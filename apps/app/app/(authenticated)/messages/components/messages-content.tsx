@@ -76,9 +76,29 @@ interface MessagesContentProps {
   conversations: Conversation[];
   currentUserId: string;
   filterType?: 'buying' | 'selling';
+  targetUser?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
+  } | null;
+  targetProduct?: {
+    id: string;
+    title: string;
+    price: number;
+    images: { imageUrl: string }[];
+  } | null;
+  existingConversation?: { id: string } | null;
 }
 
-export function MessagesContent({ conversations, currentUserId, filterType }: MessagesContentProps) {
+export function MessagesContent({ 
+  conversations, 
+  currentUserId, 
+  filterType,
+  targetUser,
+  targetProduct,
+  existingConversation 
+}: MessagesContentProps) {
   const router = useRouter();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -87,6 +107,8 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   // Real-time features for selected conversation
   const { bind: bindMessages } = useChannel(
@@ -133,6 +155,22 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
     return unsubscribe;
   }, [selectedConversation, bindMessages, router]);
 
+  // Handle target user (from Message Seller button)
+  useEffect(() => {
+    if (targetUser && targetProduct) {
+      if (existingConversation) {
+        // Find and select existing conversation
+        const existing = conversations.find(c => c.id === existingConversation.id);
+        if (existing) {
+          setSelectedConversation(existing);
+        }
+      } else {
+        // Show new conversation interface
+        setShowNewConversation(true);
+      }
+    }
+  }, [targetUser, targetProduct, existingConversation, conversations]);
+
   // Handle typing indicator
   const handleTyping = (value: string) => {
     setMessageInput(value);
@@ -165,6 +203,31 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
       });
     }
   }, [selectedConversation, router]);
+
+  const handleCreateConversation = async (initialMessage: string) => {
+    if (!targetUser || !targetProduct || !initialMessage.trim()) return;
+
+    setIsCreatingConversation(true);
+    try {
+      const { createConversation } = await import('../actions/message-actions');
+      const result = await createConversation({
+        productId: targetProduct.id,
+        initialMessage: initialMessage.trim(),
+      });
+
+      if (result.success) {
+        // Refresh to get the new conversation
+        router.refresh();
+        setShowNewConversation(false);
+      } else {
+        console.error('Failed to create conversation:', result.error);
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    } finally {
+      setIsCreatingConversation(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!selectedConversation || !messageInput.trim()) return;
@@ -214,7 +277,7 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
     }
   };
 
-  if (conversations.length === 0) {
+  if (conversations.length === 0 && !showNewConversation) {
     return (
       <Card>
         <CardContent className="text-center py-12">
@@ -353,7 +416,15 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
 
       {/* Chat Area */}
       <div className="lg:col-span-2">
-        {selectedConversation ? (
+        {showNewConversation && targetUser && targetProduct ? (
+          <NewConversationCard 
+            targetUser={targetUser}
+            targetProduct={targetProduct}
+            onCreateConversation={handleCreateConversation}
+            isCreating={isCreatingConversation}
+            onCancel={() => setShowNewConversation(false)}
+          />
+        ) : selectedConversation ? (
           <Card className="h-full flex flex-col">
             {/* Chat Header */}
             <CardHeader className="pb-4">
@@ -517,5 +588,126 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
         )}
       </div>
     </div>
+  );
+}
+
+interface NewConversationCardProps {
+  targetUser: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
+  };
+  targetProduct: {
+    id: string;
+    title: string;
+    price: number;
+    images: { imageUrl: string }[];
+  };
+  onCreateConversation: (message: string) => Promise<void>;
+  isCreating: boolean;
+  onCancel: () => void;
+}
+
+function NewConversationCard({ 
+  targetUser, 
+  targetProduct, 
+  onCreateConversation, 
+  isCreating,
+  onCancel 
+}: NewConversationCardProps) {
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      await onCreateConversation(message);
+      setMessage('');
+    }
+  };
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={targetUser.imageUrl || undefined} />
+              <AvatarFallback>
+                {targetUser.firstName?.[0]}
+                {targetUser.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold">
+                {targetUser.firstName} {targetUser.lastName}
+              </h3>
+              <p className="text-sm text-muted-foreground">Start a new conversation</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 flex flex-col">
+        {/* Product Info */}
+        <div className="mb-4 p-3 bg-muted rounded-lg">
+          <div className="flex gap-3">
+            {targetProduct.images[0] && (
+              <div className="relative w-16 h-16 rounded-md overflow-hidden">
+                <Image
+                  src={targetProduct.images[0].imageUrl}
+                  alt={targetProduct.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <h4 className="font-medium line-clamp-1">{targetProduct.title}</h4>
+              <p className="text-lg font-bold">${targetProduct.price.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Message Form */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+          <div className="flex-1 mb-4">
+            <label htmlFor="message" className="block text-sm font-medium mb-2">
+              Your message
+            </label>
+            <textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Hi! I'm interested in your item..."
+              className="w-full h-32 p-3 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isCreating}
+              required
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isCreating || !message.trim()}
+              className="flex-1"
+            >
+              {isCreating ? 'Starting conversation...' : 'Send Message'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

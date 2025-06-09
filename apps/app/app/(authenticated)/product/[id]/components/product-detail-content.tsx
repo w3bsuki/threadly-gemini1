@@ -104,7 +104,7 @@ export const ProductDetailContent = ({
   };
 
   const handleMessageSeller = () => {
-    router.push(`/messages?user=${product.seller.id}`);
+    router.push(`/messages?user=${product.seller.id}&product=${product.id}`);
   };
 
   const nextImage = () => {
