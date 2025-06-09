@@ -87,7 +87,7 @@ export function CartContent({ userId }: CartContentProps) {
                 {/* Product Image */}
                 <div className="relative w-20 h-20 flex-shrink-0">
                   <Image
-                    src={item.image}
+                    src={item.imageUrl}
                     alt={item.title}
                     fill
                     className="object-cover rounded-md"
@@ -151,7 +151,7 @@ export function CartContent({ userId }: CartContentProps) {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                          disabled={item.quantity >= item.availableQuantity}
+                          disabled={item.quantity >= (item.availableQuantity ?? 1)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>

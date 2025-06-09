@@ -20,6 +20,7 @@
     "@repo/analytics": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/cache": "workspace:*",
+    "@repo/cart": "workspace:*",
     "@repo/cms": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/design-system": "workspace:*",

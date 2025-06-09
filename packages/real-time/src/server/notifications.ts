@@ -21,7 +21,7 @@ export class NotificationService {
         title: notification.title,
         message: notification.message,
         type: notification.type.toUpperCase() as any,
-        metadata: notification.metadata || {},
+        metadata: JSON.stringify(notification.metadata || {}),
         read: false,
       },
     });

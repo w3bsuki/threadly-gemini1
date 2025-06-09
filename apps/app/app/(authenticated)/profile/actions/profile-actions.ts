@@ -149,10 +149,10 @@ export async function updateNotificationSettings(input: z.infer<typeof updateNot
       create: {
         clerkId: user.id,
         email: user.emailAddresses[0]?.emailAddress || '',
-        notificationPreferences: validatedInput,
+        notificationPreferences: JSON.stringify(validatedInput),
       },
       update: {
-        notificationPreferences: validatedInput,
+        notificationPreferences: JSON.stringify(validatedInput),
       },
     });
 

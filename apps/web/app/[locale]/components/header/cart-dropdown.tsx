@@ -18,7 +18,7 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount / 100);
+  }).format(amount); // Price is already in dollars
 };
 
 export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
@@ -129,7 +129,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                         <div className="mt-2 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                               className="p-1 rounded-md hover:bg-gray-100"
                               aria-label="Decrease quantity"
                             >
@@ -139,7 +139,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                               className="p-1 rounded-md hover:bg-gray-100"
                               aria-label="Increase quantity"
                             >
@@ -147,7 +147,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                             </button>
                           </div>
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeItem(item.productId)}
                             className="text-red-500 hover:text-red-600"
                             aria-label="Remove item"
                           >

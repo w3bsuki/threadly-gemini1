@@ -4,9 +4,12 @@ import { z } from 'zod';
 export const keys = () =>
   createEnv({
     server: {
+      // Vercel Blob Storage (alternative to UploadThing)
       BLOB_READ_WRITE_TOKEN: z.string().optional(),
-      UPLOADTHING_SECRET: z.string().optional(),
-      UPLOADTHING_TOKEN: z.string().optional(),
+      
+      // UploadThing configuration (primary file storage)
+      UPLOADTHING_SECRET: z.string().startsWith('sk_').optional(),
+      UPLOADTHING_TOKEN: z.string().startsWith('eyJ').optional(), // JWT token
     },
     client: {
       NEXT_PUBLIC_UPLOADTHING_APP_ID: z.string().optional(),
@@ -17,4 +20,8 @@ export const keys = () =>
       UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
       NEXT_PUBLIC_UPLOADTHING_APP_ID: process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID,
     },
+    skipValidation: !!(
+      process.env.SKIP_ENV_VALIDATION ||
+      process.env.npm_lifecycle_event === 'lint'
+    ),
   });

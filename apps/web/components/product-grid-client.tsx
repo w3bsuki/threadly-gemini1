@@ -73,8 +73,8 @@ const ProductCard = ({ product }: {
     id: product.id,
     title: product.title,
     brand: product.brand,
-    price: product.price / 100, // Convert from cents to dollars
-    originalPrice: product.originalPrice ? product.originalPrice / 100 : null,
+    price: product.price, // Price is already in dollars
+    originalPrice: product.originalPrice ? product.originalPrice : null,
     size: product.size,
     condition: product.condition,
     categoryName: product.category,
@@ -166,11 +166,11 @@ const ProductCard = ({ product }: {
             
             <div className="flex items-center space-x-2">
               <span className="text-lg font-semibold text-gray-900">
-                ${(product.price / 100).toFixed(2)}
+                ${product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span className="text-sm text-gray-500 line-through">
-                  ${(product.originalPrice / 100).toFixed(2)}
+                  ${product.originalPrice.toFixed(2)}
                 </span>
               )}
             </div>

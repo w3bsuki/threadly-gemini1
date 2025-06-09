@@ -1,2 +1,76 @@
 @import "tailwindcss";
 @import "@repo/design-system/styles/globals.css";
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  /* Safe area handling for mobile devices */
+  .safe-area-padding-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Fix for mobile viewport height issues */
+  .min-h-screen-mobile {
+    min-height: 100dvh; /* Dynamic viewport height */
+  }
+  
+  /* Remove webkit tap highlight */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent zoom on input focus (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Improve touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Fix sticky elements on mobile */
+  .sticky-mobile {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+/* Dark mode adjustments for mobile */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  .mobile-bottom-nav {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Animation for mobile navigation */
+@keyframes mobile-nav-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mobile-nav-enter {
+  animation: mobile-nav-slide-up 0.3s ease-out;
+}
+
+/* Improved scrolling on mobile */
+@media (max-width: 768px) {
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}

@@ -63,7 +63,7 @@ export function CartDropdown() {
                   <div key={item.id} className="flex gap-3">
                     <div className="relative w-16 h-16 flex-shrink-0">
                       <Image
-                        src={item.image}
+                        src={item.imageUrl}
                         alt={item.title}
                         fill
                         className="object-cover rounded-md"
@@ -93,7 +93,7 @@ export function CartDropdown() {
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            disabled={item.quantity >= item.availableQuantity}
+                            disabled={item.quantity >= (item.availableQuantity ?? 1)}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>

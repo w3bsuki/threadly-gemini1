@@ -101,6 +101,7 @@ export function MessagesContent({
 }: MessagesContentProps) {
   const router = useRouter();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [conversationsList, setConversationsList] = useState<Conversation[]>(conversations);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -115,12 +116,20 @@ export function MessagesContent({
     selectedConversation ? `private-conversation-${selectedConversation.id}` : ''
   );
   
+  // User channel for notifications about new messages in any conversation
+  const { bind: bindUserChannel } = useChannel(`private-user-${currentUserId}`);
+  
   const { typingUsers, sendTyping } = useTypingIndicator(
     selectedConversation?.id || ''
   );
 
+  // Update conversations list when props change
+  useEffect(() => {
+    setConversationsList(conversations);
+  }, [conversations]);
+
   // Filter conversations based on search
-  const filteredConversations = conversations.filter(conversation => {
+  const filteredConversations = conversationsList.filter(conversation => {
     if (!searchQuery) return true;
     
     const otherUser = conversation.buyerId === currentUserId 
@@ -148,12 +157,83 @@ export function MessagesContent({
     if (!selectedConversation || !bindMessages) return;
 
     const unsubscribe = bindMessages('new-message', (data: any) => {
-      // Refresh to get new messages
-      router.refresh();
+      // Update the selected conversation with the new message
+      if (data.conversationId === selectedConversation.id) {
+        const newMessage: Message = {
+          id: data.id,
+          content: data.content,
+          senderId: data.senderId,
+          createdAt: new Date(data.createdAt),
+          read: data.senderId === currentUserId ? true : false
+        };
+
+        // Update selected conversation
+        setSelectedConversation(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            messages: [...prev.messages, newMessage],
+            updatedAt: new Date(data.createdAt)
+          };
+        });
+
+        // Update conversations list
+        setConversationsList(prevList => 
+          prevList.map(conv => 
+            conv.id === selectedConversation.id
+              ? {
+                  ...conv,
+                  messages: [...conv.messages, newMessage],
+                  updatedAt: new Date(data.createdAt)
+                }
+              : conv
+          )
+        );
+
+        // Mark as read if the message is from another user
+        if (data.senderId !== currentUserId) {
+          markMessagesAsRead(selectedConversation.id).catch(console.error);
+        }
+      }
     });
 
     return unsubscribe;
-  }, [selectedConversation, bindMessages, router]);
+  }, [selectedConversation, bindMessages, currentUserId]);
+
+  // Listen for new messages in all user conversations
+  useEffect(() => {
+    if (!bindUserChannel) return;
+
+    const unsubscribe = bindUserChannel('new-message-notification', (data: any) => {
+      // Update the conversation list with new message notification
+      setConversationsList(prevList => {
+        const updatedList = prevList.map(conv => {
+          if (conv.id === data.conversationId) {
+            // If this is the selected conversation, don't update here as it's handled above
+            if (selectedConversation?.id === conv.id) return conv;
+            
+            // Update conversation's last message and timestamp
+            return {
+              ...conv,
+              updatedAt: new Date(data.createdAt),
+              _count: {
+                ...conv._count,
+                messages: conv._count.messages + 1
+              }
+            };
+          }
+          return conv;
+        });
+        
+        // Sort conversations by most recent first
+        return updatedList.sort((a, b) => 
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      });
+    });
+
+    return unsubscribe;
+  }, [bindUserChannel, selectedConversation?.id]);
 
   // Handle target user (from Message Seller button)
   useEffect(() => {

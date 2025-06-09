@@ -30,7 +30,7 @@ const ProfilePage = async () => {
   }
 
   // Fetch user's marketplace data
-  const [userStats, userAddress] = await Promise.all([
+  const [userStats] = await Promise.all([
     // Get user statistics
     database.$queryRaw<Array<{
       products_sold: number;
@@ -66,10 +66,6 @@ const ProfilePage = async () => {
           0
         ) as active_listings
     `,
-
-    // Get user's saved address from most recent order
-    // TODO: Implement address storage once Order model has shipping fields
-    Promise.resolve(null),
   ]);
 
   const stats = userStats[0] || {
@@ -103,7 +99,6 @@ const ProfilePage = async () => {
               createdAt: new Date(user.createdAt),
             }}
             stats={stats}
-            savedAddress={userAddress}
           />
         </div>
       </div>

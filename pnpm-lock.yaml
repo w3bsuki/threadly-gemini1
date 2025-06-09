@@ -139,6 +139,9 @@ importers:
       '@repo/cache':
         specifier: workspace:*
         version: link:../../packages/cache
+      '@repo/cart':
+        specifier: workspace:*
+        version: link:../../packages/cart
       '@repo/collaboration':
         specifier: workspace:*
         version: link:../../packages/collaboration
@@ -448,6 +451,9 @@ importers:
       '@repo/cache':
         specifier: workspace:*
         version: link:../../packages/cache
+      '@repo/cart':
+        specifier: workspace:*
+        version: link:../../packages/cart
       '@repo/cms':
         specifier: workspace:*
         version: link:../../packages/cms
@@ -756,6 +762,22 @@ importers:
         version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.0)
       typescript:
         specifier: ^5.8.3
+        version: 5.8.3
+
+  packages/cart:
+    dependencies:
+      zustand:
+        specifier: ^4.5.2
+        version: 4.5.6(@types/react@19.1.5)(immer@10.1.1)(react@19.1.0)
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tsup:
+        specifier: ^8.0.2
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.3.3
         version: 5.8.3
 
   packages/cms:
@@ -25448,7 +25470,7 @@ snapshots:
 
   zustand@4.5.6(@types/react@19.1.5)(immer@10.1.1)(react@19.1.0):
     dependencies:
-      use-sync-external-store: 1.4.0(react@19.1.0)
+      use-sync-external-store: 1.5.0(react@19.1.0)
     optionalDependencies:
       '@types/react': 19.1.5
       immer: 10.1.1

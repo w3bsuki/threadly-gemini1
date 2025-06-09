@@ -44,8 +44,8 @@
 - **File**: `/apps/app/app/(authenticated)/messages/components/messages-content.tsx`
   - **Missing**: Loading states for messages
   - **TODO**: Implement message pagination
-  - **Bug**: Typing indicator not clearing properly
-  - **Bug Line 129-134**: Real-time updates only trigger router refresh (bad UX)
+  - ✅ **FIXED**: Typing indicator now clears properly with proper timeout handling
+  - ✅ **FIXED**: Real-time updates now properly update message state via WebSocket
   
 - **File**: `/apps/app/app/(authenticated)/product/[id]/components/product-detail-content.tsx`
   - ✅ **FIXED**: "Message Seller" now navigates with both user and product params

@@ -62,8 +62,30 @@ export class PusherServer {
 
   // Send a message event
   async sendMessage(message: MessageEvent['data']) {
-    const channel = `private-conversation-${message.conversationId}`;
-    await this.pusher.trigger(channel, 'new-message', message);
+    // Send to conversation channel for real-time updates
+    const conversationChannel = `private-conversation-${message.conversationId}`;
+    await this.pusher.trigger(conversationChannel, 'new-message', message);
+    
+    // Also get conversation to send notification to recipient's user channel
+    const conversation = await database.conversation.findUnique({
+      where: { id: message.conversationId },
+      select: { buyerId: true, sellerId: true }
+    });
+    
+    if (conversation) {
+      // Determine recipient (the user who didn't send the message)
+      const recipientId = message.senderId === conversation.buyerId 
+        ? conversation.sellerId 
+        : conversation.buyerId;
+      
+      // Send notification to recipient's user channel for updating conversation list
+      const userChannel = `private-user-${recipientId}`;
+      await this.pusher.trigger(userChannel, 'new-message-notification', {
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        createdAt: message.createdAt
+      });
+    }
   }
 
   // Send typing indicator

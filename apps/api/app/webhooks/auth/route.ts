@@ -21,6 +21,10 @@ const handleUserCreated = async (data: UserJSON) => {
       throw new Error('No email address found for user');
     }
 
+    // Check if this is the first user (make them admin)
+    const userCount = await database.user.count();
+    const isFirstUser = userCount === 0;
+
     await database.user.upsert({
       where: { clerkId: data.id },
       update: {
@@ -35,6 +39,7 @@ const handleUserCreated = async (data: UserJSON) => {
         firstName: data.first_name || null,
         lastName: data.last_name || null,
         imageUrl: data.image_url,
+        role: isFirstUser ? 'ADMIN' : 'USER',
       },
     });
 

@@ -54,7 +54,7 @@ export const ProductDetailContent = ({
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount / 100);
+    }).format(amount); // Price is already in dollars
   };
 
   const getSellerName = (seller: any) => {

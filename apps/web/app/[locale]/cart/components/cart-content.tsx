@@ -13,7 +13,7 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount / 100); // Assuming price is stored in cents
+  }).format(amount); // Price is already in dollars
 };
 
 const conditionLabels = {
@@ -111,7 +111,7 @@ export function CartContent() {
                               variant="outline"
                               size="sm"
                               className="h-8 w-8 p-0"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -120,7 +120,7 @@ export function CartContent() {
                               variant="outline"
                               size="sm"
                               className="h-8 w-8 p-0"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -133,7 +133,7 @@ export function CartContent() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeItem(item.id)}
+                              onClick={() => removeItem(item.productId)}
                               className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />

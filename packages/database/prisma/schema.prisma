@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider     = "postgresql"
+  provider     = "sqlite"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
@@ -29,7 +29,8 @@ model User {
   totalPurchases          Int      @default(0)
   averageRating           Float?
   stripeAccountId         String?  @unique
-  notificationPreferences Json?
+  notificationPreferences String?
+  role                    UserRole @default(USER)
 
   // Relations
   listings            Product[]
@@ -45,6 +46,7 @@ model User {
   following           Follow[]       @relation("Follower")
   followers           Follow[]       @relation("Following")
   notifications       Notification[]
+  addresses           Address[]
 
   @@index([clerkId])
   @@index([email])
@@ -281,7 +283,7 @@ model Notification {
   title     String
   message   String
   type      NotificationType
-  metadata  Json             @default("{}")
+  metadata  String           @default("{}")
   read      Boolean          @default(false)
   readAt    DateTime?
   createdAt DateTime         @default(now())
@@ -293,7 +295,39 @@ model Notification {
   @@index([createdAt])
 }
 
+// User addresses for shipping
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  firstName   String
+  lastName    String
+  company     String?
+  streetLine1 String
+  streetLine2 String?
+  city        String
+  state       String
+  zipCode     String
+  country     String   @default("US")
+  phone       String?
+  isDefault   Boolean  @default(false)
+  type        AddressType @default(SHIPPING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isDefault])
+  @@index([type])
+}
+
 // Enums
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
 enum Condition {
   NEW_WITH_TAGS
   NEW_WITHOUT_TAGS
@@ -328,4 +362,9 @@ enum NotificationType {
   MESSAGE
   PAYMENT
   SYSTEM
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
 }

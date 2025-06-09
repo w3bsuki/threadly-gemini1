@@ -115,6 +115,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
           state: data.state,
           zipCode: data.zipCode,
           country: data.country,
+          phone: data.phone,
         },
         shippingMethod: data.shippingMethod,
         subtotal,
@@ -122,6 +123,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
         tax,
         total,
         notes: data.notes,
+        saveAddress: data.saveAddress,
       };
 
       const orderResult = await createOrder(orderData);
@@ -513,7 +515,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
                 <div key={item.id} className="flex gap-3">
                   <div className="relative w-12 h-12 flex-shrink-0">
                     <Image
-                      src={item.image}
+                      src={item.imageUrl}
                       alt={item.title}
                       fill
                       className="object-cover rounded-md"

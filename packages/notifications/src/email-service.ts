@@ -1,49 +1,106 @@
 import { Resend } from 'resend';
 import { database } from '@repo/database';
 import type { NotificationPreferences } from '@repo/real-time';
+import { log } from '@repo/observability/log';
 import { OrderConfirmationEmail } from './templates/order-confirmation';
 import { NewMessageEmail } from './templates/new-message';
 import { PaymentReceivedEmail } from './templates/payment-received';
 import { WeeklyReportEmail } from './templates/weekly-report';
 
+interface EmailConfig {
+  apiKey: string;
+  fromEmail?: string;
+  environment?: 'development' | 'production';
+  enableDelivery?: boolean;
+}
+
 export class EmailService {
   private resend: Resend;
-  private fromEmail = 'notifications@threadly.com';
+  private fromEmail: string;
+  private environment: 'development' | 'production';
+  private enableDelivery: boolean;
 
-  constructor(apiKey: string) {
-    this.resend = new Resend(apiKey);
+  constructor(config: EmailConfig) {
+    this.resend = new Resend(config.apiKey);
+    this.fromEmail = config.fromEmail || 'noreply@threadly.com';
+    this.environment = config.environment || 'production';
+    this.enableDelivery = config.enableDelivery ?? (this.environment === 'production');
+    
+    log.info('Email service initialized', {
+      fromEmail: this.fromEmail,
+      environment: this.environment,
+      deliveryEnabled: this.enableDelivery
+    });
   }
 
   // Send order confirmation email
   async sendOrderConfirmation(order: any) {
-    const buyer = await database.user.findUnique({
-      where: { id: order.buyerId },
-      select: { email: true, firstName: true, notificationPreferences: true },
-    });
+    try {
+      const buyer = await database.user.findUnique({
+        where: { id: order.buyerId },
+        select: { email: true, firstName: true, notificationPreferences: true },
+      });
 
-    if (!buyer?.email) return;
+      if (!buyer?.email) {
+        log.warn('No buyer email found for order confirmation', { orderId: order.id });
+        return null;
+      }
 
-    const prefs = buyer.notificationPreferences as any as NotificationPreferences;
-    if (!prefs?.email?.orderUpdates) return;
+      const prefs = buyer.notificationPreferences as any as NotificationPreferences;
+      if (!prefs?.email?.orderUpdates) {
+        log.info('User has disabled order update emails', { 
+          orderId: order.id, 
+          buyerEmail: buyer.email 
+        });
+        return null;
+      }
 
-    const { data, error } = await this.resend.emails.send({
-      from: this.fromEmail,
-      to: buyer.email,
-      subject: `Order Confirmed - #${order.id}`,
-      react: OrderConfirmationEmail({
+      if (!this.enableDelivery) {
+        log.info('Email delivery disabled - would send order confirmation', {
+          orderId: order.id,
+          to: buyer.email,
+          environment: this.environment
+        });
+        return { id: 'mock-email-id', environment: this.environment };
+      }
+
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: buyer.email,
+        subject: `Order Confirmed - #${order.id}`,
+        react: OrderConfirmationEmail({
+          orderId: order.id,
+          buyerName: buyer.firstName || 'Customer',
+          items: order.items,
+          total: order.total,
+          estimatedDelivery: order.estimatedDelivery,
+        }),
+        tags: [
+          { name: 'type', value: 'order-confirmation' },
+          { name: 'environment', value: this.environment }
+        ]
+      });
+
+      if (error) {
+        log.error('Failed to send order confirmation email', { 
+          error, 
+          orderId: order.id,
+          buyerEmail: buyer.email 
+        });
+        throw error;
+      }
+
+      log.info('Order confirmation email sent successfully', {
         orderId: order.id,
-        buyerName: buyer.firstName || 'Customer',
-        items: order.items,
-        total: order.total,
-        estimatedDelivery: order.estimatedDelivery,
-      }),
-    });
+        emailId: data?.id,
+        to: buyer.email
+      });
 
-    if (error) {
-      console.error('Failed to send order confirmation email:', error);
+      return data;
+    } catch (error) {
+      log.error('Error in sendOrderConfirmation', { error, orderId: order.id });
+      throw error;
     }
-
-    return data;
   }
 
   // Send new message notification
@@ -176,14 +233,34 @@ export class EmailService {
 // Singleton instance
 let emailService: EmailService | null = null;
 
-export function getEmailService(apiKey?: string): EmailService {
-  if (!emailService && apiKey) {
-    emailService = new EmailService(apiKey);
+export function getEmailService(config?: EmailConfig): EmailService {
+  if (!emailService && config) {
+    emailService = new EmailService(config);
   }
   
   if (!emailService) {
-    throw new Error('EmailService not initialized. Provide API key first.');
+    throw new Error('EmailService not initialized. Provide configuration first.');
   }
   
   return emailService;
+}
+
+// Factory function for production setup
+export function createProductionEmailService(apiKey: string, fromEmail?: string): EmailService {
+  return new EmailService({
+    apiKey,
+    fromEmail,
+    environment: 'production',
+    enableDelivery: true
+  });
+}
+
+// Factory function for development setup
+export function createDevelopmentEmailService(apiKey?: string): EmailService {
+  return new EmailService({
+    apiKey: apiKey || 'mock-api-key',
+    fromEmail: 'dev@threadly.com',
+    environment: 'development',
+    enableDelivery: false // Don't send real emails in development
+  });
 }

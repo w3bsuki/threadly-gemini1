@@ -39,7 +39,7 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount / 100); // Assuming price is stored in cents
+  }).format(amount); // Price is already in dollars
 };
 
 interface Product {

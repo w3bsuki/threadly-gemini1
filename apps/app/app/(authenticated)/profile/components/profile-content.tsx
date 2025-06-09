@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { updateUserProfile, updateNotificationSettings, updateShippingAddress } from '../actions/profile-actions';
+import { AddressManagement } from './address-management';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -43,15 +44,6 @@ const profileSchema = z.object({
   website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
-const addressSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  zipCode: z.string().min(5, 'Valid zip code is required'),
-  country: z.string().min(1, 'Country is required'),
-});
 
 const notificationSchema = z.object({
   emailMarketing: z.boolean(),
@@ -64,7 +56,6 @@ const notificationSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
-type AddressFormData = z.infer<typeof addressSchema>;
 type NotificationFormData = z.infer<typeof notificationSchema>;
 
 interface UserStats {
@@ -75,15 +66,6 @@ interface UserStats {
   active_listings: number;
 }
 
-interface SavedAddress {
-  shippingFirstName?: string;
-  shippingLastName?: string;
-  shippingAddress?: string;
-  shippingCity?: string;
-  shippingState?: string;
-  shippingZipCode?: string;
-  shippingCountry?: string;
-}
 
 interface User {
   id: string;
@@ -100,13 +82,11 @@ interface User {
 interface ProfileContentProps {
   user: User;
   stats: UserStats;
-  savedAddress?: SavedAddress | null;
 }
 
-export function ProfileContent({ user, stats, savedAddress }: ProfileContentProps) {
+export function ProfileContent({ user, stats }: ProfileContentProps) {
   const router = useRouter();
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isUpdatingAddress, setIsUpdatingAddress] = useState(false);
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
 
   const profileForm = useForm<ProfileFormData>({
@@ -121,18 +101,6 @@ export function ProfileContent({ user, stats, savedAddress }: ProfileContentProp
     },
   });
 
-  const addressForm = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      firstName: savedAddress?.shippingFirstName || user.firstName || '',
-      lastName: savedAddress?.shippingLastName || user.lastName || '',
-      address: savedAddress?.shippingAddress || '',
-      city: savedAddress?.shippingCity || '',
-      state: savedAddress?.shippingState || '',
-      zipCode: savedAddress?.shippingZipCode || '',
-      country: savedAddress?.shippingCountry || 'United States',
-    },
-  });
 
   const notificationForm = useForm<NotificationFormData>({
     resolver: zodResolver(notificationSchema),
@@ -163,21 +131,6 @@ export function ProfileContent({ user, stats, savedAddress }: ProfileContentProp
     }
   };
 
-  const onSubmitAddress = async (data: AddressFormData) => {
-    setIsUpdatingAddress(true);
-    try {
-      const result = await updateShippingAddress(data);
-      if (result.success) {
-        router.refresh();
-      } else {
-        console.error('Failed to update address:', result.error);
-      }
-    } catch (error) {
-      console.error('Error updating address:', error);
-    } finally {
-      setIsUpdatingAddress(false);
-    }
-  };
 
   const onSubmitNotifications = async (data: NotificationFormData) => {
     setIsUpdatingNotifications(true);
@@ -414,127 +367,7 @@ export function ProfileContent({ user, stats, savedAddress }: ProfileContentProp
 
         {/* Address Tab */}
         <TabsContent value="address">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Shipping Address
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...addressForm}>
-                <form onSubmit={addressForm.handleSubmit(onSubmitAddress)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addressForm.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={addressForm.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={addressForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Street Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addressForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={addressForm.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addressForm.control}
-                      name="zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ZIP Code</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={addressForm.control}
-                      name="country"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <Button type="submit" disabled={isUpdatingAddress}>
-                    {isUpdatingAddress ? 'Updating...' : 'Save Address'}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+          <AddressManagement />
         </TabsContent>
 
         {/* Notifications Tab */}

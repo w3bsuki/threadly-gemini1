@@ -141,7 +141,7 @@ export function BrowseContent({
       productId: product.id,
       title: product.title,
       price: product.price,
-      image: product.images[0]?.imageUrl || '/placeholder.png',
+      imageUrl: product.images[0]?.imageUrl || '/placeholder.png',
       sellerId: product.seller.id,
       sellerName: product.seller.firstName && product.seller.lastName 
         ? `${product.seller.firstName} ${product.seller.lastName}` 

@@ -19,6 +19,7 @@ const createOrderSchema = z.object({
     state: z.string().min(1),
     zipCode: z.string().min(1),
     country: z.string().min(1),
+    phone: z.string().optional(),
   }),
   shippingMethod: z.enum(['standard', 'express', 'overnight']),
   subtotal: z.number().min(0),
@@ -27,6 +28,7 @@ const createOrderSchema = z.object({
   total: z.number().min(0),
   notes: z.string().optional(),
   paymentIntentId: z.string().optional(),
+  saveAddress: z.boolean().default(false),
 });
 
 export async function createOrder(input: z.infer<typeof createOrderSchema>) {
@@ -82,6 +84,57 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
       }
     }
 
+    // Save shipping address if requested
+    if (validatedInput.saveAddress) {
+      try {
+        // Check if this exact address already exists
+        const existingAddress = await database.address.findFirst({
+          where: {
+            userId: dbUser.id,
+            firstName: validatedInput.shippingAddress.firstName,
+            lastName: validatedInput.shippingAddress.lastName,
+            streetLine1: validatedInput.shippingAddress.address,
+            city: validatedInput.shippingAddress.city,
+            state: validatedInput.shippingAddress.state,
+            zipCode: validatedInput.shippingAddress.zipCode,
+            country: validatedInput.shippingAddress.country,
+            type: 'SHIPPING',
+          },
+        });
+
+        if (!existingAddress) {
+          // Check if user has any default shipping addresses
+          const hasDefaultShipping = await database.address.findFirst({
+            where: {
+              userId: dbUser.id,
+              type: 'SHIPPING',
+              isDefault: true,
+            },
+          });
+
+          // Create new address
+          await database.address.create({
+            data: {
+              userId: dbUser.id,
+              firstName: validatedInput.shippingAddress.firstName,
+              lastName: validatedInput.shippingAddress.lastName,
+              streetLine1: validatedInput.shippingAddress.address,
+              city: validatedInput.shippingAddress.city,
+              state: validatedInput.shippingAddress.state,
+              zipCode: validatedInput.shippingAddress.zipCode,
+              country: validatedInput.shippingAddress.country,
+              phone: validatedInput.shippingAddress.phone,
+              type: 'SHIPPING',
+              isDefault: !hasDefaultShipping, // Make it default if user has no default shipping address
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to save shipping address:', error);
+        // Don't fail the order if address saving fails
+      }
+    }
+
     // Create separate orders for each product (current schema limitation)
     const orders = [];
     
@@ -122,11 +175,14 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
 
     // Send confirmation email to buyer
     try {
-      const { getEmailService } = await import('@repo/notifications/src');
+      const { createProductionEmailService, createDevelopmentEmailService } = await import('@repo/notifications/src');
       const resendToken = process.env.RESEND_TOKEN;
+      const environment = process.env.NODE_ENV || 'development';
       
       if (resendToken) {
-        const emailService = getEmailService(resendToken);
+        const emailService = environment === 'production' 
+          ? createProductionEmailService(resendToken, process.env.RESEND_FROM)
+          : createDevelopmentEmailService(resendToken);
         await emailService.sendOrderConfirmation({
           ...orders[0],
           items: orders.map(o => ({

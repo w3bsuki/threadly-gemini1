@@ -56,7 +56,7 @@ export function AddToCartButton({
         productId: product.id,
         title: product.title,
         price: product.price,
-        image: product.images[0]?.url || '/placeholder-image.jpg',
+        imageUrl: product.images[0]?.url || '/placeholder-image.jpg',
         sellerId: product.sellerId,
         sellerName,
         size: product.size,

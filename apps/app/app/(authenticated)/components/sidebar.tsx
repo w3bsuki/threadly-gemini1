@@ -58,6 +58,7 @@ import {
   PlusIcon,
   HeartIcon,
   StarIcon,
+  ShieldIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -66,6 +67,7 @@ import { CartDropdown } from './cart-dropdown';
 
 type GlobalSidebarProperties = {
   readonly children: ReactNode;
+  readonly isAdmin?: boolean;
 };
 
 const data = {
@@ -177,8 +179,36 @@ const data = {
   ],
 };
 
-export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
+export const GlobalSidebar = ({ children, isAdmin = false }: GlobalSidebarProperties) => {
   const sidebar = useSidebar();
+  
+  // Add admin section if user is admin
+  const navMainWithAdmin = isAdmin ? [
+    ...data.navMain,
+    {
+      title: 'Admin',
+      url: '/admin',
+      icon: ShieldIcon,
+      items: [
+        {
+          title: 'Dashboard',
+          url: '/admin',
+        },
+        {
+          title: 'Users',
+          url: '/admin/users',
+        },
+        {
+          title: 'Products',
+          url: '/admin/products',
+        },
+        {
+          title: 'Reports',
+          url: '/admin/reports',
+        },
+      ],
+    },
+  ] : data.navMain;
 
   return (
     <>
@@ -205,7 +235,7 @@ export const GlobalSidebar = ({ children }: GlobalSidebarProperties) => {
           <SidebarGroup>
             <SidebarGroupLabel>Marketplace</SidebarGroupLabel>
             <SidebarMenu>
-              {data.navMain.map((item) => (
+              {navMainWithAdmin.map((item) => (
                 <Collapsible
                   key={item.title}
                   asChild
