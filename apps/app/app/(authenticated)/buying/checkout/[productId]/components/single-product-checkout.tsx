@@ -41,7 +41,7 @@ const checkoutSchema = z.object({
   shippingMethod: z.enum(['standard', 'express']),
   
   // Preferences
-  saveAddress: z.boolean().default(false),
+  saveAddress: z.boolean(),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;

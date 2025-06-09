@@ -55,7 +55,7 @@ const ReviewsPage = async () => {
       },
     },
     orderBy: {
-      updatedAt: 'desc',
+      createdAt: 'desc',
     },
   });
 

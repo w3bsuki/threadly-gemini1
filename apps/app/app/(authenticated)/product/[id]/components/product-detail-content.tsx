@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/co
 import { Badge } from '@repo/design-system/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/design-system/components/ui/avatar';
 import { Separator } from '@repo/design-system/components/ui/separator';
-import { toast } from '@repo/design-system/components/ui/sonner';
+import { toast } from '@/components/toast';
 import {
   Heart,
   Share2,

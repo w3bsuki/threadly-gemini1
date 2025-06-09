@@ -42,7 +42,7 @@ async function checkConversationAccess(conversationId: string, userId: string) {
 // GET /api/messages/conversations/[conversationId] - Get conversation details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     // Check authentication
@@ -57,8 +57,10 @@ export async function GET(
       );
     }
 
+    const resolvedParams = await params;
+    
     // Check access to conversation
-    const accessCheck = await checkConversationAccess(params.conversationId, userId);
+    const accessCheck = await checkConversationAccess(resolvedParams.conversationId, userId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {
@@ -71,7 +73,7 @@ export async function GET(
 
     // Get full conversation details
     const conversation = await database.conversation.findUnique({
-      where: { id: params.conversationId },
+      where: { id: resolvedParams.conversationId },
       include: {
         buyer: {
           select: {
@@ -126,7 +128,7 @@ export async function GET(
 
     await database.message.updateMany({
       where: {
-        conversationId: params.conversationId,
+        conversationId: resolvedParams.conversationId,
         senderId: otherUserId,
         read: false,
       },
@@ -160,7 +162,7 @@ export async function GET(
 // PATCH /api/messages/conversations/[conversationId] - Update conversation status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     // Check authentication
@@ -177,9 +179,10 @@ export async function PATCH(
 
     const body = await request.json();
     const validatedData = updateConversationSchema.parse(body);
+    const resolvedParams = await params;
 
     // Check access to conversation
-    const accessCheck = await checkConversationAccess(params.conversationId, userId);
+    const accessCheck = await checkConversationAccess(resolvedParams.conversationId, userId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {
@@ -192,7 +195,7 @@ export async function PATCH(
 
     // Update conversation status
     const updatedConversation = await database.conversation.update({
-      where: { id: params.conversationId },
+      where: { id: resolvedParams.conversationId },
       data: {
         status: validatedData.status,
       },
@@ -265,7 +268,7 @@ export async function PATCH(
 // DELETE /api/messages/conversations/[conversationId] - Soft delete conversation
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     // Check authentication
@@ -280,8 +283,10 @@ export async function DELETE(
       );
     }
 
+    const resolvedParams = await params;
+    
     // Check access to conversation
-    const accessCheck = await checkConversationAccess(params.conversationId, userId);
+    const accessCheck = await checkConversationAccess(resolvedParams.conversationId, userId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {
@@ -294,7 +299,7 @@ export async function DELETE(
 
     // Soft delete by archiving the conversation
     await database.conversation.update({
-      where: { id: params.conversationId },
+      where: { id: resolvedParams.conversationId },
       data: {
         status: 'ARCHIVED',
       },

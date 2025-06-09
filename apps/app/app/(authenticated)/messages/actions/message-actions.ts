@@ -4,7 +4,7 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { getPusherServer } from '@repo/real-time/server';
 import { getNotificationService } from '@repo/real-time/server';
-import { getEmailService } from '@repo/notifications';
+// import { getEmailService } from '@repo/notifications';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
@@ -17,7 +17,7 @@ const pusherServer = getPusherServer({
 });
 
 const notificationService = getNotificationService();
-const emailService = getEmailService(process.env.RESEND_API_KEY!);
+// const emailService = getEmailService(process.env.RESEND_API_KEY!);
 
 const sendMessageSchema = z.object({
   conversationId: z.string().min(1),
@@ -37,6 +37,15 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
       redirect('/sign-in');
     }
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser) {
+      throw new Error('User not found in database');
+    }
+
     // Validate input
     const validatedInput = sendMessageSchema.parse(input);
 
@@ -54,7 +63,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
       throw new Error('Conversation not found');
     }
 
-    if (conversation.buyerId !== user.id && conversation.sellerId !== user.id) {
+    if (conversation.buyerId !== dbUser.id && conversation.sellerId !== dbUser.id) {
       throw new Error('You are not authorized to send messages in this conversation');
     }
 
@@ -62,7 +71,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
     const message = await database.message.create({
       data: {
         conversationId: validatedInput.conversationId,
-        senderId: user.id,
+        senderId: dbUser.id,
         content: validatedInput.content,
         read: false,
       },
@@ -102,7 +111,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
     }
 
     // Send in-app notification to recipient
-    const recipientId = conversation.buyerId === user.id 
+    const recipientId = conversation.buyerId === dbUser.id 
       ? conversation.sellerId 
       : conversation.buyerId;
 
@@ -114,7 +123,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
 
     // Send email notification
     try {
-      await emailService.sendNewMessageNotification(message, conversation);
+      // await emailService.sendNewMessageNotification(message, conversation);
     } catch (error) {
       console.error('Failed to send email notification:', error);
     }
@@ -150,6 +159,15 @@ export async function createConversation(input: z.infer<typeof createConversatio
       redirect('/sign-in');
     }
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser) {
+      throw new Error('User not found in database');
+    }
+
     // Validate input
     const validatedInput = createConversationSchema.parse(input);
 
@@ -168,7 +186,7 @@ export async function createConversation(input: z.infer<typeof createConversatio
       throw new Error('Product not found or no longer available');
     }
 
-    if (product.sellerId === user.id) {
+    if (product.sellerId === dbUser.id) {
       throw new Error('You cannot start a conversation about your own product');
     }
 
@@ -176,7 +194,7 @@ export async function createConversation(input: z.infer<typeof createConversatio
     const existingConversation = await database.conversation.findFirst({
       where: {
         productId: validatedInput.productId,
-        buyerId: user.id,
+        buyerId: dbUser.id,
         sellerId: product.sellerId,
       },
     });
@@ -186,7 +204,7 @@ export async function createConversation(input: z.infer<typeof createConversatio
       await database.message.create({
         data: {
           conversationId: existingConversation.id,
-          senderId: user.id,
+          senderId: dbUser.id,
           content: validatedInput.initialMessage,
           read: false,
         },
@@ -212,12 +230,12 @@ export async function createConversation(input: z.infer<typeof createConversatio
     const conversation = await database.conversation.create({
       data: {
         productId: validatedInput.productId,
-        buyerId: user.id,
+        buyerId: dbUser.id,
         sellerId: product.sellerId,
         status: 'ACTIVE',
         messages: {
           create: {
-            senderId: user.id,
+            senderId: dbUser.id,
             content: validatedInput.initialMessage,
             read: false,
           },
@@ -264,6 +282,15 @@ export async function markMessagesAsRead(conversationId: string) {
       redirect('/sign-in');
     }
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser) {
+      throw new Error('User not found in database');
+    }
+
     // Verify the user is part of this conversation
     const conversation = await database.conversation.findUnique({
       where: {
@@ -275,7 +302,7 @@ export async function markMessagesAsRead(conversationId: string) {
       throw new Error('Conversation not found');
     }
 
-    if (conversation.buyerId !== user.id && conversation.sellerId !== user.id) {
+    if (conversation.buyerId !== dbUser.id && conversation.sellerId !== dbUser.id) {
       throw new Error('You are not authorized to access this conversation');
     }
 
@@ -283,7 +310,7 @@ export async function markMessagesAsRead(conversationId: string) {
     await database.message.updateMany({
       where: {
         conversationId: conversationId,
-        senderId: { not: user.id },
+        senderId: { not: dbUser.id },
         read: false,
       },
       data: {
@@ -313,6 +340,15 @@ export async function archiveConversation(conversationId: string) {
       redirect('/sign-in');
     }
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser) {
+      throw new Error('User not found in database');
+    }
+
     // Verify the user is part of this conversation
     const conversation = await database.conversation.findUnique({
       where: {
@@ -324,7 +360,7 @@ export async function archiveConversation(conversationId: string) {
       throw new Error('Conversation not found');
     }
 
-    if (conversation.buyerId !== user.id && conversation.sellerId !== user.id) {
+    if (conversation.buyerId !== dbUser.id && conversation.sellerId !== dbUser.id) {
       throw new Error('You are not authorized to archive this conversation');
     }
 

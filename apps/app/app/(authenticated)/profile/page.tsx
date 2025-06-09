@@ -20,6 +20,15 @@ const ProfilePage = async () => {
     redirect('/sign-in');
   }
 
+  // Get database user
+  const dbUser = await database.user.findUnique({
+    where: { clerkId: user.id },
+  });
+
+  if (!dbUser) {
+    redirect('/sign-in');
+  }
+
   // Fetch user's marketplace data
   const [userStats, userAddress] = await Promise.all([
     // Get user statistics
@@ -32,52 +41,35 @@ const ProfilePage = async () => {
     }>>`
       SELECT 
         COALESCE(
-          (SELECT COUNT(*) FROM order_items oi 
-           INNER JOIN orders o ON oi.order_id = o.id 
-           WHERE oi.seller_id = ${user.id} AND o.status = 'COMPLETED'), 
+          (SELECT COUNT(*) FROM "Order" o 
+           WHERE o.seller_id = ${dbUser.id} AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')), 
           0
         ) as products_sold,
         COALESCE(
-          (SELECT SUM(oi.price) FROM order_items oi 
-           INNER JOIN orders o ON oi.order_id = o.id 
-           WHERE oi.seller_id = ${user.id} AND o.status = 'COMPLETED'), 
+          (SELECT SUM(o.amount) FROM "Order" o 
+           WHERE o.seller_id = ${dbUser.id} AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')), 
           0
         ) as total_earnings,
         COALESCE(
-          (SELECT COUNT(*) FROM orders o 
-           WHERE o.buyer_id = ${user.id} AND o.status = 'COMPLETED'), 
+          (SELECT COUNT(*) FROM "Order" o 
+           WHERE o.buyer_id = ${dbUser.id} AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')), 
           0
         ) as products_bought,
         COALESCE(
-          (SELECT SUM(o.total) FROM orders o 
-           WHERE o.buyer_id = ${user.id} AND o.status = 'COMPLETED'), 
+          (SELECT SUM(o.amount) FROM "Order" o 
+           WHERE o.buyer_id = ${dbUser.id} AND o.status IN ('PAID', 'SHIPPED', 'DELIVERED')), 
           0
         ) as total_spent,
         COALESCE(
-          (SELECT COUNT(*) FROM products p 
-           WHERE p.seller_id = ${user.id} AND p.status = 'AVAILABLE'), 
+          (SELECT COUNT(*) FROM "Product" p 
+           WHERE p.seller_id = ${dbUser.id} AND p.status = 'AVAILABLE'), 
           0
         ) as active_listings
     `,
 
     // Get user's saved address from most recent order
-    database.order.findFirst({
-      where: {
-        buyerId: user.id,
-      },
-      select: {
-        shippingFirstName: true,
-        shippingLastName: true,
-        shippingAddress: true,
-        shippingCity: true,
-        shippingState: true,
-        shippingZipCode: true,
-        shippingCountry: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    }),
+    // TODO: Implement address storage once Order model has shipping fields
+    Promise.resolve(null),
   ]);
 
   const stats = userStats[0] || {
@@ -101,7 +93,15 @@ const ProfilePage = async () => {
           </div>
           
           <ProfileContent 
-            user={user}
+            user={{
+              id: user.id,
+              emailAddresses: user.emailAddresses,
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
+              username: user.username || undefined,
+              imageUrl: user.imageUrl || undefined,
+              createdAt: new Date(user.createdAt),
+            }}
             stats={stats}
             savedAddress={userAddress}
           />

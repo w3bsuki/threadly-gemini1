@@ -1,4 +1,4 @@
-import { auth } from '@repo/auth/server';
+import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,9 +16,9 @@ const createNotificationSchema = z.object({
 // GET /api/notifications - Get user notifications
 export async function GET(request: NextRequest) {
   try {
-    const user = await auth();
+    const user = await currentUser();
     
-    if (!user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
 // POST /api/notifications - Create notification (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const user = await auth();
+    const user = await currentUser();
     
-    if (!user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

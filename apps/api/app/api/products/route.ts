@@ -6,10 +6,12 @@ import { z } from 'zod';
 import { 
   createProductSchema,
   productConditionSchema,
+} from '@repo/validation/schemas/product';
+import {
   priceSchema,
   safeTextSchema,
   paginationSchema,
-} from '@repo/validation/schemas/product';
+} from '@repo/validation/schemas/common';
 import { 
   withValidation, 
   validateQuery, 
@@ -30,24 +32,32 @@ import {
 
 // Enhanced schema for creating a product with validation
 const createProductInput = z.object({
-  title: safeTextSchema
+  title: z.string()
+    .trim()
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be at most 100 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    })
     .refine((title) => isValidProductTitle(title), {
       message: 'Invalid product title format',
     })
     .refine((title) => !containsProfanity(title), {
       message: 'Product title contains inappropriate content',
     }),
-  description: safeTextSchema
+  description: z.string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
-    .max(2000, 'Description must be at most 2000 characters'),
+    .max(2000, 'Description must be at most 2000 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    }),
   price: priceSchema.refine((price) => isPriceInRange(price), {
     message: 'Price must be between $0.01 and $999,999.99',
   }),
   condition: productConditionSchema,
   categoryId: z.string().cuid('Invalid category ID'),
-  brand: safeTextSchema.max(50).optional(),
+  brand: z.string().trim().max(50).optional(),
   size: z.string().max(20).optional(),
   color: z.string().max(30).optional(),
   images: z.array(
@@ -62,11 +72,11 @@ const createProductInput = z.object({
 // Enhanced schema for listing products with better filtering
 const listProductsInput = paginationSchema.extend({
   category: z.string().optional(),
-  brand: safeTextSchema.max(50).optional(),
+  brand: z.string().trim().max(50).optional(),
   condition: productConditionSchema.optional(),
   minPrice: priceSchema.optional(),
   maxPrice: priceSchema.optional(),
-  search: safeTextSchema.max(100).optional(),
+  search: z.string().trim().max(100).optional(),
   sortBy: z.enum(['newest', 'price_asc', 'price_desc']).default('newest'),
 });
 
@@ -102,15 +112,15 @@ export async function GET(request: NextRequest) {
     }
     
     const {
-      page,
-      limit,
+      page = 1,
+      limit = 20,
       category,
       brand,
       condition,
       minPrice,
       maxPrice,
       search,
-      sortBy,
+      sortBy = 'newest',
     } = validation.data;
 
     const skip = (page - 1) * limit;

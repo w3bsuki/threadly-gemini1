@@ -1,4 +1,4 @@
-import { auth } from '@repo/auth/server';
+import { currentUser } from '@repo/auth/server';
 import { getPusherServer } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,11 +9,11 @@ const pusherServer = getPusherServer({
   pusherSecret: process.env.PUSHER_SECRET!,
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const user = await auth();
+    const user = await currentUser();
     
-    if (!user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -156,9 +156,15 @@ export const passwordSchema = z
 
 // Address validation
 export const addressSchema = z.object({
-  street: safeTextSchema.max(100),
-  city: safeTextSchema.max(50),
-  state: safeTextSchema.max(50).optional(),
+  street: z.string().trim().min(1).max(100).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }),
+  city: z.string().trim().min(1).max(50).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }),
+  state: z.string().trim().min(1).max(50).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }).optional(),
   postalCode: z.string().regex(REGEX_PATTERNS.POSTAL_CODE, 'Invalid postal code'),
   country: z.string().length(2, 'Country must be 2-letter ISO code'),
 });
@@ -171,7 +177,9 @@ export const coordinatesSchema = z.object({
 
 // Search query validation
 export const searchQuerySchema = z.object({
-  q: safeTextSchema.max(100).optional(),
+  q: z.string().trim().max(100).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }).optional(),
   filters: z.record(z.string(), z.any()).optional(),
   ...paginationSchema.shape,
 });

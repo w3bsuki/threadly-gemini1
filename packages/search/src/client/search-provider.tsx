@@ -1,17 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { SearchService } from '../search-service';
+import { MarketplaceSearchService } from '../search-service';
 
 interface SearchContextType {
-  searchService: SearchService;
+  searchService: MarketplaceSearchService;
 }
 
 const SearchContext = createContext<SearchContextType | null>(null);
 
 interface SearchProviderProps {
   children: ReactNode;
-  searchService: SearchService;
+  searchService: MarketplaceSearchService;
 }
 
 export function SearchProvider({ children, searchService }: SearchProviderProps) {

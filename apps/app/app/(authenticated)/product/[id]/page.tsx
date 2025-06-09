@@ -84,12 +84,12 @@ const ProductPage = async ({ params }: ProductPageProps) => {
           id: true,
           firstName: true,
           lastName: true,
-          profileImage: true,
+          imageUrl: true,
           averageRating: true,
-          createdAt: true,
+          joinedAt: true,
           _count: {
             select: {
-              productsAsseller: {
+              listings: {
                 where: {
                   status: 'SOLD',
                 },

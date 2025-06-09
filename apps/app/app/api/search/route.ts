@@ -28,7 +28,7 @@ const searchRequestSchema = z.object({
     sortBy: z.enum(['relevance', 'price_asc', 'price_desc', 'newest', 'most_viewed', 'most_favorited']).optional(),
   }),
   page: z.number().default(0),
-  hitsPerPage: z.number().default(20).max(100),
+  hitsPerPage: z.number().max(100).default(20),
 });
 
 export async function POST(request: NextRequest) {

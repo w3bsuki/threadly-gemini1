@@ -16,6 +16,7 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { Trash2, Save, Eye, EyeOff } from 'lucide-react';
 import { updateProduct, deleteProduct } from '../actions/product-actions';
 import { ImageUpload } from '../../../../new/components/image-upload';
+import { toast } from '@/components/toast';
 
 const editProductSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
@@ -37,20 +38,20 @@ interface Product {
   title: string;
   description: string;
   price: number;
-  categoryId: number;
+  categoryId: string;
   condition: string;
-  brand?: string;
-  size?: string;
-  color?: string;
+  brand?: string | null;
+  size?: string | null;
+  color?: string | null;
   status: string;
   images: Array<{
     id: string;
-    url: string;
-    altText?: string;
+    imageUrl: string;
+    alt?: string | null;
     displayOrder: number;
   }>;
   category: {
-    id: number;
+    id: string;
     name: string;
   };
 }
@@ -77,7 +78,7 @@ export function EditProductForm({ product, userId }: EditProductFormProps) {
       size: product.size || '',
       color: product.color || '',
       status: product.status as any,
-      images: product.images.map(img => img.url),
+      images: product.images.map(img => img.imageUrl),
     },
   });
 

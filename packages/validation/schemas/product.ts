@@ -18,7 +18,7 @@ export const productConditionSchema = z.enum([
   'NEW_WITHOUT_TAGS',
   'VERY_GOOD',
   'GOOD',
-  'FAIR',
+  'SATISFACTORY',
 ], {
   errorMap: () => ({ message: 'Invalid product condition' }),
 });
@@ -125,27 +125,42 @@ export const productMaterialSchema = z.enum([
 });
 
 // Brand validation
-export const brandSchema = safeTextSchema
+export const brandSchema = z.string()
+  .trim()
+  .min(1, 'Text cannot be empty')
   .max(50, 'Brand name must be at most 50 characters')
+  .refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  })
   .optional();
 
 // Product image schema
 export const productImageSchema = z.object({
   id: z.string().optional(),
   url: z.string().url('Invalid image URL'),
-  alt: safeTextSchema.max(100).optional(),
+  alt: z.string().trim().max(100).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }).optional(),
   order: z.number().int().min(0).max(10).default(0),
 });
 
 // Create product schema
 export const createProductSchema = z.object({
-  title: safeTextSchema
+  title: z.string()
+    .trim()
     .min(3, 'Title must be at least 3 characters')
-    .max(100, 'Title must be at most 100 characters'),
+    .max(100, 'Title must be at most 100 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    }),
   
-  description: safeTextSchema
+  description: z.string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
-    .max(2000, 'Description must be at most 2000 characters'),
+    .max(2000, 'Description must be at most 2000 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    }),
   
   price: priceSchema,
   currency: currencySchema.default('USD'),
@@ -164,8 +179,11 @@ export const createProductSchema = z.object({
     .min(1, 'At least one image is required')
     .max(10, 'Maximum 10 images allowed'),
   
-  tags: z.array(safeTextSchema.max(30))
-    .max(10, 'Maximum 10 tags allowed')
+  tags: z.array(
+    z.string().trim().max(30).refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    })
+  ).max(10, 'Maximum 10 tags allowed')
     .optional(),
   
   quantity: z.number()
@@ -184,7 +202,9 @@ export const updateProductSchema = createProductSchema.partial();
 
 // Product search/filter schema
 export const productFilterSchema = z.object({
-  search: safeTextSchema.max(100).optional(),
+  search: z.string().trim().max(100).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }).optional(),
   category: z.array(productCategorySchema).optional(),
   subcategory: z.array(productSubcategorySchema).optional(),
   condition: z.array(productConditionSchema).optional(),
@@ -232,7 +252,9 @@ export const productReportSchema = z.object({
     'SPAM',
     'OTHER',
   ]),
-  description: safeTextSchema.max(500).optional(),
+  description: z.string().trim().max(500).refine((text) => !/<[^>]*>/.test(text), {
+    message: 'HTML tags are not allowed',
+  }).optional(),
 });
 
 // Type exports

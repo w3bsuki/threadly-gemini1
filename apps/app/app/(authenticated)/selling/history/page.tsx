@@ -35,7 +35,7 @@ const SalesHistoryPage = async () => {
     database.order.aggregate({
       where: {
         sellerId: dbUser.id,
-        status: 'COMPLETED',
+        status: 'DELIVERED',
       },
       _sum: {
         amount: true,
@@ -82,7 +82,7 @@ const SalesHistoryPage = async () => {
       COUNT(DISTINCT id) as order_count
     FROM "Order"
     WHERE seller_id = ${dbUser.id}
-      AND status = 'COMPLETED'
+      AND status = 'DELIVERED'
       AND created_at >= NOW() - INTERVAL '12 months'
     GROUP BY TO_CHAR(created_at, 'YYYY-MM')
     ORDER BY month DESC
@@ -93,7 +93,7 @@ const SalesHistoryPage = async () => {
     by: ['productId'],
     where: {
       sellerId: dbUser.id,
-      status: 'COMPLETED',
+      status: 'DELIVERED',
     },
     _sum: {
       amount: true,

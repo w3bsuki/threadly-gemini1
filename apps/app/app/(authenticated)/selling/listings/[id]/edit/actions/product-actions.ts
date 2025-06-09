@@ -6,10 +6,12 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { 
   productConditionSchema,
+} from '@repo/validation/schemas/product';
+import {
   priceSchema,
   safeTextSchema,
   cuidSchema,
-} from '@repo/validation/schemas/product';
+} from '@repo/validation/schemas/common';
 import { 
   sanitizeForDisplay, 
   sanitizeHtml,
@@ -23,24 +25,32 @@ import {
 } from '@repo/validation/validators';
 
 const updateProductSchema = z.object({
-  title: safeTextSchema
+  title: z.string()
+    .trim()
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be at most 100 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    })
     .refine((title) => isValidProductTitle(title), {
       message: 'Invalid product title format',
     })
     .refine((title) => !containsProfanity(title), {
       message: 'Product title contains inappropriate content',
     }),
-  description: safeTextSchema
+  description: z.string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
-    .max(2000, 'Description must be at most 2000 characters'),
+    .max(2000, 'Description must be at most 2000 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    }),
   price: priceSchema.refine((price) => isPriceInRange(price), {
     message: 'Price must be between $0.01 and $999,999.99',
   }),
   categoryId: cuidSchema,
   condition: productConditionSchema,
-  brand: safeTextSchema.max(50).optional(),
+  brand: z.string().trim().max(50).optional(),
   size: z.string().max(20).optional(),
   color: z.string().max(30).optional(),
   status: z.enum(['AVAILABLE', 'SOLD', 'RESERVED', 'REMOVED']),
@@ -196,7 +206,7 @@ export async function deleteProduct(productId: string) {
     }
 
     // Check if product has any orders
-    const ordersCount = await database.orderItem.count({
+    const ordersCount = await database.order.count({
       where: {
         productId: productId,
       },

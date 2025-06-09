@@ -27,15 +27,24 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
     redirect('/sign-in');
   }
 
+  // Get database user
+  const dbUser = await database.user.findUnique({
+    where: { clerkId: user.id },
+  });
+
+  if (!dbUser) {
+    redirect('/sign-in');
+  }
+
   // Fetch user's conversations
   const conversations = await database.conversation.findMany({
     where: {
       OR: [
-        { buyerId: user.id },
-        { sellerId: user.id },
+        { buyerId: dbUser.id },
+        { sellerId: dbUser.id },
       ],
-      ...(type === 'buying' ? { buyerId: user.id } : {}),
-      ...(type === 'selling' ? { sellerId: user.id } : {}),
+      ...(type === 'buying' ? { buyerId: dbUser.id } : {}),
+      ...(type === 'selling' ? { sellerId: dbUser.id } : {}),
     },
     include: {
       buyer: true,
@@ -60,7 +69,7 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
         select: {
           messages: {
             where: {
-              senderId: { not: user.id },
+              senderId: { not: dbUser.id },
               read: false,
             },
           },
@@ -86,7 +95,7 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
           
           <MessagesContent 
             conversations={conversations}
-            currentUserId={user.id}
+            currentUserId={dbUser.id}
             filterType={type}
           />
         </div>

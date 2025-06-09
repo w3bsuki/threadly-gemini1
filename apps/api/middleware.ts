@@ -4,7 +4,8 @@ import {
   noseconeOptionsWithToolbar,
 } from '@repo/security/middleware';
 import { csrfMiddleware } from '@repo/security';
-import type { NextMiddleware, NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextMiddleware, NextRequest } from 'next/server';
 import { env } from './env';
 
 const securityHeaders = env.FLAGS_SECRET

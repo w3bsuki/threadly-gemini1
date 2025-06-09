@@ -50,7 +50,7 @@ async function checkMessageAccess(messageId: string, userId: string) {
 // PATCH /api/messages/[messageId] - Mark message as read
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     // Check authentication
@@ -67,9 +67,10 @@ export async function PATCH(
 
     const body = await request.json();
     const validatedData = updateMessageSchema.parse(body);
+    const resolvedParams = await params;
 
     // Check access to message
-    const accessCheck = await checkMessageAccess(params.messageId, userId);
+    const accessCheck = await checkMessageAccess(resolvedParams.messageId, userId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {
@@ -93,7 +94,7 @@ export async function PATCH(
 
     // Update message read status
     const updatedMessage = await database.message.update({
-      where: { id: params.messageId },
+      where: { id: resolvedParams.messageId },
       data: {
         read: validatedData.read,
       },
@@ -146,7 +147,7 @@ export async function PATCH(
 // DELETE /api/messages/[messageId] - Delete a message (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     // Check authentication
@@ -161,8 +162,10 @@ export async function DELETE(
       );
     }
 
+    const resolvedParams = await params;
+    
     // Check access to message
-    const accessCheck = await checkMessageAccess(params.messageId, userId);
+    const accessCheck = await checkMessageAccess(resolvedParams.messageId, userId);
     if (!accessCheck.hasAccess) {
       return NextResponse.json(
         {
@@ -200,7 +203,7 @@ export async function DELETE(
 
     // Soft delete by updating content
     const deletedMessage = await database.message.update({
-      where: { id: params.messageId },
+      where: { id: resolvedParams.messageId },
       data: {
         content: '[Message deleted]',
         imageUrl: null,

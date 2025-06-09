@@ -99,11 +99,11 @@ export function SalesHistoryContent({
   const getStatusBadge = (status: string) => {
     const statusMap = {
       PENDING: { variant: 'secondary' as const, label: 'Pending' },
-      PROCESSING: { variant: 'default' as const, label: 'Processing' },
+      PAID: { variant: 'default' as const, label: 'Paid' },
       SHIPPED: { variant: 'default' as const, label: 'Shipped' },
       DELIVERED: { variant: 'default' as const, label: 'Delivered' },
-      COMPLETED: { variant: 'default' as const, label: 'Completed' },
       CANCELLED: { variant: 'destructive' as const, label: 'Cancelled' },
+      DISPUTED: { variant: 'destructive' as const, label: 'Disputed' },
     };
 
     const statusInfo = statusMap[status as keyof typeof statusMap] || { 

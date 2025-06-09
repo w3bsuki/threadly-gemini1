@@ -55,7 +55,7 @@ const FollowingPage = async () => {
     include: {
       _count: {
         select: {
-          productsAsseller: {
+          listings: {
             where: {
               status: 'AVAILABLE'
             }
@@ -63,7 +63,7 @@ const FollowingPage = async () => {
           receivedReviews: true,
         },
       },
-      productsAsseller: {
+      listings: {
         where: {
           status: 'AVAILABLE'
         },
@@ -88,7 +88,7 @@ const FollowingPage = async () => {
     },
     orderBy: [
       { averageRating: 'desc' },
-      { createdAt: 'desc' }
+      { joinedAt: 'desc' }
     ],
     take: 12
   });
@@ -170,7 +170,7 @@ const FollowingPage = async () => {
               <Card key={seller.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="text-center">
                   <Avatar className="w-16 h-16 mx-auto mb-3">
-                    <AvatarImage src={seller.profileImage || undefined} />
+                    <AvatarImage src={seller.imageUrl || undefined} />
                     <AvatarFallback className="text-lg">
                       {getInitials(seller)}
                     </AvatarFallback>
@@ -180,9 +180,9 @@ const FollowingPage = async () => {
                   <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Package className="h-4 w-4" />
-                      {seller._count.productsAsseller} items
+                      {seller._count.listings} items
                     </div>
-                    {seller.averageRating > 0 && (
+                    {seller.averageRating && seller.averageRating > 0 && (
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         {seller.averageRating.toFixed(1)}
@@ -193,11 +193,11 @@ const FollowingPage = async () => {
 
                 <CardContent>
                   {/* Recent Items Preview */}
-                  {seller.productsAsseller.length > 0 && (
+                  {seller.listings.length > 0 && (
                     <div className="space-y-3 mb-4">
                       <h4 className="text-sm font-medium">Recent Items</h4>
                       <div className="grid grid-cols-3 gap-2">
-                        {seller.productsAsseller.map((product) => (
+                        {seller.listings.map((product) => (
                           <div key={product.id} className="aspect-square relative">
                             {product.images[0] ? (
                               <img

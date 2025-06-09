@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { createProduct } from '../actions/create-product';
 import { ImageUpload } from './image-upload';
 import { CategorySelector } from './category-selector';
+import { toast } from '@/components/toast';
 
 const productSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
@@ -64,14 +65,14 @@ export function ProductForm({ userId }: ProductFormProps) {
       });
 
       if (result && result.success) {
+        toast.success('Product created successfully!');
         router.push(`/selling/listings`);
       } else {
-        // Handle error - show user-friendly message
-        alert(`Failed to create product: ${result.error || 'Unknown error'}`);
+        toast.error(result.error || 'Failed to create product');
       }
     } catch (error) {
       console.error('Error creating product:', error);
-      alert(`Error creating product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(error instanceof Error ? error.message : 'Failed to create product');
     } finally {
       setIsSubmitting(false);
     }

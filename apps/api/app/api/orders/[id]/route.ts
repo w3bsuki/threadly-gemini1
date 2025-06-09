@@ -14,7 +14,7 @@ const updateOrderSchema = z.object({
 // GET /api/orders/[id] - Get a single order
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -22,8 +22,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     const order = await database.order.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         product: {
           include: {
@@ -87,7 +88,7 @@ export async function GET(
 // PUT /api/orders/[id] - Update an order (mainly for sellers to update shipping)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -95,8 +96,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     const order = await database.order.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       select: {
         id: true,
         buyerId: true,
@@ -146,7 +148,7 @@ export async function PUT(
     }
 
     const updatedOrder = await database.order.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: updateData,
       include: {
         product: {
@@ -190,7 +192,7 @@ export async function PUT(
 // DELETE /api/orders/[id] - Cancel an order (only for pending orders)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -198,8 +200,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     const order = await database.order.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: { product: true },
     });
 
@@ -223,7 +226,7 @@ export async function DELETE(
     // Cancel order and restore product availability
     await database.$transaction(async (tx) => {
       await tx.order.update({
-        where: { id: params.id },
+        where: { id: resolvedParams.id },
         data: { status: 'CANCELLED' },
       });
 

@@ -1,4 +1,4 @@
-import { auth } from '@repo/auth/server';
+import { currentUser } from '@repo/auth/server';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,9 +6,9 @@ const notificationService = getNotificationService();
 
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await auth();
+    const user = await currentUser();
     
-    if (!user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

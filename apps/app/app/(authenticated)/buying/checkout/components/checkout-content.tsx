@@ -44,7 +44,7 @@ const checkoutSchema = z.object({
   
   // Optional
   notes: z.string().optional(),
-  saveAddress: z.boolean().default(false),
+  saveAddress: z.boolean(),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
@@ -126,7 +126,7 @@ export function CheckoutContent({ user }: CheckoutContentProps) {
 
       const orderResult = await createOrder(orderData);
 
-      if (!orderResult.success) {
+      if (!orderResult.success || !orderResult.order) {
         throw new Error(orderResult.error || 'Failed to create order');
       }
 

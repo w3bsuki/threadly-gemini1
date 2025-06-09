@@ -3,6 +3,14 @@
  */
 
 import DOMPurify from 'isomorphic-dompurify';
+
+// Type definitions for DOMPurify.Config
+interface DOMPurifyConfig {
+  ALLOWED_TAGS?: string[];
+  ALLOWED_ATTR?: string[];
+  ALLOW_DATA_ATTR?: boolean;
+  [key: string]: any;
+}
 import BadWordsFilter from 'bad-words';
 
 // Initialize profanity filter
@@ -14,8 +22,8 @@ profanityFilter.addWords('scam', 'fake', 'counterfeit');
 /**
  * Sanitize HTML content to prevent XSS attacks
  */
-export const sanitizeHtml = (html: string, options?: DOMPurify.Config): string => {
-  const defaultOptions: DOMPurify.Config = {
+export const sanitizeHtml = (html: string, options?: DOMPurifyConfig): string => {
+  const defaultOptions: DOMPurifyConfig = {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
     ALLOWED_ATTR: ['href', 'target'],
     ALLOW_DATA_ATTR: false,

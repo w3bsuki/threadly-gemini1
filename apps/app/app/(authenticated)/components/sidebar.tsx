@@ -117,10 +117,6 @@ const data = {
           url: '/selling/listings',
         },
         {
-          title: 'Order Management',
-          url: '/selling/orders',
-        },
-        {
           title: 'Sales History',
           url: '/selling/history',
         },
@@ -164,12 +160,6 @@ const data = {
         },
       ],
     },
-    {
-      title: 'Reviews',
-      url: '/reviews',
-      icon: StarIcon,
-      items: [],
-    },
   ],
   navSecondary: [
     {
@@ -177,27 +167,12 @@ const data = {
       url: '/profile',
       icon: UserIcon,
     },
-    {
-      title: 'Support',
-      url: '/support',
-      icon: LifeBuoyIcon,
-    },
-    {
-      title: 'Feedback',
-      url: '/feedback',
-      icon: SendIcon,
-    },
   ],
   projects: [
     {
       name: 'My Favorites',
-      url: '/favorites',
+      url: '/buying/favorites',
       icon: HeartIcon,
-    },
-    {
-      name: 'Following',
-      url: '/following',
-      icon: UserIcon,
     },
   ],
 };

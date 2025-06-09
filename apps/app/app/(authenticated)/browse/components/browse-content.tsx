@@ -31,15 +31,15 @@ interface Product {
   description: string;
   price: number;
   condition: string;
-  brand?: string;
-  size?: string;
-  color?: string;
+  brand?: string | null;
+  size?: string | null;
+  color?: string | null;
   status: string;
   createdAt: Date;
   images: Array<{
     id: string;
     imageUrl: string;
-    alt?: string;
+    alt?: string | null;
   }>;
   category: {
     id: string;
@@ -47,9 +47,9 @@ interface Product {
   };
   seller: {
     id: string;
-    firstName?: string;
-    lastName?: string;
-    imageUrl?: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    imageUrl?: string | null;
   };
   _count: {
     favorites: number;
@@ -62,7 +62,7 @@ interface Category {
   parent?: {
     id: string;
     name: string;
-  };
+  } | null;
   _count: {
     products: number;
   };
@@ -147,7 +147,7 @@ export function BrowseContent({
         ? `${product.seller.firstName} ${product.seller.lastName}` 
         : product.seller.firstName || 'Seller',
       condition: product.condition,
-      size: product.size,
+      size: product.size || undefined,
       availableQuantity: 1, // Marketplace items are single quantity
     });
   };

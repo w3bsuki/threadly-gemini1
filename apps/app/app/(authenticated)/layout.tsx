@@ -4,10 +4,11 @@ import { SidebarProvider } from '@repo/design-system/components/ui/sidebar';
 import { showBetaFeature } from '@repo/feature-flags';
 import { NotificationsProvider } from '@repo/notifications/components/provider';
 import { RealTimeWrapper } from './components/real-time-wrapper';
-import { secure, initializeCSRFProtection } from '@repo/security';
+import { secure } from '@repo/security';
 import type { ReactNode } from 'react';
 import { PostHogIdentifier } from './components/posthog-identifier';
 import { GlobalSidebar } from './components/sidebar';
+import { ToastProvider } from '@/components/toast';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -26,8 +27,9 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
     return redirectToSignIn();
   }
 
-  // Initialize CSRF protection for authenticated users
-  await initializeCSRFProtection();
+  // TODO: Initialize CSRF protection for authenticated users
+  // Note: CSRF token setup moved to individual forms/actions due to Next.js 15 cookie restrictions
+  // await initializeCSRFProtection();
 
   return (
     <RealTimeWrapper userId={user.id}>
@@ -40,6 +42,7 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
               </div>
             )}
             {children}
+            <ToastProvider />
           </GlobalSidebar>
           <PostHogIdentifier />
         </SidebarProvider>

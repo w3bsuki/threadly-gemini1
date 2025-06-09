@@ -31,7 +31,12 @@ const CheckoutPage = async () => {
             </p>
           </div>
           
-          <CheckoutContent user={user} />
+          <CheckoutContent user={{
+            id: user.id,
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            emailAddresses: user.emailAddresses
+          }} />
         </div>
       </div>
     </>

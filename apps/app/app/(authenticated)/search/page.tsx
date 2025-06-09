@@ -1,6 +1,6 @@
-import { auth } from '@repo/auth/server';
+import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { Header } from '../components/header';
 import { AddToCartButton } from '@/components/add-to-cart-button';
 
@@ -23,6 +23,16 @@ export const generateMetadata = async ({
 
 const SearchPage = async ({ searchParams }: SearchPageProperties) => {
   const { q } = await searchParams;
+  
+  const user = await currentUser();
+  if (!user) {
+    redirect('/sign-in');
+  }
+
+  if (!q) {
+    redirect('/');
+  }
+
   const products = await database.product.findMany({
     where: {
       OR: [
@@ -51,7 +61,7 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
       images: {
         take: 1,
         orderBy: {
-          order: 'asc',
+          displayOrder: 'asc',
         },
       },
       seller: {
@@ -63,16 +73,6 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
     },
     take: 20, // Limit results
   });
-  
-  const { orgId } = await auth();
-
-  if (!orgId) {
-    notFound();
-  }
-
-  if (!q) {
-    redirect('/');
-  }
 
   return (
     <>
@@ -85,8 +85,8 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
                 <div className="aspect-square relative bg-muted">
                   {product.images[0] ? (
                     <img
-                      src={product.images[0].url}
-                      alt={product.images[0].altText || product.title}
+                      src={product.images[0].imageUrl}
+                      alt={product.images[0].alt || product.title}
                       className="object-cover w-full h-full"
                     />
                   ) : (
@@ -103,7 +103,16 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
                   <div className="flex items-center justify-between mt-2">
                     <p className="font-semibold text-sm">${product.price.toFixed(2)}</p>
                     <AddToCartButton 
-                      product={product} 
+                      product={{
+                        ...product,
+                        seller: {
+                          firstName: product.seller.firstName || undefined,
+                          lastName: product.seller.lastName || undefined,
+                        },
+                        images: product.images.map(img => ({ url: img.imageUrl })),
+                        size: product.size || undefined,
+                        color: product.color || undefined,
+                      }} 
                       size="sm" 
                       showText={false}
                     />

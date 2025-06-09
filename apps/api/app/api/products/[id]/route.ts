@@ -6,10 +6,12 @@ import { z } from 'zod';
 import { 
   updateProductSchema,
   productConditionSchema,
+} from '@repo/validation/schemas/product';
+import {
   priceSchema,
   safeTextSchema,
   cuidSchema,
-} from '@repo/validation/schemas/product';
+} from '@repo/validation/schemas/common';
 import { 
   withValidation, 
   validateBody,
@@ -30,9 +32,13 @@ import {
 
 // Enhanced schema for updating a product
 const updateProductInput = z.object({
-  title: safeTextSchema
+  title: z.string()
+    .trim()
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be at most 100 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    })
     .refine((title) => isValidProductTitle(title), {
       message: 'Invalid product title format',
     })
@@ -40,9 +46,13 @@ const updateProductInput = z.object({
       message: 'Product title contains inappropriate content',
     })
     .optional(),
-  description: safeTextSchema
+  description: z.string()
+    .trim()
     .min(10, 'Description must be at least 10 characters')
     .max(2000, 'Description must be at most 2000 characters')
+    .refine((text) => !/<[^>]*>/.test(text), {
+      message: 'HTML tags are not allowed',
+    })
     .optional(),
   price: priceSchema
     .refine((price) => isPriceInRange(price), {
@@ -50,7 +60,7 @@ const updateProductInput = z.object({
     })
     .optional(),
   condition: productConditionSchema.optional(),
-  brand: safeTextSchema.max(50).optional().nullable(),
+  brand: z.string().trim().max(50).optional().nullable(),
   size: z.string().max(20).optional().nullable(),
   color: z.string().max(30).optional().nullable(),
   status: z.enum(['AVAILABLE', 'SOLD', 'RESERVED', 'REMOVED']).optional(),
@@ -135,7 +145,7 @@ export async function GET(
         },
         images: {
           orderBy: {
-            order: 'asc',
+            displayOrder: 'asc',
           },
         },
         _count: {
@@ -314,7 +324,7 @@ export async function PUT(
         deleteMany: {},
         create: validatedData.images.map((url, index) => ({
           imageUrl: url,
-          order: index,
+          displayOrder: index,
         })),
       };
     }
@@ -341,7 +351,7 @@ export async function PUT(
         },
         images: {
           orderBy: {
-            order: 'asc',
+            displayOrder: 'asc',
           },
         },
       },

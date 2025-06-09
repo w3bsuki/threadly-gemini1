@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { Alert, AlertDescription, AlertTitle } from '@repo/design-system/components/ui/alert';
 import { Badge } from '@repo/design-system/components/ui/badge';
 import { Loader2, CheckCircle2, AlertCircle, DollarSign, Package, ShieldCheck, TrendingUp, Zap, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 
 type AccountStatus = {
   status: 'not_connected' | 'connected' | 'pending' | 'restricted' | 'disabled';

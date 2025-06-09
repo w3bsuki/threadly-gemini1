@@ -23,6 +23,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { paymentIntentId } = verifyPaymentSchema.parse(body);
 
+    // Get database user
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Retrieve the payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
@@ -31,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the payment belongs to the current user
-    if (paymentIntent.metadata.userId !== user.id) {
+    if (paymentIntent.metadata.buyerId !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -51,7 +60,7 @@ export async function POST(request: NextRequest) {
       // Since we're using single product orders, there might be multiple orders for one payment
       const orders = await database.order.findMany({
         where: {
-          buyerId: user.id,
+          buyerId: dbUser.id,
           status: 'PENDING',
           // Orders created around the same time as the payment
           createdAt: {
@@ -138,7 +147,7 @@ export async function POST(request: NextRequest) {
     const order = await database.order.findFirst({
       where: {
         id: orderId,
-        buyerId: user.id,
+        buyerId: dbUser.id,
       },
       include: {
         product: {

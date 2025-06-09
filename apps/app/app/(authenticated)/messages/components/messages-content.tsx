@@ -29,9 +29,9 @@ import { sendMessage, markMessagesAsRead } from '../actions/message-actions';
 
 interface User {
   id: string;
-  firstName?: string;
-  lastName?: string;
-  imageUrl?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  imageUrl?: string | null;
   email: string;
 }
 
@@ -41,8 +41,9 @@ interface Product {
   price: number;
   status: string;
   images: Array<{
-    url: string;
-    altText?: string;
+    id: string;
+    imageUrl: string;
+    alt?: string | null;
   }>;
 }
 
@@ -85,7 +86,7 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Real-time features for selected conversation
   const { bind: bindMessages } = useChannel(
@@ -297,7 +298,7 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
                       onClick={() => setSelectedConversation(conversation)}
                     >
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={otherUser.imageUrl} />
+                        <AvatarImage src={otherUser.imageUrl || undefined} />
                         <AvatarFallback>
                           {otherUser.firstName?.[0]}{otherUser.lastName?.[0]}
                         </AvatarFallback>
@@ -358,7 +359,7 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={getOtherUser(selectedConversation).imageUrl} />
+                  <AvatarImage src={getOtherUser(selectedConversation).imageUrl || undefined} />
                   <AvatarFallback>
                     {getOtherUser(selectedConversation).firstName?.[0]}
                     {getOtherUser(selectedConversation).lastName?.[0]}
@@ -385,7 +386,7 @@ export function MessagesContent({ conversations, currentUserId, filterType }: Me
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                 <div className="relative w-12 h-12 flex-shrink-0">
                   <Image
-                    src={selectedConversation.product.images[0]?.url || '/placeholder.png'}
+                    src={selectedConversation.product.images[0]?.imageUrl || '/placeholder.png'}
                     alt={selectedConversation.product.title}
                     fill
                     className="object-cover rounded-md"
