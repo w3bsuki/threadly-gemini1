@@ -34,9 +34,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   
   if (search) {
     where.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } }
+      { email: { contains: search } },
+      { firstName: { contains: search } },
+      { lastName: { contains: search } }
     ];
   }
   

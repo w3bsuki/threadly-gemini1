@@ -20,26 +20,22 @@ export async function GET(request: NextRequest) {
           {
             title: {
               contains: searchTerm,
-              mode: 'insensitive',
             },
           },
           {
             brand: {
               contains: searchTerm,
-              mode: 'insensitive',
             },
           },
           {
             description: {
               contains: searchTerm,
-              mode: 'insensitive',
             },
           },
           {
             category: {
               name: {
                 contains: searchTerm,
-                mode: 'insensitive',
               },
             },
           },

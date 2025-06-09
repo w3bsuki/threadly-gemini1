@@ -39,19 +39,16 @@ const SearchPage = async ({ searchParams }: SearchPageProperties) => {
         {
           title: {
             contains: q,
-            mode: 'insensitive',
           },
         },
         {
           description: {
             contains: q,
-            mode: 'insensitive',
           },
         },
         {
           brand: {
             contains: q,
-            mode: 'insensitive',
           },
         },
       ],

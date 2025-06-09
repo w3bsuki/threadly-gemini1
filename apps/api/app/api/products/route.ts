@@ -139,7 +139,6 @@ export async function GET(request: NextRequest) {
     if (brand) {
       where.brand = {
         contains: brand,
-        mode: 'insensitive',
       };
     }
 
@@ -160,19 +159,16 @@ export async function GET(request: NextRequest) {
         {
           title: {
             contains: sanitizedSearch,
-            mode: 'insensitive',
           },
         },
         {
           description: {
             contains: sanitizedSearch,
-            mode: 'insensitive',
           },
         },
         {
           brand: {
             contains: sanitizedSearch,
-            mode: 'insensitive',
           },
         },
       ];

@@ -58,9 +58,9 @@ const BrowsePage = async ({ searchParams }: BrowsePageProps) => {
 
   if (params.search) {
     where.OR = [
-      { title: { contains: params.search, mode: 'insensitive' } },
-      { description: { contains: params.search, mode: 'insensitive' } },
-      { brand: { contains: params.search, mode: 'insensitive' } },
+      { title: { contains: params.search } },
+      { description: { contains: params.search } },
+      { brand: { contains: params.search } },
     ];
   }
 

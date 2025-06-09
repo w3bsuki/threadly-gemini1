@@ -93,9 +93,9 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
     // Add search query if provided
     if (query) {
       whereClause.OR = [
-        { title: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { brand: { contains: query, mode: 'insensitive' } },
+        { title: { contains: query } },
+        { description: { contains: query } },
+        { brand: { contains: query } },
       ];
     }
 
@@ -104,8 +104,8 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
       const categoryRecord = await database.category.findFirst({
         where: {
           OR: [
-            { name: { equals: searchParams_.category, mode: 'insensitive' } },
-            { slug: { equals: searchParams_.category, mode: 'insensitive' } }
+            { name: { equals: searchParams_.category } },
+            { slug: { equals: searchParams_.category } }
           ]
         }
       });
@@ -116,7 +116,7 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
 
     // Add other filters
     if (searchParams_.brand) {
-      whereClause.brand = { equals: searchParams_.brand, mode: 'insensitive' };
+      whereClause.brand = { equals: searchParams_.brand };
     }
     if (searchParams_.size) {
       whereClause.size = searchParams_.size;

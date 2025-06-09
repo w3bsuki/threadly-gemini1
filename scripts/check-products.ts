@@ -49,19 +49,16 @@ async function checkProducts() {
           {
             title: {
               contains: 'leather',
-              mode: 'insensitive',
             },
           },
           {
             description: {
               contains: 'leather',
-              mode: 'insensitive',
             },
           },
           {
             brand: {
               contains: 'leather',
-              mode: 'insensitive',
             },
           },
         ],
@@ -81,13 +78,11 @@ async function checkProducts() {
           {
             title: {
               contains: 'jacket',
-              mode: 'insensitive',
             },
           },
           {
             description: {
               contains: 'jacket',
-              mode: 'insensitive',
             },
           },
         ],

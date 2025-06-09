@@ -27,7 +27,6 @@ async function testSuggestionsLogic() {
         status: 'AVAILABLE',
         title: {
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       include: {
@@ -65,7 +64,6 @@ async function testSuggestionsLogic() {
         brand: {
           not: null,
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       _count: {
@@ -97,7 +95,6 @@ async function testSuggestionsLogic() {
       where: {
         name: {
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       include: {

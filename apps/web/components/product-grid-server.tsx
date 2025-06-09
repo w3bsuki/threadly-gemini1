@@ -108,24 +108,24 @@ export async function ProductGridServer({
     if (category === 'designer') {
       // Find products from luxury brands
       whereClause.OR = [
-        { brand: { contains: 'Gucci', mode: 'insensitive' } },
-        { brand: { contains: 'Prada', mode: 'insensitive' } },
-        { brand: { contains: 'Chanel', mode: 'insensitive' } },
-        { brand: { contains: 'Louis Vuitton', mode: 'insensitive' } },
-        { brand: { contains: 'Versace', mode: 'insensitive' } },
-        { brand: { contains: 'Dior', mode: 'insensitive' } },
-        { brand: { contains: 'Balenciaga', mode: 'insensitive' } },
-        { brand: { contains: 'Hermès', mode: 'insensitive' } },
-        { brand: { contains: 'Saint Laurent', mode: 'insensitive' } },
-        { brand: { contains: 'Bottega Veneta', mode: 'insensitive' } },
+        { brand: { contains: 'Gucci' } },
+        { brand: { contains: 'Prada' } },
+        { brand: { contains: 'Chanel' } },
+        { brand: { contains: 'Louis Vuitton' } },
+        { brand: { contains: 'Versace' } },
+        { brand: { contains: 'Dior' } },
+        { brand: { contains: 'Balenciaga' } },
+        { brand: { contains: 'Hermès' } },
+        { brand: { contains: 'Saint Laurent' } },
+        { brand: { contains: 'Bottega Veneta' } },
       ];
     } else if (category && ['men', 'women', 'kids', 'unisex'].includes(category)) {
       // Handle gender-based categories by category name
       const genderCategory = await database.category.findFirst({
         where: {
           OR: [
-            { slug: { contains: category, mode: 'insensitive' } },
-            { name: { contains: category, mode: 'insensitive' } }
+            { slug: { contains: category } },
+            { name: { contains: category } }
           ]
         }
       });
@@ -138,8 +138,8 @@ export async function ProductGridServer({
       const categoryFilter = await database.category.findFirst({
         where: {
           OR: [
-            { name: { equals: category, mode: 'insensitive' } },
-            { slug: { equals: category, mode: 'insensitive' } }
+            { name: { equals: category } },
+            { slug: { equals: category } }
           ]
         }
       });

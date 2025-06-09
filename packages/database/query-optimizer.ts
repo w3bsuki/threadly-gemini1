@@ -116,9 +116,9 @@ export class DatabaseOptimizer {
     const where: Prisma.ProductWhereInput = {
       status: 'AVAILABLE',
       OR: [
-        { title: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { brand: { contains: query, mode: 'insensitive' } },
+        { title: { contains: query } },
+        { description: { contains: query } },
+        { brand: { contains: query } },
       ],
       ...(categoryId && { categoryId }),
       ...(minPrice && { price: { gte: minPrice } }),

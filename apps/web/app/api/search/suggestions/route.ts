@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
         status: 'AVAILABLE',
         title: {
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       include: {
@@ -55,7 +54,6 @@ export async function GET(request: NextRequest) {
         brand: {
           not: null,
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       _count: {
@@ -85,7 +83,6 @@ export async function GET(request: NextRequest) {
       where: {
         name: {
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       include: {
