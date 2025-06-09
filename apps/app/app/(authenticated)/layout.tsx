@@ -14,7 +14,7 @@ type AppLayoutProperties = {
   readonly children: ReactNode;
 };
 
-const AppLayout = async ({ children }: AppLayoutProperties) => {
+const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
   if (env.ARCJET_KEY) {
     await secure(['CATEGORY:PREVIEW']);
   }
@@ -57,4 +57,4 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
   );
 };
 
-export default AppLayout;
+export default AuthenticatedLayout;
