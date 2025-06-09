@@ -1,23 +1,6 @@
-# Threadly - Modern C2C Fashion Marketplace
+# 🛍️ Threadly - Premium C2C Fashion Marketplace
 
-A production-ready clothing marketplace built with Next.js, TypeScript, and modern web technologies. Think Vinted, but better.
-
-## 🏗️ Architecture
-
-This is a **Turborepo monorepo** with three main applications:
-
-```
-apps/
-├── web/        # Public marketplace (threadly.com)
-├── app/        # User dashboard (app.threadly.com)
-└── api/        # Backend services (api.threadly.com)
-
-packages/       # Shared packages
-├── database/   # Prisma ORM & schemas
-├── ui/         # Design system components
-├── auth/       # Clerk authentication
-└── ...         # Other shared utilities
-```
+A modern peer-to-peer fashion marketplace built with Next.js 15, TypeScript, and Turborepo.
 
 ## 🚀 Quick Start
 
@@ -26,76 +9,71 @@ packages/       # Shared packages
 pnpm install
 
 # Set up environment variables
-cp apps/web/.env.example apps/web/.env.local
-cp apps/app/.env.example apps/app/.env.local
-cp apps/api/.env.example apps/api/.env.local
+cp .env.example .env.local
 
 # Push database schema
 pnpm db:push
 
-# Start development servers
+# Seed test data
+pnpm db:seed
+
+# Start development
 pnpm dev
 ```
 
-### Access Points
-- Web: http://localhost:3001
-- App: http://localhost:3000
-- API: http://localhost:3002
-
 ## 📚 Documentation
 
-All documentation is in the `/documentation` folder:
+We use a streamlined 6-file documentation system:
 
-1. **[PROGRESS.md](./PROGRESS.md)** - Current status and task tracking
-2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development guide and patterns
-3. **[API.md](./API.md)** - API endpoints and integration
-4. **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
-5. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical architecture decisions
+1. **[CLAUDE.md](./CLAUDE.md)** - Development guide and patterns
+2. **[STATUS.md](./STATUS.md)** - Current project status dashboard
+3. **[ISSUES.md](./ISSUES.md)** - Technical debt and code issues tracker
+4. **[ROADMAP.md](./ROADMAP.md)** - Feature roadmap and vision
+5. **[APPS.md](./APPS.md)** - Implementation details for each app
+6. **[DEPLOY.md](./DEPLOY.md)** - Production deployment guide
 
-## 🔧 Tech Stack
+## 🏗️ Architecture
 
-- **Framework**: Next.js 15 (App Router)
+```
+apps/
+├── web/        # Public marketplace (port 3001)
+├── app/        # User dashboard (port 3000)
+└── api/        # Backend services (port 3002)
+
+packages/
+├── database/   # Prisma ORM
+├── ui/         # Shared components
+├── auth/       # Clerk integration
+└── ...         # Other shared packages
+```
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
-- **Database**: PostgreSQL + Prisma
+- **Database**: PostgreSQL with Prisma
 - **Auth**: Clerk
 - **Payments**: Stripe Connect
-- **File Upload**: UploadThing
 - **Styling**: Tailwind CSS + shadcn/ui
-- **State**: Zustand
-- **Monorepo**: Turborepo
-- **Deployment**: Vercel
+- **State**: Zustand + React Query
+- **Real-time**: Pusher
+- **Search**: Algolia
 
-## 📊 Project Status
+## 📦 Key Features
 
-**Overall Completion: ~70%**
+- ✅ User authentication and profiles
+- ✅ Product listings with multi-image upload
+- ✅ Real-time messaging between buyers/sellers
+- ✅ Secure payments with Stripe Connect
+- ✅ Advanced search and filtering
+- ✅ Order management and tracking
+- ✅ Review and rating system
+- ✅ Responsive design
 
-✅ **Completed**:
-- Database schema and models
-- Authentication system
-- Product browsing and search
-- Shopping cart functionality
-- Basic UI/UX structure
+## 🧑‍💻 Development
 
-🚧 **In Progress**:
-- Payment processing
-- Order management
-- Messaging system
-- Seller dashboard
+See [CLAUDE.md](./CLAUDE.md) for development guidelines and [STATUS.md](./STATUS.md) for current tasks.
 
-❌ **Not Started**:
-- Email notifications
-- Mobile app
-- Admin panel
-- Analytics dashboard
+## 📄 License
 
-## 🤝 Contributing
-
-1. Check [PROGRESS.md](./PROGRESS.md) for current tasks
-2. Follow patterns in [DEVELOPMENT.md](./DEVELOPMENT.md)
-3. Create feature branch from `main`
-4. Make changes and test thoroughly
-5. Submit PR with clear description
-
-## 📝 License
-
-Private and confidential. All rights reserved.
+Private and confidential.

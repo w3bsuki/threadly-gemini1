@@ -1,188 +1,232 @@
-# CLAUDE.md
+# 🧠 CLAUDE.md - Operational Brain
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+*Critical information for working with Threadly codebase*
 
-## Project Overview
+## 🎯 PROJECT CONTEXT
+**Threadly** = Premium C2C fashion marketplace (Vinted competitor)
+- **Tech Stack**: Next.js 15, TypeScript, Turborepo, Prisma, Stripe
+- **Architecture**: 3 apps (/web = public, /app = dashboard, /api = backend)
+- **Status**: 85% complete, needs production config
 
-**Threadly** is a production-ready C2C clothing marketplace like Vinted, built with a dual-app architecture for optimal performance and user experience. The project is 75% complete with solid foundations and ready for core marketplace feature implementation.
+## ⚡ QUICK COMMANDS
 
-## Development Commands
+```bash
+# ALWAYS USE THESE
+pnpm dev          # Start everything
+pnpm build        # Build all apps
+pnpm typecheck    # Check types before commit
+pnpm db:push      # Update database schema
+pnpm db:seed      # Add test data
 
-This is a Turborepo monorepo with three main applications and shared packages.
-
-### Root Commands
-- `pnpm dev` - Start all development servers
-- `pnpm build` - Build all applications and packages
-- `pnpm test` - Run all tests across the workspace
-- `pnpm lint` - Lint all code using ultracite (Biome wrapper)
-- `pnpm format` - Format all code
-- `pnpm typecheck` - Run TypeScript checks on all apps
-- `pnpm migrate` - Run database migrations (Prisma format, generate, and push)
-- `pnpm clean` - Clean all node_modules and build artifacts
-
-### Application-Specific Commands
-
-**App (Main authenticated application - port 3000):**
-- `cd apps/app && pnpm dev` - Start user dashboard with Turbopack
-- `cd apps/app && pnpm test` - Run vitest tests
-- `cd apps/app && pnpm typecheck` - TypeScript checking
-
-**Web (Public marketplace - port 3001):**
-- `cd apps/web && pnpm dev` - Start public marketplace site
-- `cd apps/web && pnpm typecheck` - TypeScript checking
-
-**API (Backend services - port 3002):**
-- `cd apps/api && pnpm dev` - Start API server with Stripe webhook listener
-- `cd apps/api && pnpm test` - Run vitest tests
-- `cd apps/api && pnpm stripe` - Run Stripe CLI webhook listener only
-
-## Architecture Overview
-
-### Dual-App Strategy
-```
-┌─────────────────┐     ┌─────────────────┐
-│   /web App      │     │   /app Dashboard│
-│  (Public Site)  │────▶│  (User Portal)  │
-│                 │     │                 │
-│ • Browse        │     │ • Sell          │
-│ • Search        │     │ • Buy           │
-│ • Discover      │     │ • Manage        │
-│ • Marketing     │     │ • Analytics     │
-└─────────────────┘     └─────────────────┘
+# DEBUG COMMANDS
+pnpm why [package]      # Check why package exists
+pnpm ls [package]       # List package versions
+turbo daemon clean      # Fix turbo cache issues
 ```
 
-### Applications
-- `apps/app/` - **Authenticated user dashboard** for selling, buying, messaging, and account management
-- `apps/web/` - **Public marketplace** for browsing, search, and product discovery (SEO-optimized)
-- `apps/api/` - **Backend API** handling webhooks, payments, and server-side operations
+## 🚨 CRITICAL PATTERNS
 
-### Database Schema (Prisma)
-Comprehensive marketplace schema includes:
-- **Users**: Clerk integration with marketplace-specific fields
-- **Products**: Full product management with categories, images, conditions
-- **Orders**: Complete order lifecycle with payments and tracking
-- **Messages**: Real-time communication between users
-- **Reviews**: User rating and feedback system
-- **Favorites**: Wishlist and saved items functionality
+### 1. NEVER Create Files Unless Essential
+- **Check existing files first** - we have too many already
+- **Edit > Create** - always prefer editing
+- **No README.md files** - use the 5 main docs
 
-### Shared Packages
-The monorepo uses workspace packages (`@repo/*`) for shared functionality:
+### 2. Database Access Pattern
+```typescript
+// ALWAYS use this pattern for database queries
+import { database } from '@repo/database';
 
-- `@repo/auth` - Authentication (Clerk integration)
-- `@repo/database` - Database layer (Prisma) with marketplace models
-- `@repo/design-system` - UI components with premium aesthetic
-- `@repo/payments` - Payment processing (Stripe Connect)
-- `@repo/analytics` - Analytics integration (PostHog, Vercel Analytics)
-- `@repo/observability` - Monitoring and error tracking (Sentry)
-- `@repo/feature-flags` - Feature flag management
-- `@repo/notifications` - In-app notifications
-- `@repo/security` - Security middleware (Arcjet)
-- `@repo/internationalization` - i18n support
+// Include related data to avoid N+1
+const products = await database.product.findMany({
+  include: {
+    images: { orderBy: { displayOrder: 'asc' } },
+    seller: { select: { id: true, firstName: true } },
+    category: true,
+    _count: { select: { favorites: true } }
+  }
+});
+```
 
-## Current Implementation Status
+### 3. API Route Pattern (Next.js 15)
+```typescript
+// PARAMS ARE NOW ASYNC!
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params; // MUST AWAIT
+  const id = resolvedParams.id;
+  // ... rest of code
+}
+```
 
-### ✅ Completed (75%)
-- **Database Schema**: Complete marketplace models with all relationships
-- **Authentication**: Clerk integration across both apps
-- **UI/UX**: Premium design system with designer section
-- **Navigation**: Category-based browsing (Men/Women/Kids/Designer)
-- **Filtering**: Advanced product filtering system
-- **Architecture**: Solid monorepo structure with proper separation
-- **Payments**: Stripe foundation (mock implementation)
+### 4. Environment Variables
+```typescript
+// Use packages/[package]/keys.ts pattern
+import { keys as authKeys } from '@repo/auth/keys';
+import { keys as paymentKeys } from '@repo/payments/keys';
 
-### 🚧 In Progress / Missing
-- **Product Management**: CRUD operations for product listings
-- **Image Upload**: UploadThing integration for product photos
-- **Checkout Flow**: Complete purchase and order processing
-- **Messaging System**: Real-time chat between buyers/sellers
-- **Search Engine**: Elasticsearch/Algolia integration
-- **Production Deployment**: Environment configuration and CI/CD
+// In env.ts files
+export const env = createEnv({
+  extends: [authKeys(), paymentKeys()],
+  // ... additional vars
+});
+```
 
-## Development Patterns
+### 5. State Management
+- **Cart**: Zustand in `lib/stores/cart-store.ts`
+- **Auth**: Clerk hooks `useUser()`, `useAuth()`
+- **Server State**: React Query with 5min cache
 
-**Layout Structure:**
-- Main app uses nested layouts with authentication guards in `(authenticated)/layout.tsx`
-- Web app uses locale-based routing with `[locale]/layout.tsx`
-- Shared `DesignSystemProvider` wraps all applications
+## 🐛 COMMON ISSUES & FIXES
 
-**API Development:**
-- Next.js API routes in each app for specific functionality
-- Shared database access via `@repo/database` package
-- Type-safe API calls with Zod validation
+### Build Errors
+```bash
+# TypeScript errors
+pnpm typecheck --filter=app
 
-**State Management:**
-- React Query for server state and caching
-- Zustand for client-side state management
-- Form handling with React Hook Form + Zod
+# Clean everything
+pnpm clean && pnpm install
 
-**Testing:**
-- Vitest for unit/integration tests in `app` and `api`
-- Testing utilities in `@repo/testing` package
-- React Testing Library for component tests
+# Turbo cache issues
+turbo daemon clean && rm -rf .turbo
+```
 
-## MCP Server Integration
+### Database Issues
+```bash
+# Reset database
+pnpm db:push --force-reset
+pnpm db:seed
 
-The project is configured to use Model Context Protocol servers for enhanced AI capabilities:
+# View data
+pnpm db:studio
+```
 
-**Recommended MCP Servers:**
-- **Pinecone MCP**: Vector database for product recommendations
-- **Tavily MCP**: Enhanced search capabilities
-- **Stripe MCP**: Advanced payment processing automation
-- **Clientary MCP**: Business analytics and management
+### Deployment Failures
+1. Check environment variables in Vercel
+2. Ensure all `NEXT_PUBLIC_` vars are set
+3. Default values for optional vars
+4. Check build logs for missing packages
 
-## Production Readiness
+## 📁 KEY FILES TO KNOW
 
-**Next Steps for Production:**
-1. Implement core marketplace APIs (products, orders, messages)
-2. Build product upload and management flows
-3. Complete Stripe Connect integration for multi-party payments
-4. Set up real-time messaging with WebSockets
-5. Deploy to production with proper environment configuration
+### Configuration
+- `/turbo.json` - Build pipeline
+- `/.env.example` - All env vars documented
+- `/packages/*/keys.ts` - Env validation
 
-**Performance Requirements:**
-- Page load times < 2 seconds
-- API response times < 200ms
-- 99.9% uptime SLA
-- Mobile-first responsive design
+### Database
+- `/packages/database/prisma/schema.prisma` - Source of truth
+- `/scripts/seed-*.ts` - Test data generators
 
-## Documentation
+### Critical Components
+- `/apps/app/components/product-form.tsx` - Complex form example
+- `/apps/web/components/product-grid-server.tsx` - Server component pattern
+- `/apps/app/app/api/stripe/connect/route.ts` - Stripe integration
 
-All project documentation is in the root directory:
+## 🔥 WORKFLOW RULES
 
-1. **[README.md](./README.md)** - Project overview and quick start
-2. **[PROGRESS.md](./PROGRESS.md)** - Current status and task tracking (CHECK THIS DAILY!)
-3. **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development guide and patterns
-4. **[API.md](./API.md)** - API endpoints and integration
-5. **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
-6. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical architecture decisions
+### Daily Workflow
+1. **Check STATUS.md** → See current state & active issues
+2. **Review ISSUES.md** → Find new problems while coding
+3. **Pick from NEXT section** → Focus on one task
+4. **Update as you go** → Keep STATUS.md current
+5. **Test before commit** → Run typecheck
 
-## Important Files
-- `packages/database/prisma/schema.prisma` - Complete marketplace database schema
-- `turbo.json` - Turborepo pipeline configuration
-- `pnpm-workspace.yaml` - Workspace package definitions
-- `biome.json` - Code formatting and linting rules
+### When You Find Issues
+1. **Document in ISSUES.md** → Add with file path & line numbers
+2. **Assess priority** → Critical? Add to STATUS.md
+3. **Tag appropriately** → Bug, Todo, Incomplete, Security, etc.
 
-## Development Focus Areas
+### When Implementing Features
+1. **Check APPS.md** → See if already exists
+2. **Follow existing patterns** → Consistency matters
+3. **Server components first** → Better performance
+4. **Add to correct app** → /web = public, /app = authenticated
 
-When working on this codebase, prioritize:
-1. **Marketplace Functionality**: Product management, orders, payments
-2. **User Experience**: Smooth flows between web and app
-3. **Performance**: Fast loading, optimized queries
-4. **Security**: Payment processing, user data protection
-5. **Scalability**: Architecture that supports growth
+### Before Committing
+```bash
+pnpm typecheck    # Must pass
+pnpm build        # Should pass locally
+git status        # Check what's changing
+```
 
-## Critical Development Rules
+## 🎨 UI/UX PATTERNS
 
-**ALWAYS REFER TO NEXT FORGE DOCS FIRST:**
-- Before implementing ANY feature, check Next Forge documentation at https://next-forge.com
-- Next Forge has perfect documentation - use it instead of creating "simple" solutions
-- Follow Next Forge patterns exactly as documented
-- When unsure, read the docs rather than guessing
+### Components
+- **UI Library**: shadcn/ui + custom design system
+- **Styling**: Tailwind CSS only (no CSS files)
+- **Icons**: Lucide React
+- **Forms**: React Hook Form + Zod
 
-**ONE REPO AT A TIME:**
-- Focus on ONLY ONE application at a time (/web OR /app)
-- Complete features fully in one repo before moving to another
-- Avoid cross-repo changes during feature development
-- Each app can work independently and be deployed separately
+### Component Structure
+```tsx
+// Server Component (default)
+export default async function ProductList() {
+  const products = await database.product.findMany();
+  return <ProductGrid products={products} />;
+}
 
-The codebase has excellent foundations and is ready for the final push to production-ready marketplace functionality.
+// Client Component (only when needed)
+'use client';
+export function AddToCartButton() {
+  const addItem = useCartStore(state => state.addItem);
+  return <Button onClick={() => addItem(product)}>Add</Button>;
+}
+```
+
+## 🚀 PRODUCTION CHECKLIST
+
+### Must Have
+- [ ] PostgreSQL database (not SQLite)
+- [ ] All env vars in Vercel
+- [ ] Stripe production keys
+- [ ] UploadThing configured
+- [ ] Resend email service
+- [ ] Error tracking (Sentry)
+
+### Should Have  
+- [ ] Redis for caching
+- [ ] CDN for images
+- [ ] Rate limiting configured
+- [ ] Monitoring (Better Stack)
+- [ ] Analytics (PostHog)
+
+## 💡 QUICK WINS
+
+### If you have 30 minutes:
+1. Add loading states to components
+2. Fix TypeScript errors
+3. Add error boundaries
+4. Improve form validation messages
+
+### If you have 2 hours:
+1. Complete a feature from STATUS.md NEXT
+2. Fix a critical bug from ISSUES
+3. Add missing API endpoints
+4. Write integration tests
+
+## 🎯 REMEMBER
+
+1. **We're building for PRODUCTION** - not a demo
+2. **Performance matters** - use server components
+3. **Security first** - sanitize inputs, validate everything
+4. **User experience** - fast, intuitive, beautiful
+5. **Code quality** - TypeScript strict, no any types
+
+---
+
+## 📚 6-FILE DOCUMENTATION SYSTEM
+
+1. **CLAUDE.md** (this file) - How to work
+2. **STATUS.md** - Current state dashboard  
+3. **ISSUES.md** - Technical debt tracker
+4. **ROADMAP.md** - Future plans
+5. **APPS.md** - Implementation details
+6. **DEPLOY.md** - Production guide
+
+**Workflow**: Find issues → Document in ISSUES.md → Move to STATUS.md when working on them
+
+---
+
+*Last updated: January 9, 2025*
