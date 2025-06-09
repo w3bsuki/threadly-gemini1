@@ -27,6 +27,11 @@
 - [x] **Update product-actions.ts** - Already using correct field name  
 - [x] **Fix TypeScript interfaces** - Fixed product-grid-real.tsx interface
 
+### Fix Hardcoded Category Selector ✅
+- [x] **Replace hardcoded categories in edit form** - Now uses CategorySelector component
+- [x] **Dynamic loading from database** - Uses existing getCategoriesFlat() action
+- [x] **Proper error handling** - Includes loading states and fallback categories
+
 ### Enable Email Notifications
 - [ ] **Add RESEND_API_KEY to environment**
 - [ ] **Uncomment email sending code**

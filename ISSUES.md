@@ -32,7 +32,7 @@
   - ✅ **FIXED**: UploadThing callbacks now working properly in development
   
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/components/edit-product-form.tsx`
-  - **BUG Lines 254-259**: Category selector hardcoded (should be dynamic)
+  - ✅ **FIXED**: Category selector now uses dynamic CategorySelector component
   - ✅ **FIXED**: Price field now handles cents conversion
   - ✅ **FIXED**: All field references now use correct `displayOrder` field
   
@@ -113,9 +113,9 @@
    - Need: Check order.deliveredAt
 
 2. **Category Selector Hardcoded**
-   - File: `/apps/app/app/(authenticated)/selling/new/components/category-selector.tsx`
-   - Using hardcoded category IDs
-   - Need: Fetch from database
+   - ✅ **FIXED**: Edit product form now uses dynamic CategorySelector component
+   - ✅ **FIXED**: CategorySelector loads categories from database via getCategoriesFlat()
+   - ✅ **FIXED**: Includes loading states and error handling with fallback
 
 ---
 

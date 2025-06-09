@@ -89,7 +89,7 @@
 
 ### 5. Fix Database Field Mismatches (1hr) ✅
 - [x] Change all `order` to `displayOrder` for images
-- [ ] Update category selector to use dynamic data
+- [x] Update category selector to use dynamic data
 - [x] Fix TypeScript interfaces
 
 ### 6. Enable Email Notifications (2hrs)

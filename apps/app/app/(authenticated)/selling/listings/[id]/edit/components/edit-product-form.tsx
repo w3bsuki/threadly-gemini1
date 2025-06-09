@@ -16,6 +16,7 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { Trash2, Save, Eye, EyeOff } from 'lucide-react';
 import { updateProduct, deleteProduct } from '../actions/product-actions';
 import { ImageUpload } from '../../../../new/components/image-upload';
+import { CategorySelector } from '../../../../new/components/category-selector';
 import { toast } from '@/components/toast';
 
 const editProductSchema = z.object({
@@ -245,20 +246,13 @@ export function EditProductForm({ product, userId }: EditProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">Women's Clothing</SelectItem>
-                        <SelectItem value="2">Men's Clothing</SelectItem>
-                        <SelectItem value="3">Kids' Clothing</SelectItem>
-                        <SelectItem value="4">Shoes</SelectItem>
-                        <SelectItem value="5">Accessories</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CategorySelector
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select a category"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
