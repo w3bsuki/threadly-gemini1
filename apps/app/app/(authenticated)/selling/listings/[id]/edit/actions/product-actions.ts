@@ -145,7 +145,7 @@ export async function updateProduct(productId: string, input: z.infer<typeof upd
             productId: productId,
             imageUrl: url,
             alt: `${sanitizedData.title} - Image ${index + 1}`,
-            order: index,
+            displayOrder: index,
           })),
         });
       }

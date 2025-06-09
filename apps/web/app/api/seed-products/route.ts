@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           {
             imageUrl: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&h=800&fit=crop",
             alt: "Vintage Levi's 501 Jeans",
-            order: 0,
+            displayOrder: 0,
           },
         ],
       },
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
           {
             imageUrl: "https://images.unsplash.com/photo-1564257577-452677c4e096?w=600&h=800&fit=crop",
             alt: "Designer Silk Blouse",
-            order: 0,
+            displayOrder: 0,
           },
         ],
       },
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
           {
             imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop",
             alt: "Vintage Band T-Shirt",
-            order: 0,
+            displayOrder: 0,
           },
         ],
       },
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
           {
             imageUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=800&fit=crop",
             alt: "Designer Handbag",
-            order: 0,
+            displayOrder: 0,
           },
         ],
       },
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
           {
             imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&h=800&fit=crop",
             alt: "Wool Winter Coat",
-            order: 0,
+            displayOrder: 0,
           },
         ],
       },

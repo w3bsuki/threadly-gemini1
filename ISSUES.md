@@ -34,11 +34,11 @@
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/components/edit-product-form.tsx`
   - **BUG Lines 254-259**: Category selector hardcoded (should be dynamic)
   - ✅ **FIXED**: Price field now handles cents conversion
-  - **BUG**: Uses `order` but schema has `displayOrder` field
+  - ✅ **FIXED**: All field references now use correct `displayOrder` field
   
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/actions/product-actions.ts`
   - ✅ **FIXED**: Updated to use priceCentsSchema and convert to dollars for database
-  - **BUG Line 149**: Creates images with `order` field but schema expects `displayOrder`
+  - ✅ **FIXED**: All image creation now uses correct `displayOrder` field
 
 ### Messaging System  
 - **File**: `/apps/app/app/(authenticated)/messages/components/messages-content.tsx`
@@ -101,6 +101,10 @@
    - ✅ **FIXED**: Added `/api/uploadthing` to public routes in middleware
    - ✅ **FIXED**: Improved error handling in upload callbacks
    - ✅ **FIXED**: Added development mode configuration with proper logging
+
+5. **Database Field Mismatches**
+   - ✅ **FIXED**: TypeScript interface in product-grid-real.tsx now uses `displayOrder`
+   - ✅ **FIXED**: All ProductImage operations consistently use correct field name
 
 ### Non-Critical Bugs
 1. **Review Form Shows Too Early**

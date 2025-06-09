@@ -87,10 +87,10 @@
 - [x] Remove object URL fallback that breaks
 - [x] Test image persistence in database
 
-### 5. Fix Database Field Mismatches (1hr)
-- [ ] Change all `order` to `displayOrder` for images
+### 5. Fix Database Field Mismatches (1hr) ✅
+- [x] Change all `order` to `displayOrder` for images
 - [ ] Update category selector to use dynamic data
-- [ ] Fix TypeScript interfaces
+- [x] Fix TypeScript interfaces
 
 ### 6. Enable Email Notifications (2hrs)
 - [ ] Add RESEND_API_KEY to environment

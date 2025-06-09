@@ -75,7 +75,7 @@ interface Product {
   };
   images: {
     imageUrl: string;
-    order: number;
+    displayOrder: number;
   }[];
   _count: {
     favorites: number;
