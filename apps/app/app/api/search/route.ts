@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSearchService } from '@repo/search';
 import { z } from 'zod';
 
-const searchService = getSearchService({
-  appId: process.env.ALGOLIA_APP_ID!,
-  apiKey: process.env.ALGOLIA_ADMIN_API_KEY!,
-  searchOnlyApiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY!,
-  indexName: process.env.ALGOLIA_INDEX_NAME!,
-});
+let searchService: ReturnType<typeof getSearchService> | null = null;
 
 const searchRequestSchema = z.object({
   filters: z.object({
@@ -33,6 +28,29 @@ const searchRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize search service on first request
+    if (!searchService) {
+      const appId = process.env.ALGOLIA_APP_ID;
+      const apiKey = process.env.ALGOLIA_ADMIN_API_KEY;
+      const searchOnlyApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY;
+      const indexName = process.env.ALGOLIA_INDEX_NAME;
+
+      if (!appId || !apiKey || !searchOnlyApiKey || !indexName) {
+        console.error('[Search API] Missing required environment variables');
+        return NextResponse.json(
+          { error: 'Search service not configured' },
+          { status: 503 }
+        );
+      }
+
+      searchService = getSearchService({
+        appId,
+        apiKey,
+        searchOnlyApiKey,
+        indexName,
+      });
+    }
+
     const body = await request.json();
     const { filters, page, hitsPerPage } = searchRequestSchema.parse(body);
 
@@ -58,6 +76,29 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Initialize search service on first request
+    if (!searchService) {
+      const appId = process.env.ALGOLIA_APP_ID;
+      const apiKey = process.env.ALGOLIA_ADMIN_API_KEY;
+      const searchOnlyApiKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY;
+      const indexName = process.env.ALGOLIA_INDEX_NAME;
+
+      if (!appId || !apiKey || !searchOnlyApiKey || !indexName) {
+        console.error('[Search API] Missing required environment variables');
+        return NextResponse.json(
+          { error: 'Search service not configured' },
+          { status: 503 }
+        );
+      }
+
+      searchService = getSearchService({
+        appId,
+        apiKey,
+        searchOnlyApiKey,
+        indexName,
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const page = parseInt(searchParams.get('page') || '0');
