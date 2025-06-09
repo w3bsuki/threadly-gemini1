@@ -10,7 +10,7 @@ export interface EmailNotification {
 }
 
 export class NotificationService {
-  private pusherServer = getPusherServer();
+  private pusherServer: any;
 
   // Create and send in-app notification
   async notify(userId: string, notification: Omit<NotificationEvent['data'], 'id' | 'userId' | 'createdAt' | 'read'>) {
@@ -26,17 +26,36 @@ export class NotificationService {
       },
     });
 
-    // Send real-time notification
-    await this.pusherServer.sendNotification(userId, {
-      id: savedNotification.id,
-      userId,
-      title: notification.title,
-      message: notification.message,
-      type: notification.type as any,
-      metadata: notification.metadata,
-      read: false,
-      createdAt: savedNotification.createdAt,
-    });
+    // Send real-time notification if Pusher is configured
+    try {
+      if (!this.pusherServer) {
+        // Try to initialize if environment variables are available
+        if (process.env.PUSHER_APP_ID && process.env.PUSHER_SECRET) {
+          this.pusherServer = getPusherServer({
+            pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
+            pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+            pusherAppId: process.env.PUSHER_APP_ID!,
+            pusherSecret: process.env.PUSHER_SECRET!,
+          });
+        }
+      }
+
+      if (this.pusherServer) {
+        await this.pusherServer.sendNotification(userId, {
+          id: savedNotification.id,
+          userId,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type as any,
+          metadata: notification.metadata,
+          read: false,
+          createdAt: savedNotification.createdAt,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send real-time notification:', error);
+      // Continue without real-time notification
+    }
 
     return savedNotification;
   }

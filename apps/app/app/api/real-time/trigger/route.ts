@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
       // For now, we'll trust the authentication
     }
 
+    // Check if Pusher is configured
+    if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_SECRET) {
+      return NextResponse.json(
+        { error: 'Real-time service not configured' },
+        { status: 503 }
+      );
+    }
+
     const pusherServer = getPusherServer({
       pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
       pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
