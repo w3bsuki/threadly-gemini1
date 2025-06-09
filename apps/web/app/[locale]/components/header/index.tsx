@@ -4,7 +4,7 @@ import { env } from '@/env';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Search, Heart, Menu, X, User, ShoppingBag, Crown, ChevronDown, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Dictionary } from '@repo/internationalization';
 import { CartDropdown } from './cart-dropdown';
@@ -48,6 +48,7 @@ interface SearchSuggestion {
 
 export const Header = ({ dictionary }: HeaderProps) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSubCategories, setShowSubCategories] = useState(true);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -142,6 +143,71 @@ export const Header = ({ dictionary }: HeaderProps) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Mobile menu toggle function
+  const toggleMenu = useCallback(() => {
+    setMenuOpen(prev => !prev);
+  }, []);
+
+  // Close mobile menu on outside click/touch
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: false });
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isMenuOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    const handleRouteChange = () => setMenuOpen(false);
+    
+    // Listen for route changes (Next.js app router uses different events)
+    const handleBeforeHistoryChange = () => setMenuOpen(false);
+    
+    // For Next.js 13+ app router, we need to listen to navigation events differently
+    // This is a fallback that works with both pages and app router
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function(...args) {
+      handleBeforeHistoryChange();
+      return originalPushState.apply(history, args);
+    };
+    
+    history.replaceState = function(...args) {
+      handleBeforeHistoryChange();
+      return originalReplaceState.apply(history, args);
+    };
+    
+    window.addEventListener('popstate', handleBeforeHistoryChange);
+    
+    return () => {
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', handleBeforeHistoryChange);
+    };
+  }, []);
+
+  // Close mobile menu on escape key
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMenuOpen) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [isMenuOpen]);
 
   return (
     <>
@@ -252,7 +318,16 @@ export const Header = ({ dictionary }: HeaderProps) => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => setMenuOpen(!isMenuOpen)}
+                  onClick={toggleMenu}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    toggleMenu();
+                  }}
+                  aria-label="Toggle navigation menu"
+                  aria-expanded={isMenuOpen}
+                  aria-controls="mobile-menu"
+                  className="min-w-[44px] min-h-[44px] p-3 hover:bg-gray-100 active:bg-gray-200"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
@@ -422,15 +497,25 @@ export const Header = ({ dictionary }: HeaderProps) => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
+          <div 
+            ref={menuRef}
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-menu-heading"
+            className="md:hidden border-t border-gray-200 bg-white shadow-lg"
+          >
             <div className="px-4 py-4 space-y-4">
+              {/* Visually hidden heading for accessibility */}
+              <h2 id="mobile-menu-heading" className="sr-only">Navigation Menu</h2>
+              
               {/* Primary Actions - Buy/Sell */}
               <div className="space-y-3 pb-4 border-b border-gray-100">
                 <Button 
-                  className="w-full bg-black text-white hover:bg-gray-800 text-lg py-3" 
+                  className="w-full bg-black text-white hover:bg-gray-800 text-lg py-3 min-h-[48px]" 
                   asChild
                 >
-                  <Link href="/products">
+                  <Link href="/products" onClick={() => setMenuOpen(false)}>
                     <ShoppingBag className="h-5 w-5 mr-2" />
                     Browse Items
                   </Link>
@@ -438,10 +523,10 @@ export const Header = ({ dictionary }: HeaderProps) => {
                 
                 <Button 
                   variant="outline" 
-                  className="w-full border-black text-black hover:bg-gray-50 text-lg py-3" 
+                  className="w-full border-black text-black hover:bg-gray-50 text-lg py-3 min-h-[48px]" 
                   asChild
                 >
-                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/selling/new`}>
+                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/selling/new`} onClick={() => setMenuOpen(false)}>
                     <Plus className="h-5 w-5 mr-2" />
                     Start Selling
                   </Link>
@@ -450,8 +535,8 @@ export const Header = ({ dictionary }: HeaderProps) => {
 
               {/* Secondary Actions */}
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
-                  <Link href="/favorites">
+                <Button variant="ghost" className="w-full justify-start text-gray-700 min-h-[44px]" asChild>
+                  <Link href="/favorites" onClick={() => setMenuOpen(false)}>
                     <Heart className="h-5 w-5 mr-3" />
                     Saved Items
                   </Link>
@@ -465,8 +550,8 @@ export const Header = ({ dictionary }: HeaderProps) => {
                   <CartDropdown dictionary={dictionary} />
                 </div>
                 
-                <Button variant="ghost" className="w-full justify-start text-gray-700" asChild>
-                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`}>
+                <Button variant="ghost" className="w-full justify-start text-gray-700 min-h-[44px]" asChild>
+                  <Link href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`} onClick={() => setMenuOpen(false)}>
                     <User className="h-5 w-5 mr-3" />
                     Sign In / Join
                   </Link>
