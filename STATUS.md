@@ -42,61 +42,61 @@
 ## 🔴 ISSUES (Current Problems)
 
 ### 🚨 Critical (Blocking Production)
-1. **Environment Variables Missing** - Vercel deployment failing due to missing Clerk URLs
-2. **Payment Webhook Not Creating Orders** - Stripe success doesn't trigger order creation
-3. **Image URLs Breaking** - UploadThing not configured for production
-4. **Email Service Down** - Resend not configured, no transactional emails
+1. **RACE CONDITION in Order Creation** - Products marked SOLD before payment confirmation
+2. **XSS Vulnerability in Messages** - No sanitization on message content  
+3. **Price Handling Bug** - Form sends cents but backend expects dollars
+4. **Message Seller Broken** - Button navigates to wrong URL, no conversation creation
+5. **Image URLs in Dev** - Object URLs won't persist in database
 
 ### ⚠️ High Priority
-1. **No Admin Panel** - Can't moderate content or manage users
-2. **Search Index Empty** - Products not indexed in Algolia
-3. **Mobile Navigation Broken** - Hamburger menu not working on small screens
-4. **Cart State Sync** - Inconsistent between /web and /app
-5. **Error Tracking Missing** - Sentry not configured
+1. **Mobile Navigation Broken** - Touch targets too small, no swipe gestures
+2. **Email System Disabled** - Code commented out, needs RESEND_API_KEY
+3. **Category Selector Issues** - Hardcoded in edit form, field name mismatch
+4. **No Admin Panel** - Can't moderate content or manage users
+5. **Search Not Indexed** - Algolia configured but not indexing products
 
 ### 🟡 Medium Priority
-1. Category IDs hardcoded in product creation form
-2. No loading states in messaging components
-3. Product images show gradients instead of actual images
-4. Review form appears before order is delivered
-5. Stripe Connect onboarding incomplete
+1. **Real-time Messages** - Only triggers router refresh, bad UX
+2. **Missing Mobile Features** - No pull-to-refresh, offline support, haptics
+3. **No Loading States** - Messages, orders, search results
+4. **UploadThing Dev Issues** - Callbacks not working properly
+5. **Missing Features** - No message editing, file attachments, user blocking
 
 ---
 
 ## 🟡 NEXT (Immediate Tasks - Next 48hrs)
 
-### 1. Fix Vercel Deployment (2hrs)
-```bash
-# Add to Vercel environment variables:
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL="/"
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL="/"
-NEXT_PUBLIC_APP_URL="https://app.threadly.com"
-NEXT_PUBLIC_WEB_URL="https://threadly.com"
-```
+### 1. Fix Critical Security Issues (2hrs)
+- [ ] Add message sanitization to prevent XSS
+- [ ] Fix race condition in order creation (remove early SOLD status)
+- [ ] Validate payment metadata in webhook handler
 
-### 2. Complete Payment → Order Flow (4hrs)
-- [ ] Fix webhook handler in `/api/webhooks/payments/route.ts`
-- [ ] Add order creation after payment success
-- [ ] Update product status to SOLD
-- [ ] Send order confirmation email
+### 2. Fix Price Handling Bug (2hrs)
+- [ ] Standardize on cents throughout the system
+- [ ] Update validation schemas to expect cents
+- [ ] Fix price display formatting
 
-### 3. Configure Production Services (6hrs)
-- [ ] Set up UploadThing production account
-- [ ] Configure Resend for emails
-- [ ] Set up Algolia indices
-- [ ] Configure Sentry error tracking
+### 3. Fix Message Seller Flow (3hrs) 
+- [ ] Create conversation creation endpoint
+- [ ] Handle `?user=` param in messages page
+- [ ] Add UI for starting new conversations
+- [ ] Test buyer-seller messaging flow
 
-### 4. Critical Bug Fixes (4hrs)
-- [ ] Fix mobile navigation menu
-- [ ] Sync cart state between apps
-- [ ] Fix category selector in product form
-- [ ] Add proper error boundaries
+### 4. Fix Image Upload in Development (2hrs)
+- [ ] Configure UploadThing for dev environment
+- [ ] Remove object URL fallback that breaks
+- [ ] Test image persistence in database
 
-### 5. Testing & Verification (4hrs)
-- [ ] Test complete purchase flow
-- [ ] Verify email notifications
-- [ ] Check mobile responsiveness
-- [ ] Load test with 100+ products
+### 5. Fix Database Field Mismatches (1hr)
+- [ ] Change all `order` to `displayOrder` for images
+- [ ] Update category selector to use dynamic data
+- [ ] Fix TypeScript interfaces
+
+### 6. Enable Email Notifications (2hrs)
+- [ ] Add RESEND_API_KEY to environment
+- [ ] Uncomment email sending code
+- [ ] Create welcome email template
+- [ ] Test email delivery
 
 ---
 

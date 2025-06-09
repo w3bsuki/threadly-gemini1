@@ -138,11 +138,36 @@ pnpm db:studio
 2. **Assess priority** → Critical? Add to STATUS.md
 3. **Tag appropriately** → Bug, Todo, Incomplete, Security, etc.
 
-### When Implementing Features
-1. **Check APPS.md** → See if already exists
-2. **Follow existing patterns** → Consistency matters
-3. **Server components first** → Better performance
-4. **Add to correct app** → /web = public, /app = authenticated
+### 🚨 WHEN IMPLEMENTING ANYTHING - THE GOLDEN RULE
+**ALWAYS: Research → Plan → Review → Implement**
+
+1. **🔍 RESEARCH FIRST (30% of time)**
+   - **Next Forge**: https://next-forge.com/docs (ALWAYS CHECK FIRST!)
+   - **Next.js 15**: https://nextjs.org/docs (app router patterns)
+   - **UI Components**: https://ui.shadcn.com/docs/components
+   - **Tailwind CSS**: https://tailwindcss.com/docs
+   - **Database**: https://www.prisma.io/docs/guides
+   - **Payments**: https://stripe.com/docs/connect
+   - **Auth**: https://clerk.com/docs
+   - **Real-time**: https://pusher.com/docs
+   - **Search**: https://www.algolia.com/doc/
+
+2. **📋 PLAN BASED ON DOCS (20% of time)**
+   - Write implementation steps
+   - Identify potential issues
+   - Consider edge cases
+   - Check existing patterns in codebase
+
+3. **👀 REVIEW PLAN (10% of time)**
+   - Does it follow Next Forge patterns?
+   - Is it the simplest solution?
+   - Will it scale?
+   - Is it secure?
+
+4. **💻 IMPLEMENT (40% of time)**
+   - Follow the plan exactly
+   - Use docs as reference while coding
+   - Test as you go
 
 ### Before Committing
 ```bash

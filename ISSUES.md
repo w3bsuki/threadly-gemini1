@@ -5,21 +5,57 @@
 ## 🔴 INCOMPLETE IMPLEMENTATIONS
 
 ### Payment Processing
-- **File**: `/apps/app/app/api/webhooks/payments/route.ts`
-  - TODO: Order creation after payment success
-  - Missing: Update product status to SOLD
-  - Missing: Send confirmation email
-  ```typescript
-  // Line 45: TODO: Create order in database
-  // Line 67: TODO: Update product availability
-  // Line 89: TODO: Send email notification
-  ```
+- **File**: `/apps/app/app/(authenticated)/buying/checkout/actions/create-order.ts`
+  - **CRITICAL BUG Line 121-129**: Products marked as SOLD before payment confirmation (race condition!)
+  - **TODO Line 99**: Shipping details need separate storage
+  - **TODO Line 132**: Email notifications not implemented
+  - **TODO Line 151**: Real-time notifications not implemented
+  
+- **File**: `/apps/app/app/api/stripe/create-checkout-session/route.ts`
+  - **Issue**: Creates payment intents, not checkout sessions (naming mismatch)
+  - **Missing**: No timeout handling for abandoned checkouts
+  - **Missing**: No mechanism to revert RESERVED status on failure
+
+- **File**: `/apps/api/app/webhooks/payments/route.ts`
+  - ✅ Actually working! Updates order to PAID and product to SOLD
+  - **Issue Line 76**: Relies on metadata being present (needs validation)
+
+### Product Management
+- **File**: `/apps/app/app/(authenticated)/selling/new/components/product-form.tsx`
+  - **BUG Line 63**: Price converted to cents but schema expects dollars
+  
+- **File**: `/apps/app/app/(authenticated)/selling/new/actions/create-product.ts`
+  - **BUG Line 48-50**: Price validation expects dollars but form sends cents
+  
+- **File**: `/apps/app/app/(authenticated)/selling/new/components/image-upload.tsx`
+  - **CRITICAL Lines 46-50**: Object URLs in dev won't persist in database
+  - **Issue**: UploadThing callbacks not working properly in development
+  
+- **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/components/edit-product-form.tsx`
+  - **BUG Lines 254-259**: Category selector hardcoded (should be dynamic)
+  - **BUG**: Price field doesn't handle cents conversion
+  - **BUG**: Uses `order` but schema has `displayOrder` field
+  
+- **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/actions/product-actions.ts`
+  - **BUG Line 149**: Creates images with `order` field but schema expects `displayOrder`
 
 ### Messaging System  
 - **File**: `/apps/app/app/(authenticated)/messages/components/messages-content.tsx`
-  - Missing: Loading states for messages
-  - TODO: Implement message pagination
-  - Bug: Typing indicator not clearing properly
+  - **Missing**: Loading states for messages
+  - **TODO**: Implement message pagination
+  - **Bug**: Typing indicator not clearing properly
+  - **Bug Line 129-134**: Real-time updates only trigger router refresh (bad UX)
+  
+- **File**: `/apps/app/app/(authenticated)/product/[id]/components/product-detail-content.tsx`
+  - **CRITICAL Bug Line 107**: "Message Seller" navigates to `/messages?user=${id}` but messages page doesn't handle this param
+  - **Missing**: No conversation creation flow
+  
+- **File**: `/apps/app/app/(authenticated)/messages/actions/message-actions.ts`
+  - **SECURITY Line 75**: No sanitization on message content (XSS vulnerability)
+  
+- **File**: `/apps/api/app/api/messages/route.ts`
+  - **SECURITY Line 249**: Message content not sanitized before storage
+  - **Missing**: No file/image attachment support (schema has it, no implementation)
 
 ### Search Implementation
 - **File**: `/apps/web/app/api/search/route.ts`
@@ -113,11 +149,31 @@
 - [ ] Pagination components
 - [ ] Date pickers for filters
 
-### Integrations
-- [ ] Email service not connected
+### Email & Notification System
+- **Infrastructure EXISTS but DISABLED**:
+  - **File**: `/apps/app/app/(authenticated)/buying/checkout/actions/create-order.ts`
+    - **Lines 131-148**: Order confirmation email COMMENTED OUT
+  - **File**: `/apps/app/app/(authenticated)/messages/actions/message-actions.ts`
+    - **Line 126**: New message email COMMENTED OUT
+  - **File**: `/apps/api/app/webhooks/auth/route.ts`
+    - **Missing**: No welcome email on user creation
+  
+- **Email Templates Available**:
+  - ✅ Order confirmation template exists
+  - ✅ New message template exists  
+  - ✅ Payment received template exists
+  - ❌ Welcome email template MISSING
+  
+- **Required to Enable**:
+  - Set `RESEND_API_KEY` environment variable
+  - Uncomment email sending code
+  - Create welcome email template
+
+### Other Missing Integrations
 - [ ] SMS notifications not implemented
 - [ ] Push notifications not set up
-- [ ] Analytics tracking incomplete
+- [ ] Analytics tracking incomplete (PostHog configured but not used)
+- [ ] Search indexing not running (Algolia configured but not indexing)
 
 ---
 
@@ -185,15 +241,43 @@
 
 ## 📱 MOBILE ISSUES
 
-### Responsive Design
-- Checkout form breaks on small screens
-- Product grid not optimized for mobile
-- Modal dialogs too large on mobile
+### Navigation Problems
+- **File**: `/apps/web/app/[locale]/components/header/index.tsx`
+  - **Line 305-318**: Mobile search lacks proper keyboard handling
+  - **Line 250-258**: Menu toggle touch target too small (< 44px)
+  - **Line 423-477**: No swipe gestures to close mobile menu
+  - **Missing**: `enterkeyhint="search"` for mobile keyboards
 
-### Touch Interactions  
-- Swipe gestures not implemented
-- Touch targets too small
-- No pull-to-refresh
+- **File**: `/apps/app/app/(authenticated)/components/sidebar.tsx`
+  - **Line 185-341**: Desktop-first design, no mobile navigation
+  - **Missing**: Bottom navigation for mobile app
+  - **Missing**: Swipe gestures for sidebar
+
+- **File**: `/apps/web/app/[locale]/components/bottom-nav-mobile.tsx`
+  - **Line 104-120**: Jarring scroll-based visibility
+  - **Line 357**: Missing spacer causing content to hide behind nav
+
+### Touch Interaction Issues
+- **File**: `/apps/web/app/[locale]/product/[id]/components/product-detail.tsx`
+  - **Line 148-165**: Basic swipe lacks momentum/physics
+  - **Line 204-210**: Touch events don't prevent defaults
+  - **Missing**: Pinch-to-zoom on images
+
+### Responsive Design Problems  
+- **Global Issues**:
+  - Touch targets below 44x44px minimum
+  - Using `100vh` instead of `100dvh` (browser chrome issues)
+  - No safe area handling for notches
+  - Form inputs < 16px cause zoom on iOS
+  - No `-webkit-tap-highlight-color` reset
+
+### Missing Mobile Features
+- No pull-to-refresh anywhere
+- No offline support/PWA
+- No haptic feedback
+- No deep linking
+- No mobile app install banners
+- No reduced motion support
 
 ---
 
