@@ -2,17 +2,17 @@
 
 **Current Issue**: Build failing due to Clerk environment variable validation
 
-## ⚡ Immediate Fix Required
+## ⚠️ IMPORTANT: Custom Domain Required
 
-Your Vercel build is failing because these environment variables are missing or incorrect:
+**Clerk blocks `.vercel.app` domains for production apps.** You have 2 options:
 
-```
-Invalid environment variables:
-- NEXT_PUBLIC_CLERK_SIGN_IN_URL: Invalid input: must start with '/'
-- NEXT_PUBLIC_CLERK_SIGN_UP_URL: Invalid input: must start with '/'
-- NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: Invalid input: must start with '/'
-- NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: Invalid input: must start with '/'
-```
+### Option A: Use Custom Domain (Recommended)
+1. **Buy a domain** (e.g., `threadly.io`, `getthreadly.com`)
+2. **Add to Vercel**: Project Settings → Domains
+3. **Configure Clerk** with your custom domain
+
+### Option B: Use Development Keys for Now
+Keep using `pk_test_` and `sk_test_` keys until you get a custom domain.
 
 ## 🔧 How to Fix
 
@@ -34,13 +34,18 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 - No quotes needed in Vercel dashboard
 - Set for "Production" environment
 
-### Step 3: Add Required Clerk Keys
+### Step 3: Add Clerk Keys
 
-You'll also need your Clerk production keys:
-
+**Option A - Custom Domain (Production):**
 ```bash
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_YOUR_KEY_HERE
 CLERK_SECRET_KEY=sk_live_YOUR_KEY_HERE
+```
+
+**Option B - Development Keys (Temporary):**
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE  
+CLERK_SECRET_KEY=sk_test_YOUR_KEY_HERE
 ```
 
 Get these from: https://dashboard.clerk.com → Your App → API Keys
@@ -80,9 +85,15 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 DATABASE_URL=postgresql://...
 
 # Application URLs (Required)
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
-NEXT_PUBLIC_WEB_URL=https://your-web.vercel.app
-NEXT_PUBLIC_API_URL=https://your-api.vercel.app
+# Option A - Custom Domain:
+NEXT_PUBLIC_APP_URL=https://app.yourdomain.com
+NEXT_PUBLIC_WEB_URL=https://yourdomain.com  
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+
+# Option B - Vercel domains (for development/testing):
+NEXT_PUBLIC_APP_URL=https://threadly-app.vercel.app
+NEXT_PUBLIC_WEB_URL=https://threadly-web.vercel.app
+NEXT_PUBLIC_API_URL=https://threadly-api.vercel.app
 ```
 
 But for now, just add the Clerk variables to fix the build.
