@@ -167,24 +167,24 @@
 - [ ] Date pickers for filters
 
 ### Email & Notification System
-- **Infrastructure EXISTS but DISABLED**:
+- **Infrastructure ENABLED**:
   - **File**: `/apps/app/app/(authenticated)/buying/checkout/actions/create-order.ts`
-    - **Lines 131-148**: Order confirmation email COMMENTED OUT
+    - ✅ **FIXED**: Order confirmation email enabled with proper error handling
   - **File**: `/apps/app/app/(authenticated)/messages/actions/message-actions.ts`
-    - **Line 126**: New message email COMMENTED OUT
+    - ✅ **FIXED**: New message email enabled with environment check
   - **File**: `/apps/api/app/webhooks/auth/route.ts`
     - **Missing**: No welcome email on user creation
   
 - **Email Templates Available**:
-  - ✅ Order confirmation template exists
-  - ✅ New message template exists  
+  - ✅ Order confirmation template exists and active
+  - ✅ New message template exists and active  
   - ✅ Payment received template exists
   - ❌ Welcome email template MISSING
   
-- **Required to Enable**:
-  - Set `RESEND_API_KEY` environment variable
-  - Uncomment email sending code
-  - Create welcome email template
+- **How to Enable in Production**:
+  - Set `RESEND_TOKEN` environment variable (not RESEND_API_KEY)
+  - Set `RESEND_FROM` environment variable for sender email
+  - Email service will automatically activate when token is present
 
 ### Other Missing Integrations
 - [ ] SMS notifications not implemented

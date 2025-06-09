@@ -121,23 +121,28 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     // This prevents race conditions where products are marked sold before payment confirmation
 
     // Send confirmation email to buyer
-    // TODO: Implement email notifications when Resend is configured
-    // try {
-    //   const { getEmailService } = await import('@repo/email');
-    //   const emailService = getEmailService();
-    //   await emailService.sendOrderConfirmation({
-    //     ...orders[0],
-    //     items: orders.map(o => ({
-    //       product: o.product,
-    //       quantity: 1,
-    //       price: o.amount,
-    //     })),
-    //     total: validatedInput.total,
-    //     estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    //   });
-    // } catch (error) {
-    //   console.error('Failed to send confirmation email:', error);
-    // }
+    try {
+      const { getEmailService } = await import('@repo/notifications/src');
+      const resendToken = process.env.RESEND_TOKEN;
+      
+      if (resendToken) {
+        const emailService = getEmailService(resendToken);
+        await emailService.sendOrderConfirmation({
+          ...orders[0],
+          items: orders.map(o => ({
+            product: o.product,
+            quantity: 1,
+            price: o.amount,
+          })),
+          total: validatedInput.total,
+          estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        });
+      } else {
+        console.warn('RESEND_TOKEN not configured - order confirmation email not sent');
+      }
+    } catch (error) {
+      console.error('Failed to send confirmation email:', error);
+    }
 
     // Send notifications to sellers
     // TODO: Implement real-time notifications

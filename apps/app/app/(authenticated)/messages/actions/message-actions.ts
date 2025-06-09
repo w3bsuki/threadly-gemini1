@@ -123,7 +123,15 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
 
     // Send email notification
     try {
-      // await emailService.sendNewMessageNotification(message, conversation);
+      const { getEmailService } = await import('@repo/notifications/src');
+      const resendToken = process.env.RESEND_TOKEN;
+      
+      if (resendToken) {
+        const emailService = getEmailService(resendToken);
+        await emailService.sendNewMessageNotification(message, conversation);
+      } else {
+        console.warn('RESEND_TOKEN not configured - message notification email not sent');
+      }
     } catch (error) {
       console.error('Failed to send email notification:', error);
     }
