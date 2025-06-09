@@ -1,6 +1,7 @@
 import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { messageRateLimit, checkRateLimit } from '@repo/security';
+import { sanitizeForDisplay } from '@repo/validation/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -241,12 +242,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the message
+    // Create the message with sanitized content
     const message = await database.message.create({
       data: {
         conversationId: validatedData.conversationId,
         senderId: accessCheck.user!.id,
-        content: validatedData.content,
+        content: sanitizeForDisplay(validatedData.content),
         imageUrl: validatedData.imageUrl,
       },
       include: {

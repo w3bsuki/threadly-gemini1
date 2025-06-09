@@ -6,7 +6,7 @@
 
 ### Payment Processing
 - **File**: `/apps/app/app/(authenticated)/buying/checkout/actions/create-order.ts`
-  - **CRITICAL BUG Line 121-129**: Products marked as SOLD before payment confirmation (race condition!)
+  - ✅ **FIXED**: Removed early SOLD status update to prevent race condition
   - **TODO Line 99**: Shipping details need separate storage
   - **TODO Line 132**: Email notifications not implemented
   - **TODO Line 151**: Real-time notifications not implemented
@@ -18,14 +18,14 @@
 
 - **File**: `/apps/api/app/webhooks/payments/route.ts`
   - ✅ Actually working! Updates order to PAID and product to SOLD
-  - **Issue Line 76**: Relies on metadata being present (needs validation)
+  - ✅ **FIXED**: Added proper metadata validation before accessing fields
 
 ### Product Management
 - **File**: `/apps/app/app/(authenticated)/selling/new/components/product-form.tsx`
-  - **BUG Line 63**: Price converted to cents but schema expects dollars
+  - ✅ **FIXED**: Price now properly converted to cents
   
 - **File**: `/apps/app/app/(authenticated)/selling/new/actions/create-product.ts`
-  - **BUG Line 48-50**: Price validation expects dollars but form sends cents
+  - ✅ **FIXED**: Updated to use priceCentsSchema and convert to dollars for database
   
 - **File**: `/apps/app/app/(authenticated)/selling/new/components/image-upload.tsx`
   - **CRITICAL Lines 46-50**: Object URLs in dev won't persist in database
@@ -33,10 +33,11 @@
   
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/components/edit-product-form.tsx`
   - **BUG Lines 254-259**: Category selector hardcoded (should be dynamic)
-  - **BUG**: Price field doesn't handle cents conversion
+  - ✅ **FIXED**: Price field now handles cents conversion
   - **BUG**: Uses `order` but schema has `displayOrder` field
   
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/actions/product-actions.ts`
+  - ✅ **FIXED**: Updated to use priceCentsSchema and convert to dollars for database
   - **BUG Line 149**: Creates images with `order` field but schema expects `displayOrder`
 
 ### Messaging System  
@@ -51,10 +52,10 @@
   - **Missing**: No conversation creation flow
   
 - **File**: `/apps/app/app/(authenticated)/messages/actions/message-actions.ts`
-  - **SECURITY Line 75**: No sanitization on message content (XSS vulnerability)
+  - ✅ **FIXED**: Message content now sanitized with `sanitizeForDisplay()`
   
 - **File**: `/apps/api/app/api/messages/route.ts`
-  - **SECURITY Line 249**: Message content not sanitized before storage
+  - ✅ **FIXED**: Message content now sanitized before storage
   - **Missing**: No file/image attachment support (schema has it, no implementation)
 
 ### Search Implementation
@@ -72,6 +73,13 @@
 ---
 
 ## 🟡 BUGS & ERRORS
+
+### Price Display Inconsistencies
+- **Multiple Files**: Inconsistent price display formatting
+  - Some expect dollars: `${product.price.toFixed(2)}`
+  - Some expect cents: `${(price / 100).toFixed(2)}`
+  - Need to standardize using formatPrice utility
+  - Created `/packages/utils/src/price.ts` with formatting utilities
 
 ### Critical Bugs
 1. **Mobile Navigation Broken**

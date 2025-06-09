@@ -2,8 +2,6 @@ import { currentUser } from '@repo/auth/server';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const notificationService = getNotificationService();
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,6 +15,7 @@ export async function PATCH(
 
     const { id } = await params;
 
+    const notificationService = getNotificationService();
     await notificationService.markAsRead(id, user.id);
 
     return NextResponse.json({ success: true });

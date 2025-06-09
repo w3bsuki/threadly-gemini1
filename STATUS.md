@@ -66,15 +66,15 @@
 
 ## 🟡 NEXT (Immediate Tasks - Next 48hrs)
 
-### 1. Fix Critical Security Issues (2hrs)
-- [ ] Add message sanitization to prevent XSS
-- [ ] Fix race condition in order creation (remove early SOLD status)
-- [ ] Validate payment metadata in webhook handler
+### 1. Fix Critical Security Issues (2hrs) ✅
+- [x] Add message sanitization to prevent XSS
+- [x] Fix race condition in order creation (remove early SOLD status)
+- [x] Validate payment metadata in webhook handler
 
-### 2. Fix Price Handling Bug (2hrs)
-- [ ] Standardize on cents throughout the system
-- [ ] Update validation schemas to expect cents
-- [ ] Fix price display formatting
+### 2. Fix Price Handling Bug (2hrs) 🟡
+- [x] Standardize on cents throughout the system
+- [x] Update validation schemas to expect cents
+- [ ] Fix price display formatting (IN PROGRESS)
 
 ### 3. Fix Message Seller Flow (3hrs) 
 - [ ] Create conversation creation endpoint

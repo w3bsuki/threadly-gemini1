@@ -3,13 +3,6 @@ import { getPusherServer } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const pusherServer = getPusherServer({
-  pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-  pusherAppId: process.env.PUSHER_APP_ID!,
-  pusherSecret: process.env.PUSHER_SECRET!,
-});
-
 const triggerSchema = z.object({
   channel: z.string(),
   event: z.string(),
@@ -39,6 +32,13 @@ export async function POST(request: NextRequest) {
       // For now, we'll trust the authentication
     }
 
+    const pusherServer = getPusherServer({
+      pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
+      pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+      pusherAppId: process.env.PUSHER_APP_ID!,
+      pusherSecret: process.env.PUSHER_SECRET!,
+    });
+    
     await pusherServer.broadcast([channel], event, data);
 
     return NextResponse.json({ success: true });

@@ -72,16 +72,23 @@ const handlePaymentIntentSucceeded = async (
       metadata: paymentIntent.metadata 
     });
 
-    // Extract order details from metadata
-    const { buyerId, productId, sellerId, orderId } = paymentIntent.metadata;
-    
-    if (!buyerId) {
-      log.error('No buyerId in payment intent metadata', { paymentIntentId: paymentIntent.id });
+    // Validate and extract order details from metadata
+    if (!paymentIntent.metadata) {
+      log.error('No metadata in payment intent', { paymentIntentId: paymentIntent.id });
       return;
     }
 
-    if (!orderId) {
-      log.error('No orderId in payment intent metadata', { paymentIntentId: paymentIntent.id });
+    const { buyerId, productId, sellerId, orderId } = paymentIntent.metadata;
+    
+    if (!buyerId || !orderId) {
+      log.error('Missing required metadata in payment intent', { 
+        paymentIntentId: paymentIntent.id,
+        metadata: paymentIntent.metadata,
+        missing: {
+          buyerId: !buyerId,
+          orderId: !orderId
+        }
+      });
       return;
     }
 

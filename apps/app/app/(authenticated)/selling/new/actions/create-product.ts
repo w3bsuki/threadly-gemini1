@@ -8,7 +8,7 @@ import {
   productConditionSchema,
 } from '@repo/validation/schemas/product';
 import {
-  priceSchema,
+  priceCentsSchema,
   safeTextSchema,
   cuidSchema,
 } from '@repo/validation/schemas/common';
@@ -45,7 +45,7 @@ const createProductSchema = z.object({
     .refine((text) => !/<[^>]*>/.test(text), {
       message: 'HTML tags are not allowed',
     }),
-  price: priceSchema.refine((price) => isPriceInRange(price), {
+  price: priceCentsSchema.refine((price) => price >= 1 && price <= 99999999, {
     message: 'Price must be between $0.01 and $999,999.99',
   }),
   categoryId: cuidSchema,
@@ -117,7 +117,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       data: {
         title: sanitizedData.title,
         description: sanitizedData.description,
-        price: sanitizedData.price,
+        price: sanitizedData.price / 100, // Convert cents to dollars for database
         categoryId: sanitizedData.categoryId,
         condition: sanitizedData.condition,
         brand: sanitizedData.brand,

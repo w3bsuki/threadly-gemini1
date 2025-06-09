@@ -2,8 +2,6 @@ import { currentUser } from '@repo/auth/server';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const notificationService = getNotificationService();
-
 export async function PATCH(request: NextRequest) {
   try {
     const user = await currentUser();
@@ -12,6 +10,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const notificationService = getNotificationService();
     await notificationService.markAllAsRead(user.id);
 
     return NextResponse.json({ success: true });

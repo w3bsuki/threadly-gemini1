@@ -88,6 +88,7 @@ export function EditProductForm({ product, userId }: EditProductFormProps) {
       
       const result = await updateProduct(product.id, {
         ...data,
+        price: Math.round(data.price * 100), // Convert dollars to cents
         sellerId: userId,
       });
 

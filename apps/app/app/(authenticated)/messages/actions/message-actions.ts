@@ -4,20 +4,12 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { getPusherServer } from '@repo/real-time/server';
 import { getNotificationService } from '@repo/real-time/server';
+import { sanitizeForDisplay } from '@repo/validation/sanitize';
 // import { getEmailService } from '@repo/notifications';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-// Initialize services
-const pusherServer = getPusherServer({
-  pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-  pusherAppId: process.env.PUSHER_APP_ID!,
-  pusherSecret: process.env.PUSHER_SECRET!,
-});
-
-const notificationService = getNotificationService();
-// const emailService = getEmailService(process.env.RESEND_API_KEY!);
+// Services will be initialized inside functions to avoid build-time issues
 
 const sendMessageSchema = z.object({
   conversationId: z.string().min(1),
@@ -67,12 +59,12 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
       throw new Error('You are not authorized to send messages in this conversation');
     }
 
-    // Create the message
+    // Create the message with sanitized content
     const message = await database.message.create({
       data: {
         conversationId: validatedInput.conversationId,
         senderId: dbUser.id,
-        content: validatedInput.content,
+        content: sanitizeForDisplay(validatedInput.content),
         read: false,
       },
       include: {
@@ -99,6 +91,13 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
 
     // Send real-time message notification
     try {
+      const pusherServer = getPusherServer({
+        pusherKey: process.env.NEXT_PUBLIC_PUSHER_KEY!,
+        pusherCluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+        pusherAppId: process.env.PUSHER_APP_ID!,
+        pusherSecret: process.env.PUSHER_SECRET!,
+      });
+      
       await pusherServer.sendMessage({
         id: message.id,
         conversationId: message.conversationId,
@@ -116,6 +115,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
       : conversation.buyerId;
 
     try {
+      const notificationService = getNotificationService();
       await notificationService.notifyNewMessage(message, conversation);
     } catch (error) {
       console.error('Failed to send in-app notification:', error);

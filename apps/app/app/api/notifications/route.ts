@@ -4,8 +4,6 @@ import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const notificationService = getNotificationService();
-
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(255),
   message: z.string().min(1).max(1000),
@@ -37,6 +35,7 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
+    const notificationService = getNotificationService();
     const unreadCount = await notificationService.getUnreadCount(user.id);
 
     return NextResponse.json({
@@ -67,6 +66,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, message, type, metadata } = createNotificationSchema.parse(body);
 
+    const notificationService = getNotificationService();
     const notification = await notificationService.notify(user.id, {
       title,
       message,

@@ -117,16 +117,8 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
       orders.push(order);
     }
 
-    // Update product status if they're single-quantity items
-    await database.product.updateMany({
-      where: {
-        id: { in: productIds },
-        // Only update products that are single quantity (typical for marketplace)
-      },
-      data: {
-        status: 'SOLD',
-      },
-    });
+    // NOTE: Product status will be updated to SOLD by the payment webhook
+    // This prevents race conditions where products are marked sold before payment confirmation
 
     // Send confirmation email to buyer
     // TODO: Implement email notifications when Resend is configured

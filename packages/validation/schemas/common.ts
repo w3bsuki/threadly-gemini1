@@ -50,12 +50,19 @@ export const emailSchema = z
     }
   );
 
-// Price validation
+// Price validation (in dollars for legacy compatibility)
 export const priceSchema = z
   .number()
   .positive('Price must be positive')
   .multipleOf(0.01, 'Price must have at most 2 decimal places')
   .max(999999.99, 'Price must be less than 1,000,000');
+
+// Price validation in cents (recommended for e-commerce)
+export const priceCentsSchema = z
+  .number()
+  .int('Price must be a whole number in cents')
+  .positive('Price must be positive')
+  .max(99999999, 'Price must be less than $1,000,000');
 
 // Currency validation
 export const currencySchema = z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD'], {
