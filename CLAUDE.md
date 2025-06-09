@@ -138,6 +138,42 @@ pnpm db:studio
 2. **Assess priority** → Critical? Add to STATUS.md
 3. **Tag appropriately** → Bug, Todo, Incomplete, Security, etc.
 
+## 📋 OPTIMAL TASK WORKFLOW (FOLLOW EVERY TIME)
+
+**Our documentation system:**
+- **STATUS.md** = High-level project dashboard (completion %, timeline, working features)
+- **ISSUES.md** = Technical debt tracker (specific bugs, line numbers, code problems) 
+- **TODO.md** = Active task list (what we're working on now)
+- **ROADMAP.md** = Long-term feature planning
+
+**The 5-step workflow for every task:**
+
+### 1. 🔍 SCAN ISSUES.MD (Primary work source)
+- Read through ISSUES.md systematically
+- Identify next priority issue with specific file paths/line numbers
+- Focus on Critical → High → Medium priority items
+
+### 2. 📝 EXTRACT & WRITE TODOS
+- Use TodoWrite tool to create specific, measurable tasks
+- Break complex issues into 3-5 actionable steps
+- Set priorities based on blocking impact
+
+### 3. 📚 RESEARCH BEST PRACTICES
+- Check technology docs first (Next Forge, Next.js, etc.)
+- Look for existing patterns in codebase
+- Understand the "why" not just the "how"
+
+### 4. 💻 IMPLEMENT SYSTEMATICALLY  
+- Mark todos as in_progress one at a time
+- Complete each todo fully before moving to next
+- Update ISSUES.md when bugs are fixed
+- Mark todos as completed immediately
+
+### 5. 📊 UPDATE DOCUMENTATION
+- Update ISSUES.md with ✅ fixed items
+- Update STATUS.md completion percentages  
+- Commit with descriptive messages
+
 ### 🚨 WHEN IMPLEMENTING ANYTHING - THE GOLDEN RULE
 **ALWAYS: Research → Plan → Review → Implement**
 

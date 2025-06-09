@@ -21,6 +21,7 @@ const isPublicRoute = createRouteMatcher([
   '/browse(.*)',
   '/product(.*)',
   '/api/webhooks(.*)',
+  '/api/uploadthing(.*)', // Required for UploadThing callbacks
 ]);
 
 export default authMiddleware(async (auth, req) => {

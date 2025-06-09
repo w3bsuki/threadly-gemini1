@@ -4,9 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { ourFileRouter } from "./core";
 
-// Create the uploadthing route handler
+// Create the uploadthing route handler with development configuration
 const uploadthingHandler = createRouteHandler({
   router: ourFileRouter,
+  config: {
+    // Enable development mode features
+    ...(process.env.NODE_ENV === 'development' && {
+      logLevel: 'Info' as const,
+      callbackUrl: process.env.UPLOADTHING_URL || 'http://localhost:3000/api/uploadthing',
+    }),
+  },
 });
 
 // Wrap the handlers with rate limiting

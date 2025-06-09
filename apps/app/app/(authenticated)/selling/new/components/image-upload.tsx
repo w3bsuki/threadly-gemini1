@@ -26,8 +26,10 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
     },
     onUploadError: (error: Error) => {
       console.error("UploadThing error:", error);
-      console.log("Using fallback local URLs for development");
       setIsUploading(false);
+      
+      // Show user-friendly error message
+      alert(`Upload failed: ${error.message}. Please try again.`);
     },
     onUploadBegin: (name) => {
       console.log("Beginning upload: ", name);
@@ -41,39 +43,19 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
     const fileArray = Array.from(files);
     setIsUploading(true);
     
-    // Always try the fallback approach in development for now
-    // Since UploadThing callback is having issues
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Development mode: Using local object URLs");
-      handleFallbackUpload(fileArray);
-      return;
-    }
-    
-    // In production, try UploadThing
+    // Always try UploadThing first (both dev and production)
     try {
-      const result = await startUpload(fileArray);
-      if (!result || result.length === 0) {
-        // UploadThing failed, fallback to local URLs
-        handleFallbackUpload(fileArray);
-      }
-      // Success handled in onClientUploadComplete
+      await startUpload(fileArray);
+      // Success handled in onClientUploadComplete callback
     } catch (error) {
-      // TODO: Add proper error tracking
-      handleFallbackUpload(fileArray);
+      console.error("UploadThing upload failed:", error);
+      setIsUploading(false);
+      
+      // Show user-friendly error message
+      alert("Upload failed. Please check your internet connection and try again.");
     }
   };
 
-  const handleFallbackUpload = (fileArray: File[]) => {
-    // Create local object URLs for development/preview
-    // WARNING: This will not work in production - UploadThing must be configured
-    const localUrls = fileArray.map(file => {
-      const url = URL.createObjectURL(file);
-      return url;
-    });
-    const updatedUrls = [...value, ...localUrls].slice(0, maxFiles);
-    onChange(updatedUrls);
-    setIsUploading(false);
-  };
 
   const removeImage = (indexToRemove: number) => {
     const updatedUrls = value.filter((_, index) => index !== indexToRemove);
@@ -131,11 +113,6 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
             <p className="text-xs text-muted-foreground mt-1">
               PNG, JPG, GIF up to 10MB ({value.length}/{maxFiles} images)
             </p>
-            {process.env.NODE_ENV === 'development' && (
-              <p className="text-xs text-yellow-600 mt-2">
-                Development Mode: Using local object URLs for instant preview
-              </p>
-            )}
           </div>
         </div>
       </Card>

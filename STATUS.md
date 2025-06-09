@@ -82,10 +82,10 @@
 - [x] Add UI for starting new conversations
 - [x] Test buyer-seller messaging flow
 
-### 4. Fix Image Upload in Development (2hrs)
-- [ ] Configure UploadThing for dev environment
-- [ ] Remove object URL fallback that breaks
-- [ ] Test image persistence in database
+### 4. Fix Image Upload in Development (2hrs) ✅
+- [x] Configure UploadThing for dev environment
+- [x] Remove object URL fallback that breaks
+- [x] Test image persistence in database
 
 ### 5. Fix Database Field Mismatches (1hr)
 - [ ] Change all `order` to `displayOrder` for images

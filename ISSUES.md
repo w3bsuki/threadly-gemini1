@@ -28,8 +28,8 @@
   - ✅ **FIXED**: Updated to use priceCentsSchema and convert to dollars for database
   
 - **File**: `/apps/app/app/(authenticated)/selling/new/components/image-upload.tsx`
-  - **CRITICAL Lines 46-50**: Object URLs in dev won't persist in database
-  - **Issue**: UploadThing callbacks not working properly in development
+  - ✅ **FIXED**: Removed development bypass that used non-persistent object URLs
+  - ✅ **FIXED**: UploadThing callbacks now working properly in development
   
 - **File**: `/apps/app/app/(authenticated)/selling/listings/[id]/edit/components/edit-product-form.tsx`
   - **BUG Lines 254-259**: Category selector hardcoded (should be dynamic)
@@ -96,6 +96,11 @@
    - Multiple files
    - Issue: Using localhost URLs instead of UploadThing
    - Need: Environment-based URL generation
+
+4. **UploadThing Route Access**
+   - ✅ **FIXED**: Added `/api/uploadthing` to public routes in middleware
+   - ✅ **FIXED**: Improved error handling in upload callbacks
+   - ✅ **FIXED**: Added development mode configuration with proper logging
 
 ### Non-Critical Bugs
 1. **Review Form Shows Too Early**
