@@ -2,7 +2,6 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Header } from '../components/header';
 import { MessagesContent } from './components/messages-content';
 
 const title = 'Messages';
@@ -29,16 +28,17 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
     redirect('/sign-in');
   }
 
-  // Get database user
+  // Get database user with just ID for performance
   const dbUser = await database.user.findUnique({
     where: { clerkId: user.id },
+    select: { id: true }
   });
 
   if (!dbUser) {
     redirect('/sign-in');
   }
 
-  // Fetch user's conversations
+  // Fetch user's conversations with optimized queries
   const conversations = await database.conversation.findMany({
     where: {
       OR: [
@@ -124,28 +124,23 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
   }
 
   return (
-    <>
-      <Header pages={['Dashboard', 'Messages']} page="Messages" />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Messages</h1>
-            <p className="text-muted-foreground">
-              Chat with buyers and sellers about your transactions
-            </p>
-          </div>
-          
-          <MessagesContent 
-            conversations={conversations}
-            currentUserId={dbUser.id}
-            filterType={type}
-            targetUser={targetUser}
-            targetProduct={targetProduct}
-            existingConversation={existingConversation}
-          />
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+        <p className="text-muted-foreground">
+          Chat with buyers and sellers about your transactions
+        </p>
       </div>
-    </>
+      
+      <MessagesContent 
+        conversations={conversations}
+        currentUserId={dbUser.id}
+        filterType={type}
+        targetUser={targetUser}
+        targetProduct={targetProduct}
+        existingConversation={existingConversation}
+      />
+    </div>
   );
 };
 

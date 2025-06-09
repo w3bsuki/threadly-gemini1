@@ -45,9 +45,7 @@ const createProductSchema = z.object({
     .refine((text) => !/<[^>]*>/.test(text), {
       message: 'HTML tags are not allowed',
     }),
-  price: priceCentsSchema.refine((price) => price >= 1 && price <= 99999999, {
-    message: 'Price must be between $0.01 and $999,999.99',
-  }),
+  price: z.number().min(1, 'Price must be at least 1 cent').max(99999999, 'Price must be less than $999,999.99'),
   categoryId: cuidSchema,
   condition: productConditionSchema,
   brand: z.string().trim().max(50).optional(),
@@ -55,9 +53,8 @@ const createProductSchema = z.object({
   color: z.string().max(30).optional(),
   images: z.array(
     z.string()
-      .url('Invalid image URL')
-      .refine((url) => isAllowedImageUrl(url, ['uploadthing.com', 'utfs.io']), {
-        message: 'Image must be from an allowed source',
+      .refine((url) => url.startsWith('data:image/') || url.startsWith('http'), {
+        message: 'Invalid image format',
       })
   ).min(1, 'At least one image is required').max(10, 'Maximum 10 images allowed'),
   sellerId: z.string(),
@@ -97,7 +94,9 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
     console.log('Database user:', dbUser.id);
 
     // Validate input
+    console.log('Validating input against schema...');
     const validatedInput = createProductSchema.parse(input);
+    console.log('Input validation passed');
 
     // Sanitize user input
     const sanitizedData = {

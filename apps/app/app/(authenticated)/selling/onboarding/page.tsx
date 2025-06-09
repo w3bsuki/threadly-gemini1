@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Header } from '../../components/header';
 import { StripeConnectStatus } from './components/stripe-connect-status';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
@@ -89,7 +88,11 @@ const SellerOnboardingPage = () => {
       window.location.href = data.url;
     } catch (error) {
       console.error('Error starting onboarding:', error);
-      toast.error('Failed to start onboarding. Please try again.');
+      if (error.message.includes('not configured')) {
+        toast.error('Payment processing is not available at the moment.');
+      } else {
+        toast.error('Failed to start onboarding. Please try again.');
+      }
       setConnecting(false);
     }
   };
@@ -115,40 +118,40 @@ const SellerOnboardingPage = () => {
 
   if (loading) {
     return (
-      <>
-        <Header pages={['Dashboard', 'Selling', 'Onboarding']} page="Onboarding" />
-        <div className="flex flex-1 items-center justify-center">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Seller Onboarding</h1>
+          <p className="text-muted-foreground">Loading your account status...</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <Header pages={['Dashboard', 'Selling', 'Onboarding']} page="Onboarding" />
-      <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-        <div className="mx-auto w-full max-w-4xl">
-          {/* Page Title */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">Seller Onboarding</h1>
-            <p className="text-muted-foreground mt-2">
-              Connect your Stripe account to start accepting payments and grow your business on Threadly.
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Seller Onboarding</h1>
+        <p className="text-muted-foreground">
+          Connect your Stripe account to start accepting payments and grow your business on Threadly.
+        </p>
+      </div>
 
-          {/* Account Status */}
-          {accountStatus && (
-            <div className="mb-6">
-              <StripeConnectStatus status={accountStatus} />
-            </div>
-          )}
+      <div className="mx-auto w-full max-w-4xl space-y-6">
 
-          {/* Main Content based on status */}
-          {accountStatus?.status === 'not_connected' && (
-            <>
-              {/* Benefits Section */}
-              <div className="grid gap-6 md:grid-cols-2 mb-8">
+        {/* Account Status */}
+        {accountStatus && (
+          <StripeConnectStatus status={accountStatus} />
+        )}
+
+        {/* Main Content based on status */}
+        {accountStatus?.status === 'not_connected' && (
+          <>
+            {/* Benefits Section */}
+            <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -236,9 +239,9 @@ const SellerOnboardingPage = () => {
                 </CardContent>
               </Card>
             </>
-          )}
+        )}
 
-          {accountStatus?.status === 'pending' && (
+        {accountStatus?.status === 'pending' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -290,9 +293,9 @@ const SellerOnboardingPage = () => {
                 </Button>
               </CardContent>
             </Card>
-          )}
+        )}
 
-          {accountStatus?.status === 'connected' && (
+        {accountStatus?.status === 'connected' && (
             <Card className="border-green-200 bg-green-50/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-700">
@@ -330,9 +333,9 @@ const SellerOnboardingPage = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+        )}
 
-          {(accountStatus?.status === 'restricted' || accountStatus?.status === 'disabled') && (
+        {(accountStatus?.status === 'restricted' || accountStatus?.status === 'disabled') && (
             <Card className="border-red-200 bg-red-50/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-red-700">
@@ -382,10 +385,9 @@ const SellerOnboardingPage = () => {
                 </Button>
               </CardContent>
             </Card>
-          )}
-        </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

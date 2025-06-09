@@ -1,4 +1,3 @@
-import { env } from '@/env';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
@@ -7,8 +6,7 @@ import Link from 'next/link';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { Plus, Edit, MoreHorizontal } from 'lucide-react';
-import { Header } from '../../components/header';
+import { Plus, Edit, MoreHorizontal, Eye, Trash2 } from 'lucide-react';
 
 const title = 'My Listings';
 const description = 'Manage your product listings';
@@ -25,23 +23,41 @@ const MyListingsPage = async () => {
     redirect('/sign-in');
   }
 
-  // Get database user
+  // Get database user with just ID for performance
   const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id }
+    where: { clerkId: user.id },
+    select: { id: true }
   });
 
   if (!dbUser) {
     // Create user if doesn't exist
-    await database.user.create({
+    const newUser = await database.user.create({
       data: {
         clerkId: user.id,
         email: user.emailAddresses[0]?.emailAddress || '',
         firstName: user.firstName,
         lastName: user.lastName,
         imageUrl: user.imageUrl,
-      }
+      },
+      select: { id: true }
     });
-    redirect('/selling/listings'); // Redirect to refresh
+    
+    // Return empty state for new user
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Listings</h1>
+            <p className="text-muted-foreground">
+              Manage your products and track their performance
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   // Fetch user's products
@@ -102,23 +118,21 @@ const MyListingsPage = async () => {
   };
 
   return (
-    <>
-      <Header pages={['Dashboard', 'Selling', 'My Listings']} page="My Listings" />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">My Listings</h1>
-            <p className="text-muted-foreground">
-              Manage your products and track their performance
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/selling/new">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Item
-            </Link>
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Listings</h1>
+          <p className="text-muted-foreground">
+            Manage your products and track their performance
+          </p>
         </div>
+        <Button asChild>
+          <Link href="/selling/new">
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Item
+          </Link>
+        </Button>
+      </div>
 
         {products.length === 0 ? (
           <Card>
@@ -195,18 +209,21 @@ const MyListingsPage = async () => {
                           Edit
                         </Link>
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        View Details
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/product/${product.id}`}>
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Link>
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
+        </div>
+      )}
 
-        {/* Summary Stats */}
+      {/* Summary Stats */}
         {products.length > 0 && (
           <div className="grid gap-4 md:grid-cols-4 mt-6">
             <Card>
@@ -252,8 +269,7 @@ const MyListingsPage = async () => {
             </Card>
           </div>
         )}
-      </div>
-    </>
+    </div>
   );
 };
 

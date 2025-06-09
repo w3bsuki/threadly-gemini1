@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { Package, Eye, ShoppingCart, Star } from 'lucide-react';
-import { Header } from '../../components/header';
+import { Package, Eye, ShoppingCart, Star, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 
 const title = 'My Orders';
@@ -25,13 +24,14 @@ const MyOrdersPage = async () => {
     redirect('/sign-in');
   }
 
-  // Get database user
+  // Get database user with just ID for performance  
   const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id }
+    where: { clerkId: user.id },
+    select: { id: true }
   });
 
   if (!dbUser) {
-    redirect('/browse');
+    redirect('/sign-in');
   }
 
   // Fetch user's orders
@@ -41,18 +41,40 @@ const MyOrdersPage = async () => {
     },
     include: {
       product: {
-        include: {
+        select: {
+          id: true,
+          title: true,
+          condition: true,
           images: {
             take: 1,
             orderBy: {
               displayOrder: 'asc',
             },
+            select: {
+              imageUrl: true
+            }
           },
         },
       },
-      seller: true,
-      payment: true,
-      review: true, // Check if review exists
+      seller: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      },
+      payment: {
+        select: {
+          id: true,
+          status: true
+        }
+      },
+      review: {
+        select: {
+          id: true
+        }
+      }
     },
     orderBy: {
       createdAt: 'desc',
@@ -98,23 +120,22 @@ const MyOrdersPage = async () => {
   };
 
   return (
-    <>
-      <Header pages={['Dashboard', 'Buying', 'Orders']} page="My Orders" />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">My Orders</h1>
-            <p className="text-muted-foreground">
-              Track your purchases and order history
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/buying/cart">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              View Cart
-            </Link>
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
+          <p className="text-muted-foreground">
+            Track your purchases and order history
+          </p>
         </div>
+        <Button asChild>
+          <a href={process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3001'} target="_blank" rel="noopener noreferrer">
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Continue Shopping
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </a>
+        </Button>
+      </div>
 
         {orders.length === 0 ? (
           <Card>
@@ -125,9 +146,10 @@ const MyOrdersPage = async () => {
                 Start shopping to see your orders here
               </p>
               <Button asChild>
-                <Link href="/browse">
+                <a href={process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3001'} target="_blank" rel="noopener noreferrer">
                   Start Shopping
-                </Link>
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
               </Button>
             </CardContent>
           </Card>
@@ -252,9 +274,9 @@ const MyOrdersPage = async () => {
               </Card>
             ))}
           </div>
-        )}
+      )}
 
-        {/* Order Summary Stats */}
+      {/* Order Summary Stats */}
         {orders.length > 0 && (
           <div className="grid gap-4 md:grid-cols-4 mt-6">
             <Card>
@@ -300,8 +322,7 @@ const MyOrdersPage = async () => {
             </Card>
           </div>
         )}
-      </div>
-    </>
+    </div>
   );
 };
 

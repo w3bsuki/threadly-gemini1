@@ -144,10 +144,10 @@ export function AppLayout({ children, isAdmin }: AppLayoutProps) {
               {/* User Section */}
               <li className="mt-auto">
                 <div className="flex items-center gap-x-4 px-2 py-3 text-sm font-medium leading-6">
-                  <UserButton />
-                  <div className="flex-1">
-                    <ModeToggle />
+                  <div className="flex-1" suppressHydrationWarning>
+                    <UserButton />
                   </div>
+                  <ModeToggle />
                 </div>
               </li>
             </ul>
@@ -219,7 +219,9 @@ export function AppLayout({ children, isAdmin }: AppLayoutProps) {
 
               <div className="absolute bottom-4 left-4 right-4">
                 <div className="flex items-center gap-2">
-                  <UserButton />
+                  <div suppressHydrationWarning>
+                    <UserButton />
+                  </div>
                   <ModeToggle />
                   <SignOutButton>
                     <Button variant="ghost" size="icon">

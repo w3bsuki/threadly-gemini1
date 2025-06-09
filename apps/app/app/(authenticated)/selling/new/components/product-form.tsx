@@ -52,6 +52,7 @@ export function ProductForm({ userId }: ProductFormProps) {
       color: '',
       images: [],
     },
+    mode: 'onChange',
   });
 
   const onSubmit = async (data: ProductFormData) => {
@@ -68,7 +69,15 @@ export function ProductForm({ userId }: ProductFormProps) {
         toast.success('Product created successfully!');
         router.push(`/selling/listings`);
       } else {
-        toast.error(result.error || 'Failed to create product');
+        console.error('Server validation failed:', result);
+        if (result.details) {
+          // Show specific validation errors
+          result.details.forEach((detail: any) => {
+            toast.error(`${detail.path?.join('.')}: ${detail.message}`);
+          });
+        } else {
+          toast.error(result.error || 'Failed to create product');
+        }
       }
     } catch (error) {
       console.error('Error creating product:', error);
@@ -186,7 +195,7 @@ export function ProductForm({ userId }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Condition</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />

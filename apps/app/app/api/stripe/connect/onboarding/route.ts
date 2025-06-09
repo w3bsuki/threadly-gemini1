@@ -10,6 +10,14 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured. Payment processing is not available.' },
+        { status: 503 }
+      );
+    }
+
     // Authenticate user
     const user = await currentUser();
     if (!user) {
@@ -100,6 +108,14 @@ export async function POST(request: NextRequest) {
 // GET method to refresh an existing onboarding link
 export async function GET(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured. Payment processing is not available.' },
+        { status: 503 }
+      );
+    }
+
     // Authenticate user
     const user = await currentUser();
     if (!user) {

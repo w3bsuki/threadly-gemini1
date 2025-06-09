@@ -62,7 +62,7 @@ export function CategorySelector({ value, onValueChange, placeholder = "Select a
   }
 
   return (
-    <Select onValueChange={onValueChange} value={value}>
+    <Select onValueChange={onValueChange} value={value || ""}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

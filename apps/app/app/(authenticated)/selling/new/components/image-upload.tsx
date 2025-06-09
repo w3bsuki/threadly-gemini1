@@ -43,16 +43,36 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
     const fileArray = Array.from(files);
     setIsUploading(true);
     
-    // Always try UploadThing first (both dev and production)
+    // Convert files to data URLs for development/testing
     try {
-      await startUpload(fileArray);
-      // Success handled in onClientUploadComplete callback
-    } catch (error) {
-      console.error("UploadThing upload failed:", error);
-      setIsUploading(false);
+      const dataUrls: string[] = [];
       
-      // Show user-friendly error message
-      alert("Upload failed. Please check your internet connection and try again.");
+      for (const file of fileArray) {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          alert(`File ${file.name} is too large. Please choose files under 10MB.`);
+          continue;
+        }
+        
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        dataUrls.push(dataUrl);
+      }
+      
+      if (dataUrls.length > 0) {
+        const updatedUrls = [...value, ...dataUrls].slice(0, maxFiles);
+        onChange(updatedUrls);
+      }
+      
+      setIsUploading(false);
+    } catch (error) {
+      console.error("File upload failed:", error);
+      setIsUploading(false);
+      alert("Upload failed. Please try again.");
     }
   };
 

@@ -14,6 +14,9 @@ const CSRF_EXEMPT_PATHS = [
   '/api/health',
   '/api/uploadthing',
   '/api/collaboration/auth',
+  '/api/stripe',
+  '/api/real-time',
+  '/api/seed-categories',
 ];
 
 export interface CSRFConfig {

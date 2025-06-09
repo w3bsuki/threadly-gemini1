@@ -2,7 +2,6 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Header } from '../../components/header';
 import { SalesHistoryContent } from './components/sales-history-content';
 
 const title = 'Sales History';
@@ -20,9 +19,10 @@ const SalesHistoryPage = async () => {
     redirect('/sign-in');
   }
 
-  // Get database user
+  // Get database user with just ID for performance
   const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id }
+    where: { clerkId: user.id },
+    select: { id: true }
   });
 
   if (!dbUser) {
@@ -70,23 +70,36 @@ const SalesHistoryPage = async () => {
     }),
   ]);
 
-  // Calculate monthly sales for the last 12 months
-  const monthlyStats = await database.$queryRaw<Array<{
-    month: string;
-    total_sales: bigint;
-    order_count: bigint;
-  }>>`
-    SELECT 
-      TO_CHAR(created_at, 'YYYY-MM') as month,
-      COALESCE(SUM(amount), 0) as total_sales,
-      COUNT(DISTINCT id) as order_count
-    FROM "Order"
-    WHERE seller_id = ${dbUser.id}
-      AND status = 'DELIVERED'
-      AND created_at >= NOW() - INTERVAL '12 months'
-    GROUP BY TO_CHAR(created_at, 'YYYY-MM')
-    ORDER BY month DESC
-  `;
+  // Calculate monthly sales for the last 12 months (simplified for SQLite)
+  const currentDate = new Date();
+  const oneYearAgo = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), currentDate.getDate());
+  
+  const monthlyOrders = await database.order.findMany({
+    where: {
+      sellerId: dbUser.id,
+      status: 'DELIVERED',
+      createdAt: {
+        gte: oneYearAgo,
+      },
+    },
+    select: {
+      amount: true,
+      createdAt: true,
+    },
+  });
+
+  // Group by month manually
+  const monthlyStats = monthlyOrders.reduce((acc, order) => {
+    const month = order.createdAt.toISOString().substring(0, 7); // YYYY-MM format
+    if (!acc[month]) {
+      acc[month] = { month, total_sales: BigInt(0), order_count: BigInt(0) };
+    }
+    acc[month].total_sales += BigInt(Math.round(order.amount));
+    acc[month].order_count += BigInt(1);
+    return acc;
+  }, {} as Record<string, { month: string; total_sales: bigint; order_count: bigint }>);
+
+  const monthlyStatsArray = Object.values(monthlyStats).sort((a, b) => b.month.localeCompare(a.month));
 
   // Get product performance data
   const topProducts = await database.order.groupBy({
@@ -138,26 +151,27 @@ const SalesHistoryPage = async () => {
   });
 
   return (
-    <>
-      <Header pages={['Dashboard', 'Selling', 'Sales History']} page="Sales History" />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Sales History & Analytics</h1>
-            <p className="text-muted-foreground">
-              Track your sales performance, earnings, and top-selling products
-            </p>
-          </div>
-          
-          <SalesHistoryContent 
-            salesData={salesData}
-            recentOrders={recentOrders}
-            monthlyStats={monthlyStats}
-            topProducts={enrichedTopProducts}
-          />
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Sales History & Analytics</h1>
+        <p className="text-muted-foreground">
+          Track your sales performance, earnings, and top-selling products
+        </p>
       </div>
-    </>
+      
+      <SalesHistoryContent 
+        salesData={{
+          _sum: { amount: salesData._sum?.amount || null },
+          _count: salesData._count || 0
+        }}
+        recentOrders={recentOrders}
+        monthlyStats={monthlyStatsArray}
+        topProducts={enrichedTopProducts.map(product => ({
+          ...product,
+          _sum: { amount: product._sum?.amount || null }
+        }))}
+      />
+    </div>
   );
 };
 
