@@ -1,11 +1,31 @@
 import { Resend } from 'resend';
 import { database } from '@repo/database';
-import type { NotificationPreferences } from '@repo/real-time';
 import { log } from '@repo/observability/log';
 import { OrderConfirmationEmail } from './templates/order-confirmation';
 import { NewMessageEmail } from './templates/new-message';
 import { PaymentReceivedEmail } from './templates/payment-received';
 import { WeeklyReportEmail } from './templates/weekly-report';
+
+interface NotificationPreferences {
+  email: {
+    orderUpdates: boolean;
+    newMessages: boolean;
+    paymentReceived: boolean;
+    weeklyReport: boolean;
+    marketing: boolean;
+  };
+  push: {
+    orderUpdates: boolean;
+    newMessages: boolean;
+    paymentReceived: boolean;
+  };
+  inApp: {
+    orderUpdates: boolean;
+    newMessages: boolean;
+    paymentReceived: boolean;
+    systemAlerts: boolean;
+  };
+}
 
 interface EmailConfig {
   apiKey: string;
