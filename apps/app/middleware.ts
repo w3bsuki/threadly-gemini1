@@ -22,6 +22,7 @@ const isPublicRoute = createRouteMatcher([
   '/product(.*)',
   '/api/webhooks(.*)',
   '/api/uploadthing(.*)', // Required for UploadThing callbacks
+  '/api/test-db', // Database connection test
 ]);
 
 export default authMiddleware(async (auth, req) => {
