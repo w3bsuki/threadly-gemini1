@@ -14,6 +14,7 @@ export class TimeTestUtils {
         if (args.length === 0) {
           super(TimeTestUtils.mockDate!);
         } else {
+          // @ts-ignore - TypeScript doesn't like spreading args in Date constructor
           super(...args);
         }
       }

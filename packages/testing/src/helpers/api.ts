@@ -5,14 +5,14 @@ import { server } from '../mocks/server';
 // API testing utilities
 export class ApiTestHelper {
   // Mock a successful API response
-  static mockApiSuccess<T>(
+  static mockApiSuccess<T = any>(
     method: 'get' | 'post' | 'put' | 'patch' | 'delete',
     url: string,
     data: T,
     status = 200
   ) {
     const handler = http[method](url, () => {
-      return HttpResponse.json(data, { status });
+      return HttpResponse.json(data as any, { status });
     });
     
     server.use(handler);
@@ -35,7 +35,7 @@ export class ApiTestHelper {
   }
 
   // Mock API with delay
-  static mockApiWithDelay<T>(
+  static mockApiWithDelay<T = any>(
     method: 'get' | 'post' | 'put' | 'patch' | 'delete',
     url: string,
     data: T,
@@ -44,7 +44,7 @@ export class ApiTestHelper {
   ) {
     const handler = http[method](url, async () => {
       await new Promise(resolve => setTimeout(resolve, delay));
-      return HttpResponse.json(data, { status });
+      return HttpResponse.json(data as any, { status });
     });
     
     server.use(handler);

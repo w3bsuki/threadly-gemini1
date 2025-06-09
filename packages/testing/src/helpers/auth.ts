@@ -100,7 +100,7 @@ export function createAuthenticatedUser(overrides?: Partial<typeof mockDatabaseU
 }
 
 export function createUnauthenticatedState() {
-  return mockClerkAuth(false, null);
+  return mockClerkAuth(false, undefined);
 }
 
 // Mock authentication middleware

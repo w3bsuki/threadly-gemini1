@@ -50,7 +50,7 @@ export class TestDatabase {
   static async createProduct(
     sellerId: string,
     categoryId: string,
-    data?: Partial<Prisma.ProductCreateInput>
+    data?: Partial<Prisma.ProductUncheckedCreateInput>
   ) {
     return database.product.create({
       data: {
@@ -71,7 +71,7 @@ export class TestDatabase {
     sellerId: string,
     categoryId: string,
     imageCount = 3,
-    data?: Partial<Prisma.ProductCreateInput>
+    data?: Partial<Prisma.ProductUncheckedCreateInput>
   ) {
     const product = await this.createProduct(sellerId, categoryId, data);
     
@@ -95,7 +95,7 @@ export class TestDatabase {
     buyerId: string,
     sellerId: string,
     productId: string,
-    data?: Partial<Prisma.OrderCreateInput>
+    data?: Partial<Prisma.OrderUncheckedCreateInput>
   ) {
     return database.order.create({
       data: {
@@ -114,7 +114,7 @@ export class TestDatabase {
     buyerId: string,
     sellerId: string,
     productId: string,
-    data?: Partial<Prisma.ConversationCreateInput>
+    data?: Partial<Prisma.ConversationUncheckedCreateInput>
   ) {
     return database.conversation.create({
       data: {
@@ -131,7 +131,7 @@ export class TestDatabase {
   static async createMessage(
     conversationId: string,
     senderId: string,
-    data?: Partial<Prisma.MessageCreateInput>
+    data?: Partial<Prisma.MessageUncheckedCreateInput>
   ) {
     return database.message.create({
       data: {
@@ -147,7 +147,7 @@ export class TestDatabase {
   // Create test notification
   static async createNotification(
     userId: string,
-    data?: Partial<Prisma.NotificationCreateInput>
+    data?: Partial<Prisma.NotificationUncheckedCreateInput>
   ) {
     return database.notification.create({
       data: {
