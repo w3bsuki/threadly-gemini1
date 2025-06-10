@@ -6,7 +6,9 @@ import type { NextConfig } from 'next';
 
 const otelRegex = /@opentelemetry\/instrumentation/;
 
-export const config: NextConfig = {
+import { withPerformance } from './optimized';
+
+const baseConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -49,6 +51,9 @@ export const config: NextConfig = {
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
 };
+
+// Apply performance optimizations
+export const config = withPerformance(baseConfig);
 
 export const withAnalyzer = (sourceConfig: NextConfig): NextConfig =>
   withBundleAnalyzer()(sourceConfig);
