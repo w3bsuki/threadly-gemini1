@@ -25,7 +25,10 @@ export async function ProductGridServer({
   defaultCategory, 
   limit = 20 
 }: ProductGridServerProps) {
-  const cache = getCacheService();
+  const cache = getCacheService({
+    url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || 'redis://localhost:6379',
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
+  });
   
   try {
     // Try to get cached homepage data first

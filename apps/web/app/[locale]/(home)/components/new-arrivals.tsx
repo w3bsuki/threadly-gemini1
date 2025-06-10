@@ -28,7 +28,10 @@ const formatTimeAgo = (date: Date) => {
 };
 
 export const NewArrivals = async () => {
-  const cache = getCacheService();
+  const cache = getCacheService({
+    url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || 'redis://localhost:6379',
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
+  });
   
   try {
     // Use cache-aside pattern for new arrivals

@@ -6,8 +6,8 @@ import { getCacheService } from '@repo/cache';
 
 // Initialize cache service
 const cache = getCacheService({
-  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || 'redis://localhost:6379',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
 });
 
 // GET /api/users/suggestions - Get suggested users to follow

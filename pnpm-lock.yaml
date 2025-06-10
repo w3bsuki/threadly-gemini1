@@ -63,6 +63,9 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@repo/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -78,9 +81,15 @@ importers:
       '@repo/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@repo/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@repo/testing':
         specifier: workspace:*
         version: link:../../packages/testing
+      '@repo/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@sentry/nextjs':
         specifier: ^9.22.0
         version: 9.22.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(next@15.3.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(webpack@5.98.0(esbuild@0.25.2))

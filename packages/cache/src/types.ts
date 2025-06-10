@@ -1,6 +1,6 @@
 export interface CacheConfig {
   url: string;
-  token: string;
+  token?: string;
   defaultTTL?: number; // Time to live in seconds
 }
 
