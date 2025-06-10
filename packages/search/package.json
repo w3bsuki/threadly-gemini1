@@ -15,6 +15,12 @@
       "import": "./dist/client/index.js",
       "require": "./dist/client/index.js",
       "default": "./dist/client/index.js"
+    },
+    "./search-webhook-client": {
+      "types": "./dist/search-webhook-client.d.ts",
+      "import": "./dist/search-webhook-client.js",
+      "require": "./dist/search-webhook-client.js",
+      "default": "./dist/search-webhook-client.js"
     }
   },
   "files": [
