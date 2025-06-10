@@ -6,7 +6,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Heart } from "lucide-react";
 import { cn } from "@repo/design-system/lib/utils";
-import { ProductImage, AvatarImage, StaggerContainer, Animated, HoverCard } from "@repo/design-system";
+import { ProductImage, AvatarImage } from "@repo/design-system";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -18,21 +18,20 @@ const formatCurrency = (amount: number) => {
 interface Product {
   id: string;
   title: string;
+  description: string;
   price: number;
   condition: string;
-  size?: string | null;
-  brand?: string | null;
-  images: { imageUrl: string; alt?: string | null }[];
+  category: string;
+  brand?: string;
+  images: Array<{
+    id: string;
+    imageUrl: string;
+    alt?: string;
+    displayOrder: number;
+  }>;
   seller: {
     id: string;
-    firstName: string | null;
-    lastName: string | null;
-    imageUrl: string | null;
-  };
-  category: {
-    id: string;
-    name: string;
-    slug: string;
+    firstName: string;
   };
   _count: {
     favorites: number;
@@ -44,108 +43,72 @@ interface ProductGridProps {
 }
 
 const conditionLabels = {
-  NEW_WITH_TAGS: "New with tags",
-  NEW_WITHOUT_TAGS: "New without tags",
-  VERY_GOOD: "Very good",
+  NEW: "New",
+  LIKE_NEW: "Like New", 
+  EXCELLENT: "Excellent",
   GOOD: "Good",
-  SATISFACTORY: "Satisfactory",
+  SATISFACTORY: "Fair"
 };
 
 const conditionColors = {
-  NEW_WITH_TAGS: "bg-green-100 text-green-800",
-  NEW_WITHOUT_TAGS: "bg-blue-100 text-blue-800",
-  VERY_GOOD: "bg-purple-100 text-purple-800",
+  NEW: "bg-green-100 text-green-800",
+  LIKE_NEW: "bg-blue-100 text-blue-800",
+  EXCELLENT: "bg-purple-100 text-purple-800",
   GOOD: "bg-yellow-100 text-yellow-800",
   SATISFACTORY: "bg-gray-100 text-gray-800",
 };
 
 export function ProductGrid({ products }: ProductGridProps) {
   return (
-    <StaggerContainer 
-      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4"
-      staggerDelay={30}
-      animation="fadeInUp"
-      trigger="inView"
-    >
-      {products.map((product, index) => (
-        <Animated key={product.id} animation="fadeInUp" stagger={index} trigger="inView">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      {products.map((product) => (
+        <div key={product.id}>
           <Link href={`/product/${product.id}`}>
-            <HoverCard className="h-full">
-              <Card className="h-full cursor-pointer overflow-hidden transition-all duration-300">
-            <ProductImage
-              src={product.images[0]?.imageUrl || ''}
-              alt={product.images[0]?.alt || product.title}
-              aspectRatio="3/4"
-            />
-              <button
-                className="absolute top-2 right-2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // TODO: Add to favorites
-                }}
-              >
-                <Heart className="h-4 w-4" />
-              </button>
-            </div>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                {product.seller.imageUrl && (
-                  <AvatarImage
-                    src={product.seller.imageUrl}
-                    alt={`${product.seller.firstName} ${product.seller.lastName}` || "Seller"}
-                    size={20}
-                  />
-                )}
-                <span className="text-xs text-muted-foreground truncate">
-                  {product.seller.firstName && product.seller.lastName 
-                    ? `${product.seller.firstName} ${product.seller.lastName}` 
-                    : "Anonymous"}
-                </span>
-              </div>
+            <Card className="h-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <ProductImage
+                src={product.images[0]?.imageUrl || ''}
+                alt={product.images[0]?.alt || product.title}
+                aspectRatio="3/4"
+                className="w-full object-cover"
+              />
               
-              <h3 className="font-medium line-clamp-2 mb-1">
-                {product.title}
-              </h3>
-              
-              <div className="flex items-center gap-2 mb-2">
-                {product.size && (
-                  <Badge variant="secondary" className="text-xs">
-                    {product.size}
-                  </Badge>
-                )}
-                {product.brand && (
-                  <span className="text-xs text-muted-foreground truncate">
-                    {product.brand}
-                  </span>
-                )}
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold">
-                  {formatCurrency(product.price)}
-                </span>
-                <Badge 
-                  variant="secondary"
-                  className={cn(
-                    "text-xs",
-                    conditionColors[product.condition as keyof typeof conditionColors]
+              <CardContent className="p-4">
+                <div className="mb-2">
+                  <h3 className="font-medium line-clamp-2 text-sm leading-tight">
+                    {product.title}
+                  </h3>
+                  {product.brand && (
+                    <span className="text-xs text-muted-foreground truncate">
+                      {product.brand}
+                    </span>
                   )}
-                >
-                  {conditionLabels[product.condition as keyof typeof conditionLabels]}
-                </Badge>
-              </div>
-              
-              {product._count.favorites > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {product._count.favorites} likes
-                </p>
-              )}
-            </CardContent>
-              </Card>
-            </HoverCard>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold">
+                    {formatCurrency(product.price)}
+                  </span>
+                  <Badge 
+                    variant="secondary"
+                    className={cn(
+                      "text-xs",
+                      conditionColors[product.condition as keyof typeof conditionColors]
+                    )}
+                  >
+                    {conditionLabels[product.condition as keyof typeof conditionLabels]}
+                  </Badge>
+                </div>
+                
+                {product._count.favorites > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {product._count.favorites} likes
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </Link>
-        </Animated>
+        </div>
       ))}
-    </StaggerContainer>
+    </div>
   );
 }

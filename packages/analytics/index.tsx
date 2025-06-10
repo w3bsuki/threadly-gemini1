@@ -20,8 +20,10 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => (
   </PostHogProvider>
 );
 
-// Export analytics utilities and hooks
+// Export client-side analytics utilities and hooks
 export { useAnalytics } from './posthog/client';
 export { useAnalyticsEvents } from './hooks/use-analytics-events';
-export { analytics } from './posthog/server';
 export * from './events';
+
+// Server-side analytics should be imported directly from './posthog/server'
+// to avoid importing 'server-only' in client components
