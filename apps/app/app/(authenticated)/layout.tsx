@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { PostHogIdentifier } from './components/posthog-identifier';
 import { ToastProvider } from '@/components/toast';
 import { AppLayout } from './components/app-layout';
+import { redirect } from 'next/navigation';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -20,24 +21,28 @@ const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
   }
 
   const user = await currentUser();
-  const { redirectToSignIn } = await auth();
   const betaFeature = await showBetaFeature();
 
   if (!user) {
-    return redirectToSignIn();
+    redirect('/sign-in');
   }
 
   // TODO: Initialize CSRF protection for authenticated users
   // Note: CSRF token setup moved to individual forms/actions due to Next.js 15 cookie restrictions
   // await initializeCSRFProtection();
 
-  // Check if user is admin
-  const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id },
-    select: { role: true }
-  });
-  
-  const isAdmin = dbUser?.role === 'ADMIN';
+  // Check if user is admin - with error handling
+  let isAdmin = false;
+  try {
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { role: true }
+    });
+    isAdmin = dbUser?.role === 'ADMIN';
+  } catch (error) {
+    console.error('Database user check failed:', error);
+    // Continue without admin check - don't break the whole app
+  }
 
   return (
     <RealTimeWrapper userId={user.id}>
