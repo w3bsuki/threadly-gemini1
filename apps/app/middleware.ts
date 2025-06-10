@@ -46,7 +46,9 @@ export default authMiddleware(async (auth, req) => {
   // If user is not signed in and trying to access a protected route
   const { userId } = await auth();
   if (!userId) {
-    return new Response('Unauthorized', { status: 401 });
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.url);
+    return Response.redirect(signInUrl);
   }
   
   return securityResponse;
