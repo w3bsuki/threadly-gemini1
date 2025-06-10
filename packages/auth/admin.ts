@@ -1,60 +1,17 @@
-import { currentUser, auth } from './server';
-import { database } from '@repo/database';
+// Legacy admin functions - kept for backward compatibility
+// This file will be deprecated in favor of using createAdminClient directly
+// DO NOT USE IN NEW CODE - use app-level admin client instead
 
-export async function requireAdmin() {
-  const user = await currentUser();
-  const { redirectToSignIn } = await auth();
-  
-  if (!user) {
-    return redirectToSignIn();
-  }
-  
-  const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id },
-    select: { role: true }
-  });
-  
-  if (!dbUser || dbUser.role !== 'ADMIN') {
-    throw new Error('Unauthorized - Admin access required');
-  }
-  
-  return dbUser;
-}
+console.warn('Direct import of @repo/auth/admin is deprecated. Use createAdminClient from your app instead.');
 
-export async function isAdmin() {
-  try {
-    const user = await currentUser();
-    
-    if (!user) {
-      return false;
-    }
-    
-    const dbUser = await database.user.findUnique({
-      where: { clerkId: user.id },
-      select: { role: true }
-    });
-    
-    return dbUser?.role === 'ADMIN';
-  } catch {
-    return false;
-  }
-}
+export const requireAdmin = async () => {
+  throw new Error('Direct usage of requireAdmin is deprecated. Use createAdminClient from your app.');
+};
 
-export async function canModerate() {
-  try {
-    const user = await currentUser();
-    
-    if (!user) {
-      return false;
-    }
-    
-    const dbUser = await database.user.findUnique({
-      where: { clerkId: user.id },
-      select: { role: true }
-    });
-    
-    return dbUser?.role === 'ADMIN' || dbUser?.role === 'MODERATOR';
-  } catch {
-    return false;
-  }
-}
+export const isAdmin = async () => {
+  throw new Error('Direct usage of isAdmin is deprecated. Use createAdminClient from your app.');
+};
+
+export const canModerate = async () => {
+  throw new Error('Direct usage of canModerate is deprecated. Use createAdminClient from your app.');
+};

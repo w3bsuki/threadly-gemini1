@@ -32,10 +32,14 @@ const SellNewItemPage = async () => {
     },
   });
 
+  if (!dbUser) {
+    redirect('/sign-in');
+  }
+
   // For now, skip Stripe requirement to allow testing
   // TODO: Re-enable Stripe requirement when Connect is properly configured
   /*
-  if (!dbUser?.stripeAccountId) {
+  if (!dbUser.stripeAccountId) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">

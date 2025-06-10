@@ -1,3 +1,9 @@
+// DEPRECATED: This file is kept for backward compatibility only
+// DO NOT USE IN NEW CODE - use createEmailService from email-service-client instead
+// This file will be removed in the next major version
+
+console.warn('Direct import of email-service.ts is deprecated. Use createEmailService from email-service-client instead.');
+
 import { Resend } from 'resend';
 import { database } from '@repo/database';
 import { log } from '@repo/observability/log';

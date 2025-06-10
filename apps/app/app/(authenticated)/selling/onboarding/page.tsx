@@ -88,7 +88,7 @@ const SellerOnboardingPage = () => {
       window.location.href = data.url;
     } catch (error) {
       console.error('Error starting onboarding:', error);
-      if (error.message.includes('not configured')) {
+      if (error instanceof Error && error.message.includes('not configured')) {
         toast.error('Payment processing is not available at the moment.');
       } else {
         toast.error('Failed to start onboarding. Please try again.');

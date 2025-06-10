@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAdmin } from '@repo/auth/admin';
+import { requireAdmin } from '@/lib/auth/admin';
 import { database } from '@repo/database';
 import { revalidatePath } from 'next/cache';
 
