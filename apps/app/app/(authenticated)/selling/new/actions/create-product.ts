@@ -11,7 +11,7 @@ const createProductSchema = z.object({
   description: z.string().trim().min(10).max(2000),
   price: z.number().min(1).max(99999999),
   categoryId: z.string(),
-  condition: z.enum(['NEW', 'LIKE_NEW', 'GOOD', 'FAIR', 'NEW_WITH_TAGS', 'NEW_WITHOUT_TAGS', 'VERY_GOOD', 'SATISFACTORY']),
+  condition: z.enum(['NEW_WITH_TAGS', 'NEW_WITHOUT_TAGS', 'VERY_GOOD', 'GOOD', 'SATISFACTORY']),
   brand: z.string().trim().max(50).optional(),
   size: z.string().max(20).optional(),
   color: z.string().max(30).optional(),
