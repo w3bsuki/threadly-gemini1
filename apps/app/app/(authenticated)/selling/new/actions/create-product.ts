@@ -20,7 +20,6 @@ import {
 } from '@repo/validation/sanitize';
 import { 
   isValidProductTitle,
-  isAllowedImageUrl,
   isPriceInRange,
 } from '@repo/validation/validators';
 
@@ -52,10 +51,7 @@ const createProductSchema = z.object({
   size: z.string().max(20).optional(),
   color: z.string().max(30).optional(),
   images: z.array(
-    z.string()
-      .refine((url) => url.startsWith('data:image/') || url.startsWith('http'), {
-        message: 'Invalid image format',
-      })
+    z.string().url('Invalid image URL')
   ).min(1, 'At least one image is required').max(10, 'Maximum 10 images allowed'),
   sellerId: z.string(),
 });
