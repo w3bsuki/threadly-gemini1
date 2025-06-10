@@ -61,9 +61,8 @@ const createProductSchema = z.object({
 });
 
 export async function createProduct(input: z.infer<typeof createProductSchema>) {
-  console.log('Creating product with input:', JSON.stringify(input, null, 2));
-  
   try {
+    console.log('Creating product with input:', JSON.stringify(input, null, 2));
     // Verify user authentication
     const user = await currentUser();
     if (!user) {
