@@ -14,7 +14,8 @@
     "p-retry": "^5.1.2",
     "circuit-breaker-js": "^0.0.1",
     "react": "^18.3.1",
-    "next": "^15.2.3"
+    "next": "^15.2.3",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

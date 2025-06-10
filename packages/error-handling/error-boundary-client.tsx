@@ -67,7 +67,10 @@ export class ErrorBoundary extends Component<Props, State> {
     Sentry.withScope((scope) => {
       scope.setTag('errorBoundary', true);
       scope.setTag('errorBoundaryLevel', level);
-      scope.setContext('errorInfo', errorInfo);
+      scope.setContext('errorInfo', {
+        componentStack: errorInfo.componentStack,
+        digest: errorInfo.digest,
+      });
       scope.setContext('errorBoundary', {
         level,
         errorCount: this.errorCounter,

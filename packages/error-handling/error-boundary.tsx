@@ -42,10 +42,12 @@ export class ErrorBoundary extends Component<Props, State> {
     
     // Log to our error service
     logError(error, {
-      componentStack: errorInfo.componentStack,
-      level,
-      errorBoundaryProps: this.props,
-      errorCount: this.errorCounter,
+      componentStack: errorInfo.componentStack || undefined,
+      level: 'error',
+      extra: {
+        errorBoundaryProps: this.props,
+        errorCount: this.errorCounter,
+      },
     });
     
     // Send to Sentry
@@ -53,8 +55,8 @@ export class ErrorBoundary extends Component<Props, State> {
       scope.setTag('error-boundary', true);
       scope.setTag('error-level', level);
       scope.setContext('errorInfo', {
-        componentStack: errorInfo.componentStack,
-        errorId: this.state.errorId,
+        componentStack: errorInfo.componentStack || undefined,
+        errorId: this.state.errorId || 'unknown',
         errorCount: this.errorCounter,
       });
       Sentry.captureException(error);

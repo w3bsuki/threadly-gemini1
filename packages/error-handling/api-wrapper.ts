@@ -91,7 +91,7 @@ export function createApiHandler<T = any>(
       
       // Parse query parameters
       const { searchParams } = new URL(request.url);
-      const query = Object.fromEntries(searchParams.entries());
+      let query = Object.fromEntries(searchParams.entries());
       
       // Parse route params (if using new Next.js 15 pattern)
       let params = {};
