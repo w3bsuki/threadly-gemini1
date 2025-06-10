@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 import { cn } from '@repo/design-system/lib/utils';
-import { LazyImage } from './lazy-image';
 import { useVirtualImageList } from '../../hooks/use-lazy-load-images';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from './button';
@@ -117,12 +116,11 @@ export function ImageGallery({
                     style={{ height: itemHeight }}
                     onClick={() => enableLightbox && setSelectedIndex(virtualList.startIndex + index)}
                   >
-                    <LazyImage
+                    <img
                       src={image.imageUrl}
                       alt={image.alt || `Image ${index + 1}`}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-300"
-                      sizes={`(max-width: 768px) ${100 / columns}vw, ${100 / columns}vw`}
+                      className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   </div>
                 ))}
@@ -148,12 +146,11 @@ export function ImageGallery({
                 )}
                 onClick={() => enableLightbox && setSelectedIndex(index)}
               >
-                <LazyImage
+                <img
                   src={image.imageUrl}
                   alt={image.alt || `Image ${index + 1}`}
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-300"
-                  sizes={`(max-width: 768px) ${100 / columns}vw, ${100 / columns}vw`}
+                  className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
               </div>
             ))}
@@ -201,13 +198,10 @@ export function ImageGallery({
               )}
 
               <div className="relative w-full h-full max-w-[80vw] max-h-[80vh]">
-                <LazyImage
+                <img
                   src={images[selectedIndex].imageUrl}
                   alt={images[selectedIndex].alt || `Image ${selectedIndex + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="90vw"
-                  priority
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
               </div>
 

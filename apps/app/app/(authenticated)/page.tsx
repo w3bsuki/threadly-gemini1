@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { ProductImage } from '@repo/design-system';
+import Image from 'next/image';
 import { 
   PlusIcon, 
   PackageIcon, 
@@ -204,12 +204,13 @@ const App = async () => {
               <div className="space-y-4">
                 {recentOrders.map((order) => (
                   <div key={order.id} className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-md overflow-hidden bg-muted">
-                      <ProductImage
+                    <div className="h-12 w-12 rounded-md overflow-hidden bg-muted relative">
+                      <Image
                         src={order.product.images[0]?.imageUrl || ''}
                         alt={order.product.title}
-                        aspectRatio="1/1"
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="48px"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

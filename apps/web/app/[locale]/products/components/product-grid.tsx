@@ -6,7 +6,6 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Heart } from "lucide-react";
 import { cn } from "@repo/design-system/lib/utils";
-import { ProductImage, AvatarImage } from "@repo/design-system";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -65,12 +64,15 @@ export function ProductGrid({ products }: ProductGridProps) {
         <div key={product.id}>
           <Link href={`/product/${product.id}`}>
             <Card className="h-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg">
-              <ProductImage
-                src={product.images[0]?.imageUrl || ''}
-                alt={product.images[0]?.alt || product.title}
-                aspectRatio="3/4"
-                className="w-full object-cover"
-              />
+              <div className="relative aspect-[3/4] bg-gray-100">
+                <Image
+                  src={product.images[0]?.imageUrl || ''}
+                  alt={product.images[0]?.alt || product.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                />
+              </div>
               
               <CardContent className="p-4">
                 <div className="mb-2">

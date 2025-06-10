@@ -42,15 +42,16 @@ export const performanceConfig: Partial<NextConfig> = {
       '@radix-ui/react-tooltip',
     ],
     
-    // Enable server components optimization
-    serverComponentsExternalPackages: [
-      '@prisma/client',
-      'prisma',
-      'resend',
-      'pusher',
-      'stripe',
-    ],
   },
+
+  // Server external packages (moved from experimental)
+  serverExternalPackages: [
+    '@prisma/client',
+    'prisma',
+    'resend',
+    'pusher',
+    'stripe',
+  ],
 
   // Optimize production builds
   productionBrowserSourceMaps: false,
@@ -155,48 +156,10 @@ export const performanceConfig: Partial<NextConfig> = {
     // Only apply optimizations in production
     if (!dev) {
       // Optimize chunks
+      // Temporarily disable aggressive chunking to fix build error
       config.optimization = {
         ...config.optimization,
         moduleIds: 'deterministic',
-        runtimeChunk: isServer ? false : 'single',
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk for node_modules
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /node_modules/,
-              priority: 20,
-            },
-            // Common chunk for code used across multiple pages
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'async',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-            // Framework chunk
-            framework: {
-              name: 'framework',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-              priority: 40,
-              enforce: true,
-            },
-            // UI library chunk
-            lib: {
-              test: /[\\/]node_modules[\\/](@radix-ui|@floating-ui|@react-aria)[\\/]/,
-              name: 'ui-lib',
-              chunks: 'all',
-              priority: 30,
-            },
-          },
-        },
       };
 
       // Minimize bundle size

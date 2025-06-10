@@ -21,10 +21,13 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { AnalyticsCharts } from './components/analytics-charts';
-import { formatPrice } from '@/lib/utils';
 
 const title = 'Seller Dashboard';
 const description = 'Analytics and insights for your business';
+
+const formatPrice = (price: number): string => {
+  return `$${price.toFixed(2)}`;
+};
 
 export const metadata: Metadata = {
   title,
