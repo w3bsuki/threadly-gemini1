@@ -107,6 +107,10 @@ const data = {
       icon: PlusIcon,
       items: [
         {
+          title: 'Dashboard',
+          url: '/selling/dashboard',
+        },
+        {
           title: 'Seller Onboarding',
           url: '/selling/onboarding',
         },

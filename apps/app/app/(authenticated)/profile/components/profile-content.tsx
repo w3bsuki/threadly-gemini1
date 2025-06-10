@@ -29,7 +29,9 @@ import {
   Settings,
   Bell,
   Shield,
-  CreditCard
+  CreditCard,
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { updateUserProfile, updateNotificationSettings, updateShippingAddress } from '../actions/profile-actions';
@@ -64,6 +66,8 @@ interface UserStats {
   products_bought: number;
   total_spent: number;
   active_listings: number;
+  followers_count: number;
+  following_count: number;
 }
 
 
@@ -185,7 +189,7 @@ export function ProfileContent({ user, stats }: ProfileContentProps) {
       </Card>
 
       {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
@@ -233,6 +237,26 @@ export function ProfileContent({ user, stats }: ProfileContentProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.active_listings}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Followers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.followers_count}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Following</CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.following_count}</div>
           </CardContent>
         </Card>
       </div>

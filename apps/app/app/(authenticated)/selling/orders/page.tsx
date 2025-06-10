@@ -7,6 +7,7 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Package, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import { Header } from '../../components/header';
+import { OrderActions } from './components/order-actions';
 import Link from 'next/link';
 
 const title = 'My Orders';
@@ -247,23 +248,13 @@ const OrdersPage = async () => {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2 mt-4">
-                        {order.status === 'PAID' && (
-                          <Button size="sm">
-                            Mark as Shipped
-                          </Button>
-                        )}
-                        {order.status === 'SHIPPED' && (
-                          <Button size="sm">
-                            Mark as Delivered
-                          </Button>
-                        )}
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Message Buyer
-                        </Button>
+                      <div className="mt-4">
+                        <OrderActions
+                          orderId={order.id}
+                          status={order.status}
+                          productTitle={order.product.title}
+                          buyerName={`${order.buyer.firstName} ${order.buyer.lastName}`}
+                        />
                       </div>
                     </div>
                   </div>

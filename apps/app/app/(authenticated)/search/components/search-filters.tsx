@@ -24,6 +24,38 @@ const CONDITIONS = [
   { value: 'FAIR', label: 'Fair' },
 ];
 
+const SIZES = [
+  { value: 'XS', label: 'XS' },
+  { value: 'S', label: 'S' },
+  { value: 'M', label: 'M' },
+  { value: 'L', label: 'L' },
+  { value: 'XL', label: 'XL' },
+  { value: 'XXL', label: 'XXL' },
+  { value: '0', label: '0' },
+  { value: '2', label: '2' },
+  { value: '4', label: '4' },
+  { value: '6', label: '6' },
+  { value: '8', label: '8' },
+  { value: '10', label: '10' },
+  { value: '12', label: '12' },
+  { value: '14', label: '14' },
+];
+
+const COLORS = [
+  { value: 'black', label: 'Black', hex: '#000000' },
+  { value: 'white', label: 'White', hex: '#FFFFFF' },
+  { value: 'gray', label: 'Gray', hex: '#6B7280' },
+  { value: 'red', label: 'Red', hex: '#EF4444' },
+  { value: 'blue', label: 'Blue', hex: '#3B82F6' },
+  { value: 'green', label: 'Green', hex: '#10B981' },
+  { value: 'yellow', label: 'Yellow', hex: '#F59E0B' },
+  { value: 'purple', label: 'Purple', hex: '#8B5CF6' },
+  { value: 'pink', label: 'Pink', hex: '#EC4899' },
+  { value: 'brown', label: 'Brown', hex: '#92400E' },
+  { value: 'navy', label: 'Navy', hex: '#1E3A8A' },
+  { value: 'beige', label: 'Beige', hex: '#D2B48C' },
+];
+
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Most Relevant' },
   { value: 'price_asc', label: 'Price: Low to High' },
@@ -76,6 +108,24 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, facets
       : [...currentCategories, category];
     
     onFiltersChange({ categories: newCategories });
+  };
+
+  const toggleSize = (size: string) => {
+    const currentSizes = filters.sizes || [];
+    const newSizes = currentSizes.includes(size)
+      ? currentSizes.filter(s => s !== size)
+      : [...currentSizes, size];
+    
+    onFiltersChange({ sizes: newSizes });
+  };
+
+  const toggleColor = (color: string) => {
+    const currentColors = filters.colors || [];
+    const newColors = currentColors.includes(color)
+      ? currentColors.filter(c => c !== color)
+      : [...currentColors, color];
+    
+    onFiltersChange({ colors: newColors });
   };
 
   // Get popular brands and categories from facets
@@ -203,6 +253,49 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, facets
                 </div>
               )}
 
+              {/* Sizes */}
+              <div className="space-y-3">
+                <h4 className="font-medium">Sizes</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {SIZES.map(size => (
+                    <Badge
+                      key={size.value}
+                      variant={filters.sizes?.includes(size.value) ? "default" : "outline"}
+                      className="cursor-pointer justify-center py-2"
+                      onClick={() => toggleSize(size.value)}
+                    >
+                      {size.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Colors */}
+              <div className="space-y-3">
+                <h4 className="font-medium">Colors</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  {COLORS.map(color => (
+                    <div
+                      key={color.value}
+                      className={`cursor-pointer p-2 rounded-lg border-2 transition-all ${
+                        filters.colors?.includes(color.value) 
+                          ? 'border-primary bg-primary/10' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => toggleColor(color.value)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span className="text-xs font-medium">{color.label}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Clear filters */}
               {hasActiveFilters && (
                 <Button onClick={onClearFilters} variant="outline" className="w-full">
@@ -241,6 +334,30 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, facets
               <X 
                 className="h-3 w-3 cursor-pointer" 
                 onClick={() => toggleCategory(category)}
+              />
+            </Badge>
+          ))}
+          {filters.sizes?.map(size => (
+            <Badge key={size} variant="secondary" className="gap-1">
+              Size {size}
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => toggleSize(size)}
+              />
+            </Badge>
+          ))}
+          {filters.colors?.map(color => (
+            <Badge key={color} variant="secondary" className="gap-1">
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-3 h-3 rounded-full border"
+                  style={{ backgroundColor: COLORS.find(c => c.value === color)?.hex }}
+                />
+                {color}
+              </div>
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => toggleColor(color)}
               />
             </Badge>
           ))}

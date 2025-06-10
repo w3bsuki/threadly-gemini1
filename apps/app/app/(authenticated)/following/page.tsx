@@ -17,6 +17,7 @@ import {
   Search
 } from 'lucide-react';
 import Link from 'next/link';
+import { FollowButton } from './components/follow-button';
 
 const title = 'Following';
 const description = 'Sellers and users you follow';
@@ -220,10 +221,7 @@ const FollowingPage = async () => {
                   )}
 
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Follow
-                    </Button>
+                    <FollowButton userId={seller.id} className="flex-1" />
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`/messages?user=${seller.id}`}>
                         <MessageCircle className="h-4 w-4" />

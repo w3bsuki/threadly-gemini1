@@ -7,6 +7,9 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { AlertCircle, Loader2, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@repo/design-system/components/ui/alert';
 import { SearchFilters as SearchFiltersComponent } from './search-filters';
+import { SavedSearches } from './saved-searches';
+import { SearchHistory } from './search-history';
+import { RecentlyViewed } from './recently-viewed';
 
 interface SearchResultsProps {
   initialQuery?: string;
@@ -57,12 +60,26 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
   // Empty state
   if (!filters.query && isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Search className="h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">Search for products</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Enter a search term to find products in our marketplace
-        </p>
+      <div className="space-y-8">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Search className="h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Search for products</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Enter a search term to find products in our marketplace
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <SavedSearches 
+            currentFilters={filters}
+            onApplySearch={updateFilters}
+          />
+          <SearchHistory
+            onSearchSelect={(query) => updateFilters({ query })}
+            currentQuery={filters.query}
+          />
+          <RecentlyViewed />
+        </div>
       </div>
     );
   }

@@ -139,7 +139,32 @@ export function useNotifications() {
   const { client } = useRealTime();
   const [notifications, setNotifications] = useState<NotificationEvent['data'][]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch initial notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('/api/notifications?limit=50');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        } else {
+          console.error('Failed to fetch notifications:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Subscribe to real-time updates
   useEffect(() => {
     if (!client) return;
 
@@ -187,6 +212,7 @@ export function useNotifications() {
   return {
     notifications,
     unreadCount,
+    isLoading,
     markAsRead,
     markAllAsRead,
   };

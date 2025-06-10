@@ -29,7 +29,7 @@ const ProfilePage = async () => {
   }
 
   // Fetch user's marketplace data using Prisma queries for SQLite compatibility
-  const [productsSold, totalEarnings, productsBought, totalSpent, activeListings] = await Promise.all([
+  const [productsSold, totalEarnings, productsBought, totalSpent, activeListings, followersCount, followingCount] = await Promise.all([
     // Products sold count
     database.order.count({
       where: {
@@ -66,6 +66,18 @@ const ProfilePage = async () => {
         sellerId: dbUser.id,
         status: 'AVAILABLE'
       }
+    }),
+    // Followers count
+    database.follow.count({
+      where: {
+        followingId: dbUser.id
+      }
+    }),
+    // Following count
+    database.follow.count({
+      where: {
+        followerId: dbUser.id
+      }
     })
   ]);
 
@@ -75,6 +87,8 @@ const ProfilePage = async () => {
     products_bought: productsBought,
     total_spent: totalSpent._sum?.amount || 0,
     active_listings: activeListings,
+    followers_count: followersCount,
+    following_count: followingCount,
   };
 
   return (

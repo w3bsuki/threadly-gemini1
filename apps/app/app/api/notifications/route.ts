@@ -20,6 +20,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get database user from Clerk ID
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -27,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const notifications = await database.notification.findMany({
       where: {
-        userId: user.id,
+        userId: dbUser.id,
         ...(unreadOnly && { read: false }),
       },
       orderBy: { createdAt: 'desc' },
@@ -36,7 +46,7 @@ export async function GET(request: NextRequest) {
     });
 
     const notificationService = getNotificationService();
-    const unreadCount = await notificationService.getUnreadCount(user.id);
+    const unreadCount = await notificationService.getUnreadCount(dbUser.id);
 
     return NextResponse.json({
       notifications,
@@ -62,12 +72,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get database user from Clerk ID
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // This would need admin check in real implementation
     const body = await request.json();
     const { title, message, type, metadata } = createNotificationSchema.parse(body);
 
     const notificationService = getNotificationService();
-    const notification = await notificationService.notify(user.id, {
+    const notification = await notificationService.notify(dbUser.id, {
       title,
       message,
       type,

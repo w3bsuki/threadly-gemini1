@@ -12,17 +12,17 @@ export const keys = () =>
       NEXT_RUNTIME: z.enum(['nodejs', 'edge']).optional(),
     },
     client: {
-      NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-      NEXT_PUBLIC_WEB_URL: z.string().url().optional(),
-      NEXT_PUBLIC_API_URL: z.string().url().optional(),
+      NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+      NEXT_PUBLIC_WEB_URL: z.string().url().default('http://localhost:3001'),
+      NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3002'),
       NEXT_PUBLIC_DOCS_URL: z.string().url().optional(),
     },
     runtimeEnv: {
       ANALYZE: process.env.ANALYZE || undefined,
       NEXT_RUNTIME: process.env.NEXT_RUNTIME || undefined,
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || undefined,
-      NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL || undefined,
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || undefined,
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3001',
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002',
       NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || undefined,
     },
     skipValidation: !!(

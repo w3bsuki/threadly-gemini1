@@ -43,11 +43,27 @@ export async function POST(
       );
     }
 
+    // Get current user data
+    const user = await database.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true, firstName: true, lastName: true, imageUrl: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'User not found' 
+        },
+        { status: 404 }
+      );
+    }
+
     const resolvedParams = await params;
     const userToFollowId = resolvedParams.id;
 
     // Prevent self-following
-    if (userId === userToFollowId) {
+    if (user.id === userToFollowId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -77,7 +93,7 @@ export async function POST(
     const existingFollow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: userId,
+          followerId: user.id,
           followingId: userToFollowId,
         },
       },
@@ -96,7 +112,7 @@ export async function POST(
     // Create follow relationship
     const follow = await database.follow.create({
       data: {
-        followerId: userId,
+        followerId: user.id,
         followingId: userToFollowId,
       },
       include: {
@@ -119,7 +135,7 @@ export async function POST(
         message: `${user.firstName || 'Someone'} started following you`,
         type: 'SYSTEM',
         metadata: JSON.stringify({
-          followerId: userId,
+          followerId: user.id,
           followerName: user.firstName || 'User',
           followerImage: user.imageUrl,
         }),
@@ -183,6 +199,22 @@ export async function DELETE(
       );
     }
 
+    // Get current user data
+    const user = await database.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'User not found' 
+        },
+        { status: 404 }
+      );
+    }
+
     const resolvedParams = await params;
     const userToUnfollowId = resolvedParams.id;
 
@@ -190,7 +222,7 @@ export async function DELETE(
     const follow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: userId,
+          followerId: user.id,
           followingId: userToUnfollowId,
         },
       },
@@ -269,6 +301,22 @@ export async function GET(
       );
     }
 
+    // Get current user data
+    const user = await database.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'User not found' 
+        },
+        { status: 404 }
+      );
+    }
+
     const resolvedParams = await params;
     const targetUserId = resolvedParams.id;
 
@@ -276,7 +324,7 @@ export async function GET(
     const follow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: userId,
+          followerId: user.id,
           followingId: targetUserId,
         },
       },
