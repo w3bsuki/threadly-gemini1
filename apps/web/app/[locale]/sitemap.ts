@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { env } from '@/env';
 import { blog, legal } from '@repo/cms';
+import { database } from '@repo/database';
 import type { MetadataRoute } from 'next';
 
 const appFolders = fs.readdirSync('app', { withFileTypes: true });
@@ -10,52 +11,301 @@ const pages = appFolders
   .filter((folder) => !folder.name.startsWith('('))
   .map((folder) => folder.name);
 
+// Get base URL with fallback for development
+const getBaseUrl = () => {
+  // Production URL from Vercel
+  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
+    const protocol = env.VERCEL_PROJECT_PRODUCTION_URL.startsWith('https') ? 'https' : 'http';
+    return `${protocol}://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  
+  // Fallback to environment variable or localhost
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+};
+
+const baseUrl = getBaseUrl();
+
 // Conditionally fetch CMS data with fallbacks
-const getBlogSlugs = async (): Promise<string[]> => {
+const getBlogSlugs = async (): Promise<Array<{ slug: string; lastModified: Date }>> => {
   try {
     const posts = await blog.getPosts();
-    return posts.map((post) => post._slug);
+    return posts.map((post) => ({
+      slug: post._slug,
+      lastModified: new Date(post._sys.lastModifiedAt || Date.now())
+    }));
   } catch (error) {
     console.warn('Failed to fetch blog posts for sitemap:', error);
     return [];
   }
 };
 
-const getLegalSlugs = async (): Promise<string[]> => {
+const getLegalSlugs = async (): Promise<Array<{ slug: string; lastModified: Date }>> => {
   try {
     const posts = await legal.getPosts();
-    return posts.map((post) => post._slug);
+    return posts.map((post) => ({
+      slug: post._slug,
+      lastModified: new Date(post._sys.lastModifiedAt || Date.now())
+    }));
   } catch (error) {
     console.warn('Failed to fetch legal posts for sitemap:', error);
     return [];
   }
 };
 
-const blogs = await getBlogSlugs();
-const legals = await getLegalSlugs();
+// Fetch product data for sitemap
+const getProductUrls = async (): Promise<Array<{ id: string; lastModified: Date }>> => {
+  try {
+    const products = await database.product.findMany({
+      where: {
+        status: 'AVAILABLE', // Only include available products
+      },
+      select: {
+        id: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 5000 // Limit to prevent sitemap from being too large
+    });
 
-const protocol = env.VERCEL_PROJECT_PRODUCTION_URL?.startsWith('https')
-  ? 'https'
-  : 'http';
-const url = new URL(`${protocol}://${env.VERCEL_PROJECT_PRODUCTION_URL}`);
+    return products.map(product => ({
+      id: product.id,
+      lastModified: product.updatedAt
+    }));
+  } catch (error) {
+    console.warn('Failed to fetch products for sitemap:', error);
+    return [];
+  }
+};
 
-const sitemap = async (): Promise<MetadataRoute.Sitemap> => [
-  {
-    url: new URL('/', url).href,
-    lastModified: new Date(),
-  },
-  ...pages.map((page) => ({
-    url: new URL(page, url).href,
-    lastModified: new Date(),
-  })),
-  ...blogs.map((blog) => ({
-    url: new URL(`blog/${blog}`, url).href,
-    lastModified: new Date(),
-  })),
-  ...legals.map((legal) => ({
-    url: new URL(`legal/${legal}`, url).href,
-    lastModified: new Date(),
-  })),
-];
+// Fetch category data for sitemap
+const getCategoryUrls = async (): Promise<Array<{ slug: string; name: string; lastModified: Date }>> => {
+  try {
+    const categories = await database.category.findMany({
+      select: {
+        slug: true,
+        name: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            products: {
+              where: {
+                status: 'AVAILABLE'
+              }
+            }
+          }
+        }
+      },
+      where: {
+        products: {
+          some: {
+            status: 'AVAILABLE'
+          }
+        }
+      }
+    });
+
+    return categories
+      .filter(category => category._count.products > 0) // Only include categories with products
+      .map(category => ({
+        slug: category.slug,
+        name: category.name,
+        lastModified: category.updatedAt
+      }));
+  } catch (error) {
+    console.warn('Failed to fetch categories for sitemap:', error);
+    return [];
+  }
+};
+
+// Fetch user profile URLs (for public seller profiles)
+const getUserProfileUrls = async (): Promise<Array<{ id: string; lastModified: Date }>> => {
+  try {
+    const users = await database.user.findMany({
+      where: {
+        products: {
+          some: {
+            status: 'AVAILABLE' // Only users with available products
+          }
+        }
+      },
+      select: {
+        id: true,
+        updatedAt: true,
+      },
+      take: 1000 // Limit to prevent sitemap from being too large
+    });
+
+    return users.map(user => ({
+      id: user.id,
+      lastModified: user.updatedAt
+    }));
+  } catch (error) {
+    console.warn('Failed to fetch user profiles for sitemap:', error);
+    return [];
+  }
+};
+
+const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
+  try {
+    // Fetch all dynamic content in parallel
+    const [blogs, legals, products, categories, userProfiles] = await Promise.all([
+      getBlogSlugs(),
+      getLegalSlugs(),
+      getProductUrls(),
+      getCategoryUrls(),
+      getUserProfileUrls()
+    ]);
+
+    const sitemapEntries: MetadataRoute.Sitemap = [
+      // Homepage - highest priority
+      {
+        url: `${baseUrl}/`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 1.0,
+      },
+
+      // Main static pages - high priority
+      {
+        url: `${baseUrl}/products`,
+        lastModified: new Date(),
+        changeFrequency: 'hourly',
+        priority: 0.9,
+      },
+      {
+        url: `${baseUrl}/search`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.8,
+      },
+
+      // Category pages - high priority for SEO
+      ...categories.map((category) => ({
+        url: `${baseUrl}/products?category=${encodeURIComponent(category.name)}`,
+        lastModified: category.lastModified,
+        changeFrequency: 'daily' as const,
+        priority: 0.8,
+      })),
+
+      // Gender-specific category pages
+      {
+        url: `${baseUrl}/men`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.8,
+      },
+      {
+        url: `${baseUrl}/women`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.8,
+      },
+      {
+        url: `${baseUrl}/kids`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.7,
+      },
+      {
+        url: `${baseUrl}/unisex`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.7,
+      },
+
+      // Other static pages
+      ...pages
+        .filter(page => !['men', 'women', 'kids', 'unisex', 'products', 'search'].includes(page))
+        .map((page) => ({
+          url: `${baseUrl}/${page}`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.6,
+        })),
+
+      // Blog posts
+      ...blogs.map((blog) => ({
+        url: `${baseUrl}/blog/${blog.slug}`,
+        lastModified: blog.lastModified,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      })),
+
+      // Legal pages
+      ...legals.map((legal) => ({
+        url: `${baseUrl}/legal/${legal.slug}`,
+        lastModified: legal.lastModified,
+        changeFrequency: 'monthly' as const,
+        priority: 0.4,
+      })),
+
+      // Individual product pages
+      ...products.map((product) => ({
+        url: `${baseUrl}/product/${product.id}`,
+        lastModified: product.lastModified,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+
+      // User profile pages (seller profiles)
+      ...userProfiles.map((user) => ({
+        url: `${baseUrl}/seller/${user.id}`,
+        lastModified: user.lastModified,
+        changeFrequency: 'weekly' as const,
+        priority: 0.5,
+      })),
+
+      // Popular search terms (static for now, could be dynamic)
+      {
+        url: `${baseUrl}/search?q=vintage`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
+      {
+        url: `${baseUrl}/search?q=designer`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
+      {
+        url: `${baseUrl}/search?q=sneakers`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
+      {
+        url: `${baseUrl}/search?q=dresses`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.6,
+      },
+    ];
+
+    console.log(`Generated sitemap with ${sitemapEntries.length} URLs`);
+    return sitemapEntries;
+
+  } catch (error) {
+    console.error('Error generating sitemap:', error);
+    
+    // Fallback minimal sitemap
+    return [
+      {
+        url: `${baseUrl}/`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 1.0,
+      },
+      {
+        url: `${baseUrl}/products`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.9,
+      },
+    ];
+  }
+};
 
 export default sitemap;

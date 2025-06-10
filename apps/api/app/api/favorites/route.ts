@@ -1,5 +1,6 @@
 import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
+import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -11,6 +12,19 @@ const toggleFavoriteSchema = z.object({
 // GET /api/favorites - Get user's favorite products
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(generalApiLimit, request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.error?.message || 'Rate limit exceeded',
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.headers,
+        }
+      );
+    }
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -81,6 +95,19 @@ export async function GET(request: NextRequest) {
 // POST /api/favorites - Add a product to favorites
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(generalApiLimit, request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.error?.message || 'Rate limit exceeded',
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.headers,
+        }
+      );
+    }
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -162,6 +189,19 @@ export async function POST(request: NextRequest) {
 // DELETE /api/favorites - Remove a product from favorites
 export async function DELETE(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(generalApiLimit, request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.error?.message || 'Rate limit exceeded',
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.headers,
+        }
+      );
+    }
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -162,31 +162,35 @@ export function BottomNavMobile({ cartCount = 0, savedCount = 0 }: BottomNavMobi
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center justify-center space-y-1 text-xs transition-colors",
+                  "min-h-[44px] min-w-[44px] p-2", // Ensure minimum touch target size
+                  "hover:bg-gray-50 active:bg-gray-100 rounded-lg mx-1",
                   isActive 
                     ? "text-black font-medium" 
                     : "text-gray-500 hover:text-gray-700"
                 )}
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
               >
                 <div className="relative">
                   <Icon className="h-5 w-5" />
                   {item.label === 'Cart' && cartCount > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center min-w-[20px]"
                     >
-                      {cartCount}
+                      {cartCount > 99 ? '99+' : cartCount}
                     </Badge>
                   )}
                   {item.label === 'Saved' && savedCount > 0 && (
                     <Badge 
                       variant="secondary" 
-                      className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center min-w-[20px]"
                     >
-                      {savedCount}
+                      {savedCount > 99 ? '99+' : savedCount}
                     </Badge>
                   )}
                 </div>
-                <span>{item.label}</span>
+                <span className="text-[10px] leading-none max-w-full truncate">{item.label}</span>
               </Link>
             );
           })}
@@ -200,8 +204,11 @@ export function BottomNavMobile({ cartCount = 0, savedCount = 0 }: BottomNavMobi
             <Button
               className={cn(
                 "fixed bottom-20 right-4 z-30 h-14 w-14 rounded-full shadow-lg bg-black text-white hover:bg-gray-800 md:hidden transition-transform duration-300",
+                "min-h-[44px] min-w-[44px]", // Ensure minimum touch target
+                "active:scale-95 active:bg-gray-700", // Better touch feedback
                 isVisible ? "translate-y-0" : "translate-y-16"
               )}
+              aria-label="Open filters"
             >
               <div className="relative">
                 <Filter className="h-6 w-6" />

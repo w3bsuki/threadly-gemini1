@@ -1,6 +1,8 @@
 import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { getCacheService } from '@repo/cache';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
+import { searchIndexing } from '@/lib/search-init';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { 
@@ -78,6 +80,12 @@ const productIdSchema = z.object({
   id: cuidSchema,
 });
 
+// Initialize cache service
+const cache = getCacheService({
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
 // GET /api/products/[id] - Get a specific product
 export async function GET(
   request: NextRequest,
@@ -114,47 +122,56 @@ export async function GET(
 
     const { id } = validation.data;
 
-    const product = await database.product.findUnique({
-      where: { id },
-      include: {
-        seller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            imageUrl: true,
-            averageRating: true,
-            verified: true,
-            totalSales: true,
-            joinedAt: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            parent: {
+    // Try cache first, then fallback to database
+    const product = await cache.remember(
+      `product:${id}`,
+      async () => {
+        const dbProduct = await database.product.findUnique({
+          where: { id },
+          include: {
+            seller: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                imageUrl: true,
+                averageRating: true,
+                verified: true,
+                totalSales: true,
+                joinedAt: true,
+              },
+            },
+            category: {
               select: {
                 id: true,
                 name: true,
                 slug: true,
+                parent: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+            images: {
+              orderBy: {
+                displayOrder: 'asc',
+              },
+            },
+            _count: {
+              select: {
+                favorites: true,
               },
             },
           },
-        },
-        images: {
-          orderBy: {
-            displayOrder: 'asc',
-          },
-        },
-        _count: {
-          select: {
-            favorites: true,
-          },
-        },
+        });
+        
+        return dbProduct;
       },
-    });
+      300 // Cache for 5 minutes
+    );
 
     if (!product) {
       return NextResponse.json(
@@ -174,10 +191,14 @@ export async function GET(
       // Ignore errors for view counting
     });
 
+    // Add cache headers for browser caching
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+
     return NextResponse.json({
       success: true,
       data: { product },
-    });
+    }, { headers });
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(
@@ -357,6 +378,14 @@ export async function PUT(
       },
     });
 
+    // Invalidate cache for this product
+    await cache.invalidateProduct(id);
+
+    // Trigger search re-indexing (async, don't block response)
+    searchIndexing.productUpdated(product.id).catch((error) => {
+      console.error('Failed to reindex updated product:', error);
+    });
+
     return NextResponse.json({
       success: true,
       data: { product },
@@ -491,6 +520,14 @@ export async function DELETE(
     // Delete the product (CASCADE will handle related records)
     await database.product.delete({
       where: { id },
+    });
+
+    // Invalidate cache for this product
+    await cache.invalidateProduct(id);
+
+    // Remove from search index (async, don't block response)
+    searchIndexing.productDeleted(id).catch((error) => {
+      console.error('Failed to remove deleted product from search index:', error);
     });
 
     return NextResponse.json({

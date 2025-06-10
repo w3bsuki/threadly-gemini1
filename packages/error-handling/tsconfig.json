@@ -8,5 +8,5 @@
     "moduleResolution": "bundler"
   },
   "include": ["."],
-  "exclude": ["node_modules", "dist", "error-boundary.tsx", "error-pages.tsx", "error-handler.ts"]
+  "exclude": ["node_modules", "dist"]
 }

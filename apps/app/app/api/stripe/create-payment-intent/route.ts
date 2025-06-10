@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { paymentRateLimit, checkRateLimit } from '@repo/security';
 import Stripe from 'stripe';
 import { env } from '@/env';
 import { z } from 'zod';
@@ -25,6 +26,19 @@ const createPaymentIntentSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit (payment routes need stricter limits)
+    const rateLimitResult = await checkRateLimit(paymentRateLimit, request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.error?.message || 'Too many payment requests. Please try again later.',
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.headers,
+        }
+      );
+    }
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

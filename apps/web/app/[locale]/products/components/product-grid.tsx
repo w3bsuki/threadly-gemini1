@@ -6,6 +6,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Heart } from "lucide-react";
 import { cn } from "@repo/design-system/lib/utils";
+import { ProductImage, AvatarImage, StaggerContainer, Animated, HoverCard } from "@repo/design-system";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -60,26 +61,24 @@ const conditionColors = {
 
 export function ProductGrid({ products }: ProductGridProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-      {products.map((product) => (
-        <Link key={product.id} href={`/product/${product.id}`}>
-          <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
-            <div className="relative aspect-[3/4] bg-gray-100">
-              {product.images[0] ? (
-                <Image
-                  src={product.images[0].imageUrl}
-                  alt={product.images[0].alt || product.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No image
-                </div>
-              )}
+    <StaggerContainer 
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4"
+      staggerDelay={30}
+      animation="fadeInUp"
+      trigger="inView"
+    >
+      {products.map((product, index) => (
+        <Animated key={product.id} animation="fadeInUp" stagger={index} trigger="inView">
+          <Link href={`/product/${product.id}`}>
+            <HoverCard className="h-full">
+              <Card className="h-full cursor-pointer overflow-hidden transition-all duration-300">
+            <ProductImage
+              src={product.images[0]?.imageUrl || ''}
+              alt={product.images[0]?.alt || product.title}
+              aspectRatio="3/4"
+            />
               <button
-                className="absolute top-2 right-2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+                className="absolute top-2 right-2 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-200"
                 onClick={(e) => {
                   e.preventDefault();
                   // TODO: Add to favorites
@@ -91,12 +90,10 @@ export function ProductGrid({ products }: ProductGridProps) {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 {product.seller.imageUrl && (
-                  <Image
+                  <AvatarImage
                     src={product.seller.imageUrl}
                     alt={`${product.seller.firstName} ${product.seller.lastName}` || "Seller"}
-                    width={20}
-                    height={20}
-                    className="rounded-full"
+                    size={20}
                   />
                 )}
                 <span className="text-xs text-muted-foreground truncate">
@@ -144,9 +141,11 @@ export function ProductGrid({ products }: ProductGridProps) {
                 </p>
               )}
             </CardContent>
-          </Card>
-        </Link>
+              </Card>
+            </HoverCard>
+          </Link>
+        </Animated>
       ))}
-    </div>
+    </StaggerContainer>
   );
 }

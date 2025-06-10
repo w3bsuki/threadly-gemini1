@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { database } from '@repo/database';
+import { useSearchParams } from 'next/navigation';
+import { useSearch } from '../../../../lib/hooks/use-search';
+import { useAnalyticsEvents } from '@repo/analytics';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@repo/design-system/components/ui/card';
@@ -9,6 +10,7 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Search, Filter, Grid, Heart } from 'lucide-react';
 import { ProductPlaceholder } from '../../components/product-placeholder';
+import { useEffect, useState } from 'react';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -17,87 +19,121 @@ const formatCurrency = (amount: number) => {
   }).format(amount / 100);
 };
 
-interface Product {
-  id: string;
-  title: string;
-  brand: string | null;
-  price: number;
-  condition: string;
-  size: string | null;
-  images: { imageUrl: string }[];
-  seller: {
-    firstName: string | null;
-    lastName: string | null;
-  } | null;
-  category: {
-    name: string;
-  } | null;
+interface SearchFilters {
+  categories?: string[];
+  brands?: string[];
+  conditions?: string[];
+  sizes?: string[];
+  priceMin?: number;
+  priceMax?: number;
+  sortBy?: string;
 }
 
 interface SearchResultsProps {
-  query: string;
+  initialQuery?: string;
 }
 
-export function SearchResults({ query }: SearchResultsProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function SearchResults({ initialQuery = '' }: SearchResultsProps) {
+  const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+  const { trackSearchQuery, trackLoadMore: trackSearchLoadMore } = useAnalyticsEvents();
+
+  // Extract search parameters
+  const query = searchParams.get('q') || initialQuery;
+  const category = searchParams.get('category');
+  const brand = searchParams.get('brand'); 
+  const size = searchParams.get('size');
+  const condition = searchParams.get('condition');
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
+  const sort = searchParams.get('sort');
+
+  // Build initial filters from URL params
+  const validSortOptions = ['relevance', 'price_asc', 'price_desc', 'newest', 'most_viewed', 'most_favorited'] as const;
+  const sortBy = validSortOptions.includes(sort as any) ? sort as typeof validSortOptions[number] : 'relevance';
+  
+  const initialFilters = {
+    query,
+    categories: category ? [category] : undefined,
+    brands: brand ? [brand] : undefined,
+    conditions: condition ? [condition as 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR'] : undefined,
+    sizes: size ? [size] : undefined,
+    priceMin: minPrice ? parseInt(minPrice) : undefined,
+    priceMax: maxPrice ? parseInt(maxPrice) : undefined,
+    sortBy
+  } as const;
+
+  const {
+    results,
+    loading,
+    error,
+    source,
+    updateFilters,
+    clearFilters,
+    retry,
+    loadMore,
+    hasMore,
+    totalResults,
+    isEmpty
+  } = useSearch(initialFilters);
 
   useEffect(() => {
-    const searchProducts = async () => {
-      if (!query.trim()) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
+    setMounted(true);
+  }, []);
 
-      try {
-        setLoading(true);
-        setError(null);
+  // Track search queries for analytics
+  useEffect(() => {
+    if (mounted && query && query.trim() && results) {
+      trackSearchQuery(query, results.totalHits, {
+        category,
+        brand,
+        condition,
+        size,
+        minPrice,
+        maxPrice,
+        sort: sortBy,
+      });
+    }
+  }, [mounted, query, results, trackSearchQuery, category, brand, condition, size, minPrice, maxPrice, sortBy]);
 
-        // This would normally be an API call, but for simplicity we'll do client-side search
-        // In production, this should be a server action or API endpoint
-        const searchTerm = query.toLowerCase();
-        
-        // For now, we'll simulate the search by calling a hypothetical API
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-        
-        if (!response.ok) {
-          throw new Error('Search failed');
-        }
-        
-        const results = await response.json();
-        setProducts(results);
-      } catch (err) {
-        console.error('Search error:', err);
-        setError('Failed to search products. Please try again.');
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (!mounted) {
+    return <SearchSkeleton />;
+  }
 
-    searchProducts();
-  }, [query]);
+  // Transform search results to match the expected format
+  const products = results?.hits.map(hit => ({
+    id: hit.id,
+    title: hit.title,
+    brand: hit.brand || null,
+    price: hit.price,
+    condition: hit.condition,
+    size: hit.size || null,
+    images: [{ imageUrl: hit.images[0] || '' }],
+    seller: {
+      firstName: hit.sellerName?.split(' ')[0] || null,
+      lastName: hit.sellerName?.split(' ').slice(1).join(' ') || null,
+    },
+    category: {
+      name: hit.categoryName || 'Other'
+    }
+  })) || [];
 
-  if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Searching products...</p>
-      </div>
-    );
+  if (loading && !results) {
+    return <SearchSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Search Error</h2>
-        <p className="text-gray-600 mb-6">{error}</p>
-        <Button onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-red-800">Search Error</h3>
+            <p className="text-red-600 mt-1">{error}</p>
+          </div>
+          <Button onClick={retry} variant="destructive">
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -112,7 +148,7 @@ export function SearchResults({ query }: SearchResultsProps) {
     );
   }
 
-  if (products.length === 0) {
+  if (isEmpty) {
     return (
       <div className="text-center py-12">
         <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -124,8 +160,8 @@ export function SearchResults({ query }: SearchResultsProps) {
           <Button variant="outline" asChild>
             <Link href="/products">Browse All Products</Link>
           </Button>
-          <Button asChild>
-            <Link href="/">Back to Home</Link>
+          <Button onClick={clearFilters}>
+            Clear Filters
           </Button>
         </div>
       </div>
@@ -136,12 +172,33 @@ export function SearchResults({ query }: SearchResultsProps) {
     <div>
       {/* Search Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Search Results for "{query}"
-        </h1>
-        <p className="text-gray-600">
-          Found {products.length} {products.length === 1 ? 'product' : 'products'}
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {query ? `Search Results for "${query}"` : 'All Products'}
+          </h1>
+          
+          {/* Search source indicator */}
+          {source && (
+            <div className="text-sm text-gray-500">
+              {source === 'algolia' && '⚡ Powered by Algolia'}
+              {source === 'database' && '📊 Database search'}
+              {source === 'error' && '⚠️ Fallback mode'}
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <p className="text-gray-600">
+            {loading ? 'Searching...' : 
+             `Found ${totalResults.toLocaleString()} ${totalResults === 1 ? 'product' : 'products'}`}
+          </p>
+          
+          {results?.processingTimeMS && (
+            <span className="text-xs text-gray-400">
+              ({results.processingTimeMS}ms)
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Results Grid */}
@@ -161,7 +218,7 @@ export function SearchResults({ query }: SearchResultsProps) {
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
-                  <ProductPlaceholder className="h-full w-full" seed={product.id} />
+                  <ProductPlaceholder className="h-full w-full" />
                 )}
                 
                 {/* Heart Button */}
@@ -214,6 +271,55 @@ export function SearchResults({ query }: SearchResultsProps) {
               </CardContent>
             </Card>
           </Link>
+        ))}
+      </div>
+
+      {/* Load More Button */}
+      {products.length > 0 && hasMore && (
+        <div className="mt-12 text-center">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="px-8 py-3 font-medium"
+            onClick={() => {
+              loadMore();
+              trackSearchLoadMore('search_results', products.length);
+            }}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load more results'}
+          </Button>
+        </div>
+      )}
+
+      {/* End of results indicator */}
+      {products.length > 0 && !hasMore && !loading && (
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 text-sm">You've reached the end of the search results.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse" />
+      </div>
+      
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <div className="aspect-[3/4] bg-gray-200 rounded-lg animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+          </div>
         ))}
       </div>
     </div>

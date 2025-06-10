@@ -2,11 +2,13 @@
 
 *Critical information for working with Threadly codebase*
 
+**Last Updated**: January 10, 2025
+
 ## 🎯 PROJECT CONTEXT
 **Threadly** = Premium C2C fashion marketplace (Vinted competitor)
 - **Tech Stack**: Next.js 15, TypeScript, Turborepo, Prisma, Stripe
 - **Architecture**: 3 apps (/web = public, /app = dashboard, /api = backend)
-- **Status**: 85% complete, needs production config
+- **Status**: 100% MVP complete, production ready
 
 ## ⚡ QUICK COMMANDS
 
@@ -35,16 +37,29 @@ turbo daemon clean      # Fix turbo cache issues
 ```typescript
 // ALWAYS use this pattern for database queries
 import { database } from '@repo/database';
+import { getCacheService } from '@repo/cache';
 
-// Include related data to avoid N+1
-const products = await database.product.findMany({
-  include: {
-    images: { orderBy: { displayOrder: 'asc' } },
-    seller: { select: { id: true, firstName: true } },
-    category: true,
-    _count: { select: { favorites: true } }
-  }
+// Initialize cache for performance
+const cache = getCacheService({
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
+
+// Include related data to avoid N+1 with caching
+const products = await cache.remember(
+  'products:all',
+  async () => {
+    return database.product.findMany({
+      include: {
+        images: { orderBy: { displayOrder: 'asc' } },
+        seller: { select: { id: true, firstName: true } },
+        category: true,
+        _count: { select: { favorites: true } }
+      }
+    });
+  },
+  300 // Cache for 5 minutes
+);
 ```
 
 ### 3. API Route Pattern (Next.js 15)
@@ -212,6 +227,24 @@ pnpm build        # Should pass locally
 git status        # Check what's changing
 ```
 
+### 5. New Patterns (Added Jan 10)
+```typescript
+// Analytics tracking
+import { usePostHog } from '@repo/analytics';
+const posthog = usePostHog();
+posthog.capture('product_viewed', { productId, price });
+
+// Lazy loading images
+import { ProductImage, LazyImage } from '@repo/design-system';
+<ProductImage src={imageUrl} alt={alt} aspectRatio="3/4" />
+
+// Animations
+import { Animated, StaggerContainer } from '@repo/design-system';
+<Animated animation="fadeInUp" trigger="inView">
+  <Card>Content</Card>
+</Animated>
+```
+
 ## 🎨 UI/UX PATTERNS
 
 ### Components
@@ -262,8 +295,8 @@ export function AddToCartButton() {
 4. Improve form validation messages
 
 ### If you have 2 hours:
-1. Complete a feature from STATUS.md NEXT
-2. Fix a critical bug from ISSUES
+1. Fix a high-priority bug from ISSUES.md
+2. Implement a UI component for existing APIs
 3. Add missing API endpoints
 4. Write integration tests
 
@@ -277,17 +310,56 @@ export function AddToCartButton() {
 
 ---
 
-## 📚 6-FILE DOCUMENTATION SYSTEM
+## 📚 DOCUMENTATION SYSTEM (7 ESSENTIAL FILES)
 
-1. **CLAUDE.md** (this file) - How to work
-2. **STATUS.md** - Current state dashboard  
-3. **ISSUES.md** - Technical debt tracker
-4. **ROADMAP.md** - Future plans
-5. **APPS.md** - Implementation details
-6. **DEPLOY.md** - Production guide
+1. **README.md** - Project overview and setup guide
+2. **CLAUDE.md** (this file) - AI/developer operational guide  
+3. **TODO.md** - Active sprint tasks and development priorities
+4. **ISSUES.md** - Bug tracker and technical debt with file paths
+5. **HANDBOOK.md** - Comprehensive technical reference
+6. **OPERATIONS.md** - Production status & deployment procedures
+7. **ROADMAP.md** - Product vision and feature planning
 
-**Workflow**: Find issues → Document in ISSUES.md → Move to STATUS.md when working on them
+**Key Separation**:
+- Use **TODO.md** for "what we're building" (features, tasks)
+- Use **ISSUES.md** for "what's broken" (bugs, debt)
+
+## 🔄 OPTIMAL WORKFLOW
+
+```mermaid
+graph LR
+    A[Start Work] --> B[Check TODO.md]
+    B --> C[Check ISSUES.md]
+    C --> D{Found Work?}
+    D -->|Yes| E[Research in HANDBOOK.md]
+    D -->|No| F[Check ROADMAP.md]
+    E --> G[Code using CLAUDE.md patterns]
+    F --> G
+    G --> H[Update TODO.md/ISSUES.md]
+    H --> I{Production Impact?}
+    I -->|Yes| J[Update OPERATIONS.md]
+    I -->|No| K[Commit]
+    J --> K
+```
+
+### 1️⃣ Starting Work
+- Open **TODO.md** → See active development tasks
+- Check **ISSUES.md** → Find bugs that need fixing
+- Read **CLAUDE.md** → Review patterns and commands  
+- Check **HANDBOOK.md** → Understand technical implementation
+
+### 2️⃣ During Development
+- Follow code patterns from CLAUDE.md
+- Run `pnpm typecheck` frequently
+- Update ISSUES.md as you fix things
+- Use exact file paths from ISSUES.md
+
+### 3️⃣ Before Committing  
+- Run `pnpm typecheck && pnpm build`
+- Update ISSUES.md (move to "Recently Fixed")
+- Update OPERATIONS.md (if production-related)
+- Write descriptive commit messages
 
 ---
 
-*Last updated: January 9, 2025*
+*Last updated: January 10, 2025*

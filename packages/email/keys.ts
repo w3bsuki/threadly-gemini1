@@ -4,12 +4,12 @@ import { z } from 'zod';
 export const keys = () =>
   createEnv({
     server: {
-      RESEND_FROM: z.string().email().optional(),
-      RESEND_TOKEN: z.string().startsWith('re_').optional(),
+      RESEND_FROM: z.string().email().default('noreply@threadly.com'),
+      RESEND_TOKEN: z.string().startsWith('re_'),
     },
     runtimeEnv: {
-      RESEND_FROM: process.env.RESEND_FROM || undefined,
-      RESEND_TOKEN: process.env.RESEND_TOKEN || undefined,
+      RESEND_FROM: process.env.RESEND_FROM,
+      RESEND_TOKEN: process.env.RESEND_TOKEN,
     },
     skipValidation: !!(
       process.env.SKIP_ENV_VALIDATION ||

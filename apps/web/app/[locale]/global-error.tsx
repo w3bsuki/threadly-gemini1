@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@repo/design-system/components/ui/button';
+import { ErrorPage } from '@repo/error-handling/error-pages';
 import { fonts } from '@repo/design-system/lib/fonts';
 import { captureException } from '@sentry/nextjs';
 import type NextError from 'next/error';
@@ -19,8 +19,12 @@ const GlobalError = ({ error, reset }: GlobalErrorProperties) => {
   return (
     <html lang="en" className={fonts}>
       <body>
-        <h1>Oops, something went wrong</h1>
-        <Button onClick={() => reset()}>Try again</Button>
+        <ErrorPage
+          error={error}
+          errorId={error.digest || null}
+          level="app"
+          onReset={reset}
+        />
       </body>
     </html>
   );

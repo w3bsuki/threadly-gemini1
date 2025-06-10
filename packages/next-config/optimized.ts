@@ -43,7 +43,7 @@ export const performanceConfig: Partial<NextConfig> = {
     ],
     
     // Enable server components optimization
-    serverExternalPackages: [
+    serverComponentsExternalPackages: [
       '@prisma/client',
       'prisma',
       'resend',

@@ -33,6 +33,7 @@ export { NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, Navigat
 export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './components/ui/pagination';
 export { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 export { Progress } from './components/ui/progress';
+export { PullToRefreshIndicator, PullToRefreshWrapper } from './components/ui/pull-to-refresh';
 export { RadioGroup, RadioGroupItem } from './components/ui/radio-group';
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
 export { ScrollArea, ScrollBar } from './components/ui/scroll-area';
@@ -53,9 +54,11 @@ export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './comp
 
 // Custom components
 export { ModeToggle } from './components/mode-toggle';
+export { ServiceWorkerRegistration, useServiceWorker } from './components/ui/service-worker-registration';
 
 // Hooks
-export { useMobile } from './hooks/use-mobile';
+export { useIsMobile } from './hooks/use-mobile';
+export { usePullToRefresh } from './hooks/use-pull-to-refresh';
 
 // Utils
 export { cn } from './lib/utils';

@@ -1,12 +1,18 @@
 import { currentUser } from '@repo/auth/server';
-import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { Header } from '../components/header';
-import { AddToCartButton } from '@/components/add-to-cart-button';
+import { SearchResults } from './components/search-results';
 
 type SearchPageProperties = {
   searchParams: Promise<{
-    q: string;
+    q?: string;
+    categories?: string;
+    brands?: string;
+    conditions?: string;
+    sizes?: string;
+    priceMin?: string;
+    priceMax?: string;
+    sortBy?: string;
   }>;
 };
 
@@ -16,113 +22,43 @@ export const generateMetadata = async ({
   const { q } = await searchParams;
 
   return {
-    title: `${q} - Search results`,
-    description: `Search results for ${q}`,
+    title: q ? `${q} - Search results` : 'Search - Threadly',
+    description: q ? `Search results for ${q}` : 'Search for fashion items on Threadly',
   };
 };
 
 const SearchPage = async ({ searchParams }: SearchPageProperties) => {
-  const { q } = await searchParams;
+  const params = await searchParams;
+  const { q, categories, brands, conditions, sizes, priceMin, priceMax, sortBy } = params;
   
   const user = await currentUser();
   if (!user) {
     redirect('/sign-in');
   }
 
-  if (!q) {
-    redirect('/');
-  }
+  // Build initial filters from URL parameters
+  const initialFilters = {
+    query: q,
+    categories: categories ? [categories] : undefined,
+    brands: brands ? [brands] : undefined,
+    conditions: conditions ? [conditions as any] : undefined,
+    sizes: sizes ? [sizes] : undefined,
+    priceMin: priceMin ? parseInt(priceMin) : undefined,
+    priceMax: priceMax ? parseInt(priceMax) : undefined,
+    sortBy: (sortBy || 'relevance') as 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'most_viewed' | 'most_favorited'
+  };
 
-  const products = await database.product.findMany({
-    where: {
-      OR: [
-        {
-          title: {
-            contains: q,
-          },
-        },
-        {
-          description: {
-            contains: q,
-          },
-        },
-        {
-          brand: {
-            contains: q,
-          },
-        },
-      ],
-      status: 'AVAILABLE',
-    },
-    include: {
-      images: {
-        take: 1,
-        orderBy: {
-          displayOrder: 'asc',
-        },
-      },
-      seller: {
-        select: {
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-    take: 20, // Limit results
-  });
+  const displayText = categories ? `${categories.charAt(0).toUpperCase() + categories.slice(1)} Fashion` :
+                     q ? `Results for "${q}"` : 'Search';
 
   return (
     <>
-      <Header pages={['Search']} page={`Results for "${q}"`} />
+      <Header 
+        pages={['Search']} 
+        page={displayText} 
+      />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {products.length > 0 ? (
-            products.map((product) => (
-              <div key={product.id} className="group cursor-pointer rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <div className="aspect-square relative bg-muted">
-                  {product.images[0] ? (
-                    <img
-                      src={product.images[0].imageUrl}
-                      alt={product.images[0].alt || product.title}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-muted-foreground">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-sm truncate">{product.title}</h3>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {product.seller.firstName} {product.seller.lastName}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="font-semibold text-sm">${product.price.toFixed(2)}</p>
-                    <AddToCartButton 
-                      product={{
-                        ...product,
-                        seller: {
-                          firstName: product.seller.firstName || undefined,
-                          lastName: product.seller.lastName || undefined,
-                        },
-                        images: product.images.map(img => ({ url: img.imageUrl })),
-                        size: product.size || undefined,
-                        color: product.color || undefined,
-                      }} 
-                      size="sm" 
-                      showText={false}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-muted-foreground">No products found for "{q}"</p>
-            </div>
-          )}
-        </div>
+        <SearchResults initialFilters={initialFilters} />
       </div>
     </>
   );

@@ -2,10 +2,12 @@
 
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
+import { usePullToRefresh } from '@repo/design-system/hooks/use-pull-to-refresh';
+import { PullToRefreshIndicator } from '@repo/design-system/components/ui/pull-to-refresh';
 import { Heart, Filter, Grid, List, ChevronDown, Crown, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ProductPlaceholder } from './product-placeholder';
 import { useFavorites } from '../lib/hooks/use-favorites';
 import { ProductQuickView } from '../app/[locale]/components/product-quick-view';
@@ -313,6 +315,7 @@ export function ProductGridClient({
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const { 
     filters, 
@@ -321,6 +324,40 @@ export function ProductGridClient({
     clearFilters, 
     activeFilterCount 
   } = useProductFilters(products, defaultCategory);
+
+  // Pull to refresh functionality
+  const handleRefresh = useCallback(async () => {
+    try {
+      // Fetch fresh products from the server
+      const response = await fetch(`/api/search?refresh=true&category=${defaultCategory || ''}`);
+      if (response.ok) {
+        const freshProducts = await response.json();
+        setProducts(freshProducts);
+      }
+    } catch (error) {
+      console.error('Failed to refresh products:', error);
+    }
+  }, [defaultCategory]);
+
+  const {
+    isPulling,
+    isRefreshing,
+    pullDistance,
+    canRefresh,
+    setupEventListeners,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    resistance: 2.5,
+  });
+
+  // Set up pull-to-refresh event listeners
+  useEffect(() => {
+    if (containerRef.current) {
+      const cleanup = setupEventListeners(containerRef.current);
+      return cleanup;
+    }
+  }, [setupEventListeners]);
 
   // Favorites are now handled directly in ProductCard component
 
@@ -354,7 +391,17 @@ export function ProductGridClient({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <>
+      {/* Pull to refresh indicator */}
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+        canRefresh={canRefresh}
+        threshold={80}
+      />
+      
+      <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-6">
       {/* Filter Bar */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
@@ -536,6 +583,7 @@ export function ProductGridClient({
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

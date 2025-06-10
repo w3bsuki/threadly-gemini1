@@ -27,3 +27,10 @@ export const DesignSystemProvider = ({
     </AuthProvider>
   </ThemeProvider>
 );
+
+// Export additional components
+export { ServiceWorkerRegistration, useServiceWorker } from './components/ui/service-worker-registration';
+export { LazyImage, ProductImage, AvatarImage } from './components/ui/lazy-image';
+export { useLazyLoadImages, useImageLoadingState, useVirtualImageList } from './hooks/use-lazy-load-images';
+export { Animated, StaggerContainer, PageTransition, HoverCard } from './components/ui/animated';
+export { animations, animationDelays, staggerAnimation, hoverAnimations, loadingAnimations } from './lib/animations';

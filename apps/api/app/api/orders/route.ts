@@ -1,5 +1,6 @@
 import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
+import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -20,6 +21,19 @@ const createOrderSchema = z.object({
 // GET /api/orders - List orders (for buyer or seller)
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(generalApiLimit, request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.error?.message || 'Rate limit exceeded',
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.headers,
+        }
+      );
+    }
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

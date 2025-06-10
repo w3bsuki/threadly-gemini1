@@ -1,6 +1,7 @@
 import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
+import { searchIndexing } from '@/lib/search-init';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { 
@@ -385,6 +386,11 @@ export const POST = withValidation(
             },
           },
         },
+      });
+
+      // Trigger search indexing (async, don't block response)
+      searchIndexing.productCreated(product.id).catch((error) => {
+        console.error('Failed to index new product:', error);
       });
 
       return NextResponse.json(

@@ -1,5 +1,5 @@
 import './styles.css';
-import { DesignSystemProvider } from '@repo/design-system';
+import { DesignSystemProvider, ServiceWorkerRegistration } from '@repo/design-system';
 import { fonts } from '@repo/design-system/lib/fonts';
 import { cn } from '@repo/design-system/lib/utils';
 import { Toolbar } from '@repo/feature-flags/components/toolbar';
@@ -26,8 +26,15 @@ const RootLayout = async ({ children, params }: RootLayoutProperties) => {
       className={cn(fonts, 'scroll-smooth')}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
       <body>
         <DesignSystemProvider>
+          <ServiceWorkerRegistration />
           <Header dictionary={dictionary} />
           {children}
           <Footer />

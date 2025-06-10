@@ -19,3 +19,9 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => (
     )}
   </PostHogProvider>
 );
+
+// Export analytics utilities and hooks
+export { useAnalytics } from './posthog/client';
+export { useAnalyticsEvents } from './hooks/use-analytics-events';
+export { analytics } from './posthog/server';
+export * from './events';

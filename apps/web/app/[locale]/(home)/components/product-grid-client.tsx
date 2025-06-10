@@ -2,6 +2,7 @@
 
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
+import { useAnalyticsEvents } from '@repo/analytics';
 import { Heart, Filter, Grid, List, ChevronDown, Crown, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -67,11 +68,16 @@ interface FilterState {
 // Pure UI component for product cards
 const ProductCard = ({ product }: { product: Product }) => {
   const [isLiked, setIsLiked] = useState(false);
+  const { trackProductFavorite, trackProductQuickView } = useAnalyticsEvents();
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsLiked(!isLiked);
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    
+    // Track the favorite/unfavorite action
+    trackProductFavorite(product, newLikedState);
     // TODO: Save to localStorage or user favorites
   };
 
@@ -292,6 +298,14 @@ export function ProductGridClient({
   defaultCategory 
 }: ProductGridClientProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  
+  const { trackSearchFilters, trackLoadMore, trackCategoryView } = useAnalyticsEvents();
+  
   const { 
     filters, 
     filteredProducts, 
@@ -301,7 +315,7 @@ export function ProductGridClient({
     brands,
     sizes,
     conditions
-  } = useProductFilters(initialProducts, categories, defaultCategory);
+  } = useProductFilters(allProducts, categories, defaultCategory);
 
   // Get category names for filter
   const categoryNames = useMemo(() => {
@@ -314,6 +328,78 @@ export function ProductGridClient({
     { value: 'price-high' as const, label: 'Price: High to Low' },
     { value: 'popular' as const, label: 'Most Popular' },
   ];
+
+  // Load more products function
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMoreProducts) return;
+
+    setIsLoadingMore(true);
+    setLoadMoreError(null);
+
+    try {
+      const nextPage = currentPage + 1;
+      const searchParams = new URLSearchParams({
+        page: nextPage.toString(),
+        limit: '20',
+        sortBy: filters.sortBy,
+      });
+
+      // Add category filter if applied
+      if (filters.category !== 'All') {
+        searchParams.append('category', filters.category);
+      }
+
+      // Add search filter if applied
+      if (filters.searchQuery) {
+        searchParams.append('search', filters.searchQuery);
+      }
+
+      const response = await fetch(`/api/products?${searchParams.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load more products');
+      }
+
+      const data = await response.json();
+      
+      if (data.products && data.products.length > 0) {
+        setAllProducts(prev => [...prev, ...data.products]);
+        setCurrentPage(nextPage);
+        setHasMoreProducts(data.pagination.hasNextPage);
+        
+        // Track successful load more
+        trackLoadMore('products', allProducts.length + data.products.length);
+      } else {
+        setHasMoreProducts(false);
+      }
+    } catch (error) {
+      console.error('Error loading more products:', error);
+      setLoadMoreError('Failed to load more products. Please try again.');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentPage, hasMoreProducts, isLoadingMore, filters.sortBy, filters.category, filters.searchQuery]);
+
+  // Reset pagination when filters change
+  const handleFilterChange = useCallback((key: keyof FilterState, value: any) => {
+    updateFilter(key, value);
+    
+    // Track filter usage for analytics
+    if (key === 'category' && value !== 'All') {
+      trackCategoryView(value);
+    }
+    
+    // Track when filters are applied
+    trackSearchFilters({ [key]: value });
+    
+    // Reset pagination when filters change (except for search)
+    if (key !== 'searchQuery') {
+      setAllProducts(initialProducts);
+      setCurrentPage(1);
+      setHasMoreProducts(true);
+      setLoadMoreError(null);
+    }
+  }, [updateFilter, initialProducts, trackCategoryView, trackSearchFilters]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -340,7 +426,7 @@ export function ProductGridClient({
           <div className="hidden lg:flex items-center space-x-2">
             <select
               value={filters.category}
-              onChange={(e) => updateFilter('category', e.target.value)}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
               className="text-xs text-gray-600 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
               aria-label="Filter by category"
             >
@@ -351,7 +437,7 @@ export function ProductGridClient({
 
             <select
               value={filters.brand}
-              onChange={(e) => updateFilter('brand', e.target.value)}
+              onChange={(e) => handleFilterChange('brand', e.target.value)}
               className="text-xs text-gray-600 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
               aria-label="Filter by brand"
             >
@@ -362,7 +448,7 @@ export function ProductGridClient({
 
             <select
               value={filters.condition}
-              onChange={(e) => updateFilter('condition', e.target.value)}
+              onChange={(e) => handleFilterChange('condition', e.target.value)}
               className="text-xs text-gray-600 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
               aria-label="Filter by condition"
             >
@@ -397,7 +483,7 @@ export function ProductGridClient({
           {/* Sort */}
           <select
             value={filters.sortBy}
-            onChange={(e) => updateFilter('sortBy', e.target.value as SortOption)}
+            onChange={(e) => handleFilterChange('sortBy', e.target.value as SortOption)}
             className="text-sm border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black"
             aria-label="Sort products by"
           >
@@ -451,7 +537,7 @@ export function ProductGridClient({
             <div className="grid grid-cols-2 gap-3">
               <select
                 value={filters.category}
-                onChange={(e) => updateFilter('category', e.target.value)}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
                 className="text-sm border border-gray-200 rounded px-3 py-2"
                 aria-label="Filter by category"
               >
@@ -462,7 +548,7 @@ export function ProductGridClient({
 
               <select
                 value={filters.brand}
-                onChange={(e) => updateFilter('brand', e.target.value)}
+                onChange={(e) => handleFilterChange('brand', e.target.value)}
                 className="text-sm border border-gray-200 rounded px-3 py-2"
                 aria-label="Filter by brand"
               >
@@ -473,7 +559,7 @@ export function ProductGridClient({
 
               <select
                 value={filters.size}
-                onChange={(e) => updateFilter('size', e.target.value)}
+                onChange={(e) => handleFilterChange('size', e.target.value)}
                 className="text-sm border border-gray-200 rounded px-3 py-2"
                 aria-label="Filter by size"
               >
@@ -484,7 +570,7 @@ export function ProductGridClient({
 
               <select
                 value={filters.condition}
-                onChange={(e) => updateFilter('condition', e.target.value)}
+                onChange={(e) => handleFilterChange('condition', e.target.value)}
                 className="text-sm border border-gray-200 rounded px-3 py-2"
                 aria-label="Filter by condition"
               >
@@ -498,7 +584,7 @@ export function ProductGridClient({
 
             <select
               value={filters.sortBy}
-              onChange={(e) => updateFilter('sortBy', e.target.value as SortOption)}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value as SortOption)}
               className="w-full text-sm border border-gray-200 rounded px-3 py-2"
               aria-label="Sort products by"
             >
@@ -530,11 +616,27 @@ export function ProductGridClient({
       )}
 
       {/* Load More */}
-      {filteredProducts.length > 0 && (
+      {filteredProducts.length > 0 && hasMoreProducts && (
         <div className="mt-12 text-center">
-          <Button variant="outline" size="lg" className="px-8 py-3 font-medium">
-            Load more items
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="px-8 py-3 font-medium"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? 'Loading...' : 'Load more items'}
           </Button>
+          {loadMoreError && (
+            <p className="text-red-500 text-sm mt-2">{loadMoreError}</p>
+          )}
+        </div>
+      )}
+
+      {/* End of results indicator */}
+      {filteredProducts.length > 0 && !hasMoreProducts && !isLoadingMore && (
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 text-sm">You've reached the end of the results.</p>
         </div>
       )}
     </div>

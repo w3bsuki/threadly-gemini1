@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
+import { ProductImage } from '@repo/design-system';
 import { 
   PlusIcon, 
   PackageIcon, 
@@ -204,17 +205,12 @@ const App = async () => {
                 {recentOrders.map((order) => (
                   <div key={order.id} className="flex items-center space-x-4">
                     <div className="h-12 w-12 rounded-md overflow-hidden bg-muted">
-                      {order.product.images[0] ? (
-                        <img
-                          src={order.product.images[0].imageUrl}
-                          alt={order.product.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          <PackageIcon className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
+                      <ProductImage
+                        src={order.product.images[0]?.imageUrl || ''}
+                        alt={order.product.title}
+                        aspectRatio="1/1"
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">

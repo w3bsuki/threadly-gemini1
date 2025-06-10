@@ -79,25 +79,25 @@ const data = {
   navMain: [
     {
       title: 'Browse',
-      url: '/browse',
+      url: '/search',
       icon: SearchIcon,
       isActive: false,
       items: [
         {
           title: 'All Items',
-          url: '/browse',
+          url: '/search',
         },
         {
           title: 'Women',
-          url: '/browse?category=cmbl7f4ub0002w74xtex8coxd',
+          url: '/search?categories=women',
         },
         {
           title: 'Men',
-          url: '/browse?category=cmbl7gbj1000dw7wd0zemrn5b',
+          url: '/search?categories=men',
         },
         {
           title: 'Kids',
-          url: '/browse?category=cmbl7gc6w000kw7wdq2jg6k07',
+          url: '/search?categories=kids',
         },
       ],
     },

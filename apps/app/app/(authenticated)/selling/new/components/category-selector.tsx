@@ -24,15 +24,8 @@ export function CategorySelector({ value, onValueChange, placeholder = "Select a
         setCategories(fetchedCategories);
       } catch (err) {
         console.error('Failed to load categories:', err);
-        setError('Failed to load categories');
-        // Fallback to hardcoded categories if API fails
-        setCategories([
-          { id: 'cmbl7f4ub0002w74xtex8coxd', name: "Women's Clothing", parentId: null },
-          { id: 'cmbl7gbj1000dw7wd0zemrn5b', name: "Men's Clothing", parentId: null },
-          { id: 'cmbl7gc6w000kw7wdq2jg6k07', name: "Kids' Clothing", parentId: null },
-          { id: 'cmbl7gd50012w7wdbg3q6w2w', name: "Unisex Accessories", parentId: null },
-          { id: 'cmbl7gcsr000rw7wdeiv4lsmn', name: "Designer Clothing", parentId: null },
-        ]);
+        setError('Failed to load categories. Please refresh the page.');
+        setCategories([]);
       } finally {
         setIsLoading(false);
       }
@@ -53,11 +46,19 @@ export function CategorySelector({ value, onValueChange, placeholder = "Select a
 
   if (error && categories.length === 0) {
     return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="Error loading categories" />
-        </SelectTrigger>
-      </Select>
+      <div className="space-y-2">
+        <Select disabled>
+          <SelectTrigger>
+            <SelectValue placeholder="Error loading categories" />
+          </SelectTrigger>
+        </Select>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          Retry loading categories
+        </button>
+      </div>
     );
   }
 
