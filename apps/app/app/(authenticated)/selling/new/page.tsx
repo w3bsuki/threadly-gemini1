@@ -17,24 +17,40 @@ export const metadata: Metadata = {
 };
 
 const SellNewItemPage = async () => {
-  const user = await currentUser();
+  try {
+    const user = await currentUser();
 
-  if (!user) {
-    redirect('/sign-in');
-  }
+    if (!user) {
+      redirect('/sign-in');
+    }
 
-  // Check if user has connected Stripe account
-  const dbUser = await database.user.findUnique({
-    where: { clerkId: user.id },
-    select: { 
-      id: true,
-      stripeAccountId: true,
-    },
-  });
+    // Check if user has connected Stripe account
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { 
+        id: true,
+        stripeAccountId: true,
+      },
+    });
 
-  if (!dbUser) {
-    redirect('/sign-in');
-  }
+    if (!dbUser) {
+      // Create user if doesn't exist
+      const newUser = await database.user.create({
+        data: {
+          clerkId: user.id,
+          email: user.emailAddresses[0]?.emailAddress || '',
+          firstName: user.firstName,
+          lastName: user.lastName,
+          imageUrl: user.imageUrl,
+        }
+      });
+      
+      return (
+        <div className="mx-auto w-full max-w-2xl">
+          <ProductForm userId={newUser.id} />
+        </div>
+      );
+    }
 
   // For now, skip Stripe requirement to allow testing
   // TODO: Re-enable Stripe requirement when Connect is properly configured
@@ -77,25 +93,51 @@ const SellNewItemPage = async () => {
   }
   */
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">List New Item</h1>
-          <p className="text-muted-foreground">Fill out the details below to list your fashion item for sale</p>
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">List New Item</h1>
+            <p className="text-muted-foreground">Fill out the details below to list your fashion item for sale</p>
+          </div>
+        </div>
+        
+        <div className="mx-auto w-full max-w-2xl">
+          <ProductForm userId={dbUser.id} />
         </div>
       </div>
-      
-      <div className="mx-auto w-full max-w-2xl">
-        <ProductForm userId={dbUser.id} />
+    );
+  } catch (error) {
+    console.error('Error in SellNewItemPage:', error);
+    
+    return (
+      <div className="mx-auto w-full max-w-2xl p-8">
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Page</AlertTitle>
+          <AlertDescription>
+            Unable to load the product creation page. Please try again later.
+            {process.env.NODE_ENV === 'development' && (
+              <pre className="mt-2 text-xs">{error instanceof Error ? error.message : 'Unknown error'}</pre>
+            )}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center">
+          <Button asChild>
+            <Link href="/">
+              Go Back Home
+            </Link>
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default SellNewItemPage;

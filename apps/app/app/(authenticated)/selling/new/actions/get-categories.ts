@@ -56,27 +56,20 @@ export async function getCategories(): Promise<CategoryOption[]> {
 
 export async function getCategoriesFlat(): Promise<CategoryOption[]> {
   try {
-    // Use cache for flat categories too
-    const categories = await cache.remember(
-      'categories:flat',
-      async () => {
-        const cats = await database.category.findMany({
-          where: {
-            parentId: null, // Only top-level categories for now
-          },
-          select: {
-            id: true,
-            name: true,
-            parentId: true,
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
-        return cats;
+    // Skip cache for now - just get directly from database
+    const categories = await database.category.findMany({
+      where: {
+        parentId: null, // Only top-level categories for now
       },
-      3600 // Cache for 1 hour
-    );
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
 
     return categories;
   } catch (error) {
