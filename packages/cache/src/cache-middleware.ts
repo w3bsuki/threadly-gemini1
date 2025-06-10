@@ -191,8 +191,8 @@ export class EdgeCache {
   
   constructor() {
     // Initialize based on environment
-    if (typeof caches !== 'undefined') {
-      this.cache = caches;
+    if (typeof globalThis !== 'undefined' && 'caches' in globalThis) {
+      this.cache = (globalThis as any).caches;
     }
   }
   
