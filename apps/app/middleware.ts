@@ -1,64 +1,18 @@
-import { authMiddleware } from '@repo/auth/middleware';
-import { createRouteMatcher } from '@repo/auth/server';
-import {
-  noseconeMiddleware,
-  noseconeOptions,
-  noseconeOptionsWithToolbar,
-} from '@repo/security/middleware';
-import { csrfMiddleware } from '@repo/security';
-import type { NextMiddleware, NextRequest } from 'next/server';
-import { env } from './env';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const securityHeaders = env.FLAGS_SECRET
-  ? noseconeMiddleware(noseconeOptionsWithToolbar)
-  : noseconeMiddleware(noseconeOptions);
-
-// Define public routes using the new Clerk API
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/browse(.*)',
-  '/product(.*)',
-  '/api/webhooks(.*)',
-  '/api/uploadthing(.*)', // Required for UploadThing callbacks
-  '/api/test-db', // Database connection test
-  '/api/seed-categories', // Category seeding
-]);
-
-export default authMiddleware(async (auth, req) => {
-  // Apply security headers first
-  const securityResponse = securityHeaders();
+// Temporarily disable all middleware to debug
+export function middleware(request: NextRequest) {
+  // Log the request for debugging
+  console.log('Middleware hit:', request.url);
   
-  // Check CSRF for API routes
-  if (req.nextUrl.pathname.startsWith('/api/')) {
-    const csrfResponse = await csrfMiddleware(req as NextRequest);
-    if (csrfResponse) {
-      return csrfResponse;
-    }
-  }
-  
-  // Allow public routes
-  if (isPublicRoute(req)) {
-    return securityResponse;
-  }
-
-  // If user is not signed in and trying to access a protected route
-  const { userId } = await auth();
-  if (!userId) {
-    const signInUrl = new URL('/sign-in', req.url);
-    signInUrl.searchParams.set('redirect_url', req.url);
-    return Response.redirect(signInUrl);
-  }
-  
-  return securityResponse;
-}) as unknown as NextMiddleware;
+  // For now, just pass through all requests
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
+    // Skip Next.js internals and all static files
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
   ],
 };
