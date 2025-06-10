@@ -5,7 +5,7 @@ export const keys = () =>
   createEnv({
     server: {
       RESEND_FROM: z.string().email().default('noreply@threadly.com'),
-      RESEND_TOKEN: z.string().startsWith('re_'),
+      RESEND_TOKEN: z.string().startsWith('re_').optional(),
     },
     runtimeEnv: {
       RESEND_FROM: process.env.RESEND_FROM,
