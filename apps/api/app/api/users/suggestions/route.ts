@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@repo/database';
-import { requireAuthentication } from '@repo/auth/utils';
+import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
 
@@ -29,14 +29,30 @@ export async function GET(request: NextRequest) {
     }
 
     // Authenticate user
-    const { user } = await requireAuthentication();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
         { 
           success: false, 
           error: 'Authentication required' 
         },
         { status: 401 }
+      );
+    }
+
+    // Get user info
+    const user = await database.user.findUnique({
+      where: { id: userId },
+      select: { id: true, location: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'User not found' 
+        },
+        { status: 404 }
       );
     }
 

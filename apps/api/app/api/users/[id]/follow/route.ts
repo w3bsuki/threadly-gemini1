@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@repo/database';
-import { requireAuthentication } from '@repo/auth/utils';
+import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
 
@@ -32,8 +32,8 @@ export async function POST(
     }
 
     // Authenticate user
-    const { user } = await requireAuthentication();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -47,7 +47,7 @@ export async function POST(
     const userToFollowId = resolvedParams.id;
 
     // Prevent self-following
-    if (user.id === userToFollowId) {
+    if (userId === userToFollowId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -77,7 +77,7 @@ export async function POST(
     const existingFollow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: user.id,
+          followerId: userId,
           followingId: userToFollowId,
         },
       },
@@ -96,7 +96,7 @@ export async function POST(
     // Create follow relationship
     const follow = await database.follow.create({
       data: {
-        followerId: user.id,
+        followerId: userId,
         followingId: userToFollowId,
       },
       include: {
@@ -119,7 +119,7 @@ export async function POST(
         message: `${user.firstName || 'Someone'} started following you`,
         type: 'SYSTEM',
         metadata: JSON.stringify({
-          followerId: user.id,
+          followerId: userId,
           followerName: user.firstName || 'User',
           followerImage: user.imageUrl,
         }),
@@ -172,8 +172,8 @@ export async function DELETE(
     }
 
     // Authenticate user
-    const { user } = await requireAuthentication();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -190,7 +190,7 @@ export async function DELETE(
     const follow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: user.id,
+          followerId: userId,
           followingId: userToUnfollowId,
         },
       },
@@ -258,8 +258,8 @@ export async function GET(
     }
 
     // Authenticate user
-    const { user } = await requireAuthentication();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
         { 
           success: false, 
@@ -276,7 +276,7 @@ export async function GET(
     const follow = await database.follow.findUnique({
       where: {
         followerId_followingId: {
-          followerId: user.id,
+          followerId: userId,
           followingId: targetUserId,
         },
       },
