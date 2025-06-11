@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@repo/design-system/components/ui/dropdown-menu';
 import { Button } from '@repo/design-system/components/ui/button';
-import { updateUserRole, suspendUser, verifyUser } from './actions';
+import { updateUserRole, suspendUser, unsuspendUser, verifyUser } from './actions';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -27,6 +27,7 @@ interface UserActionsProps {
     email: string;
     role: string;
     verified: boolean;
+    suspended?: boolean;
   };
 }
 
@@ -111,17 +112,30 @@ export function UserActions({ user }: UserActionsProps) {
         )}
         
         {/* Suspension */}
-        <DropdownMenuItem
-          className="text-destructive"
-          onClick={() => {
-            if (confirm('Are you sure you want to suspend this user?')) {
-              handleAction(() => suspendUser(user.id));
-            }
-          }}
-        >
-          <UserX className="h-4 w-4 mr-2" />
-          Suspend User
-        </DropdownMenuItem>
+        {!user.suspended ? (
+          <DropdownMenuItem
+            className="text-destructive"
+            onClick={() => {
+              if (confirm('Are you sure you want to suspend this user?')) {
+                handleAction(() => suspendUser(user.id));
+              }
+            }}
+          >
+            <UserX className="h-4 w-4 mr-2" />
+            Suspend User
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            onClick={() => {
+              if (confirm('Are you sure you want to unsuspend this user?')) {
+                handleAction(() => unsuspendUser(user.id));
+              }
+            }}
+          >
+            <UserCheck className="h-4 w-4 mr-2" />
+            Unsuspend User
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

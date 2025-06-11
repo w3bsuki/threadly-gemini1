@@ -4,32 +4,55 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-// Temporarily remove complex validation imports to isolate issue
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
+// SECURITY: Enhanced validation schema with stricter rules
 const createProductSchema = z.object({
-  title: z.string().trim().min(3).max(100),
+  title: z.string().trim().min(3).max(100)
+    .refine((val) => !/[<>\"'&]/.test(val), { message: "Title contains invalid characters" }),
   description: z.string().trim().min(10).max(2000),
   price: z.number().min(1).max(99999999),
-  categoryId: z.string(),
+  categoryId: z.string().uuid("Invalid category ID"),
   condition: z.enum(['NEW_WITH_TAGS', 'NEW_WITHOUT_TAGS', 'VERY_GOOD', 'GOOD', 'SATISFACTORY']),
-  brand: z.string().trim().max(50).optional(),
+  brand: z.string().trim().max(50).optional()
+    .refine((val) => !val || !/[<>\"'&]/.test(val), { message: "Brand contains invalid characters" }),
   size: z.string().max(20).optional(),
   color: z.string().max(30).optional(),
   images: z.array(z.string().url()).min(1).max(10),
   sellerId: z.string(),
 });
 
+// SECURITY: Server-side DOM sanitization utility
+function createSecureDOMPurify() {
+  const window = new JSDOM('').window;
+  return DOMPurify(window as any);
+}
+
+// SECURITY: Comprehensive input sanitization
+function sanitizeUserInput(input: z.infer<typeof createProductSchema>) {
+  const purify = createSecureDOMPurify();
+  
+  return {
+    ...input,
+    title: purify.sanitize(input.title.trim(), { ALLOWED_TAGS: [] }),
+    description: purify.sanitize(input.description.trim(), { 
+      ALLOWED_TAGS: [], 
+      ALLOWED_ATTR: [] 
+    }),
+    brand: input.brand ? purify.sanitize(input.brand.trim(), { ALLOWED_TAGS: [] }) : null,
+    size: input.size ? purify.sanitize(input.size.trim(), { ALLOWED_TAGS: [] }) : null,
+    color: input.color ? purify.sanitize(input.color.trim(), { ALLOWED_TAGS: [] }) : null,
+  };
+}
+
 export async function createProduct(input: z.infer<typeof createProductSchema>) {
   try {
-    console.log('Creating product with input:', JSON.stringify(input, null, 2));
     // Verify user authentication
     const user = await currentUser();
     if (!user) {
-      console.error('User not authenticated');
       redirect('/sign-in');
     }
-    
-    console.log('Authenticated Clerk user:', user.id);
 
     // First, ensure user exists in our database
     let dbUser = await database.user.findUnique({
@@ -37,7 +60,6 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
     });
 
     if (!dbUser) {
-      console.log('User not found in database, creating...');
       dbUser = await database.user.create({
         data: {
           clerkId: user.id,
@@ -49,23 +71,10 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       });
     }
 
-    console.log('Database user:', dbUser.id);
-
-    // Validate input
-    console.log('Validating input against schema...');
+    // SECURITY: Validate and sanitize input
     const validatedInput = createProductSchema.parse(input);
-    console.log('Input validation passed');
+    const sanitizedData = sanitizeUserInput(validatedInput);
 
-    // Simple sanitization without complex imports
-    const sanitizedData = {
-      ...validatedInput,
-      title: validatedInput.title.trim(),
-      description: validatedInput.description.trim(),
-      brand: validatedInput.brand?.trim() || null,
-    };
-
-    console.log('Creating product in database...');
-    
     // Create the product in the database
     const product = await database.product.create({
       data: {
@@ -95,7 +104,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       },
     });
     
-    console.log('Product created successfully:', product.id);
+    // Product created successfully
 
     return {
       success: true,
@@ -103,7 +112,10 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
     };
 
   } catch (error) {
-    console.error('Failed to create product:', error);
+    // Log error for monitoring (replace with proper error tracking)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to create product:', error);
+    }
     
     if (error instanceof z.ZodError) {
       return {

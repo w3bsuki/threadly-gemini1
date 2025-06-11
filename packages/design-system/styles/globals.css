@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@source "../**/*.{ts,tsx}";
+
+/* Source paths for design system components */
+@source "../components/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+@source "../hooks/**/*.{ts,tsx}";
+@source "../providers/**/*.{ts,tsx}";
 
 @plugin '@tailwindcss/typography';
 
@@ -32,6 +37,24 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* THREADLY BRAND COLORS - Premium Fashion Marketplace */
+  --brand-primary: oklch(0.4 0.2 250);        /* Threadly Deep Blue */
+  --brand-primary-foreground: oklch(0.98 0 0); /* Near White */
+  --brand-secondary: oklch(0.8 0.1 120);       /* Threadly Green */
+  --brand-secondary-foreground: oklch(0.2 0 0); /* Dark */
+  --brand-accent: oklch(0.6 0.15 40);          /* Threadly Orange */
+  --brand-accent-foreground: oklch(0.98 0 0);   /* Near White */
+  --brand-purple: oklch(0.5 0.2 300);          /* Threadly Purple */
+  --brand-purple-foreground: oklch(0.98 0 0);   /* Near White */
+  
+  /* MARKETPLACE-SPECIFIC COLORS */
+  --success-gentle: oklch(0.9 0.05 165);       /* Light success bg */
+  --warning-gentle: oklch(0.9 0.1 60);         /* Light warning bg */
+  --info-gentle: oklch(0.9 0.05 250);          /* Light info bg */
+  --premium-gold: oklch(0.7 0.15 85);          /* Premium tier indicator */
+  --verified-badge: oklch(0.45 0.2 250);       /* Verified seller badge */
+  
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -116,6 +139,21 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-success: var(--success);
+  
+  /* THREADLY BRAND COLORS */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-foreground: var(--brand-primary-foreground);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-foreground: var(--brand-secondary-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-foreground: var(--brand-accent-foreground);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-purple-foreground: var(--brand-purple-foreground);
+  --color-success-gentle: var(--success-gentle);
+  --color-warning-gentle: var(--warning-gentle);
+  --color-info-gentle: var(--info-gentle);
+  --color-premium-gold: var(--premium-gold);
+  --color-verified-badge: var(--verified-badge);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -313,5 +351,69 @@
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient 3s ease infinite;
+  }
+
+  /* Mobile Touch Target Utilities - Ensuring 44px minimum touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+  
+  .touch-target-lg {
+    min-height: 48px;
+    min-width: 48px;
+    touch-action: manipulation;
+  }
+  
+  .touch-target-xl {
+    min-height: 56px;
+    min-width: 56px;
+    touch-action: manipulation;
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 768px) {
+    /* Automatically apply touch targets to interactive elements on mobile */
+    button:not(.no-touch-target), 
+    [role="button"]:not(.no-touch-target),
+    input[type="button"]:not(.no-touch-target),
+    input[type="submit"]:not(.no-touch-target),
+    input[type="reset"]:not(.no-touch-target),
+    .clickable:not(.no-touch-target) {
+      min-height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+    }
+    
+    /* Ensure links are touch-friendly on mobile */
+    a:not(.no-touch-target) {
+      min-height: 44px;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+    }
+    
+    /* Add more padding to form inputs on mobile */
+    input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+    textarea,
+    select {
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+  }
+
+  /* Touch device specific styles (regardless of screen size) */
+  @media (hover: none) and (pointer: coarse) {
+    /* Ensure all interactive elements have proper touch targets */
+    button, 
+    [role="button"],
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"] {
+      min-height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+    }
   }
 }

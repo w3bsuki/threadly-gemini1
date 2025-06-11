@@ -9,7 +9,11 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  console.log('Middleware hit:', request.url);
+  // SECURITY: Only log in development mode, avoid exposing sensitive URL parameters
+  if (process.env.NODE_ENV === 'development') {
+    const urlPath = request.nextUrl.pathname;
+    console.log('Middleware hit:', urlPath);
+  }
   
   // Handle PostHog proxy routes
   if (request.nextUrl.pathname.startsWith('/ingest')) {

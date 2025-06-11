@@ -1,3 +1,12 @@
+# 🚀 THREADLY PRODUCTION PLAN [ARCHIVED - See PRODUCTION_FINALIZATION.md]
+
+**Note**: This plan has been superseded by:
+- `PRODUCTION_FINALIZATION.md` - Master production plan
+- `web.md` - Web app specific tasks
+- `app.md` - Dashboard app specific tasks
+
+---
+
 # 🚀 THREADLY PRODUCTION PLAN
 
 **Status**: 🟢 90% COMPLETE - Core functionality verified, minor testing needed  

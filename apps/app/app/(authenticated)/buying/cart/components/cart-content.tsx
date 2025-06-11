@@ -7,7 +7,7 @@ import { Separator } from '@repo/design-system/components/ui/separator';
 import { Badge } from '@repo/design-system/components/ui/badge';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { LazyImage } from '@repo/design-system/components/ui/lazy-image';
 import { useState } from 'react';
 
 interface CartContentProps {
@@ -85,12 +85,15 @@ export function CartContent({ userId }: CartContentProps) {
             <CardContent className="p-4">
               <div className="flex gap-4">
                 {/* Product Image */}
-                <div className="relative w-20 h-20 flex-shrink-0">
-                  <Image
+                <div className="w-20 h-20 flex-shrink-0">
+                  <LazyImage
                     src={item.imageUrl}
                     alt={item.title}
+                    aspectRatio="square"
                     fill
                     className="object-cover rounded-md"
+                    quality={75}
+                    blur={true}
                   />
                 </div>
 

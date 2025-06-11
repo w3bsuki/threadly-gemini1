@@ -52,9 +52,7 @@ const SellNewItemPage = async () => {
       );
     }
 
-  // For now, skip Stripe requirement to allow testing
-  // TODO: Re-enable Stripe requirement when Connect is properly configured
-  /*
+  // Check if user has connected Stripe account - REQUIRED for receiving payments
   if (!dbUser.stripeAccountId) {
     return (
       <div className="space-y-6">
@@ -91,7 +89,6 @@ const SellNewItemPage = async () => {
       </div>
     );
   }
-  */
 
     return (
       <div className="space-y-6">

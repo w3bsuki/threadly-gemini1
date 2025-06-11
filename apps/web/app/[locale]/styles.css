@@ -1,5 +1,10 @@
 @import "@repo/design-system/styles/globals.css";
 
+/* Source paths for web app - be specific to avoid scanning unnecessary files */
+@source "../**/*.{ts,tsx}";
+@source "../../components/**/*.{ts,tsx}";
+@source "../../lib/**/*.{ts,tsx}";
+
 .shiki {
   background-color: var(--shiki-light-bg);
   color: var(--shiki-light);

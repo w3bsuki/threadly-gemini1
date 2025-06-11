@@ -1,19 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
-import { Input } from '@repo/design-system/components/ui/input';
-import { Label } from '@repo/design-system/components/ui/label';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@repo/design-system/components/ui/dialog';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -23,110 +13,123 @@ import {
 } from '@repo/design-system/components/ui/dropdown-menu';
 import { 
   Bookmark, 
-  BookmarkPlus, 
   MoreVertical, 
   Trash2, 
   Bell,
+  BellOff,
   Search,
-  Heart
+  Loader2
 } from 'lucide-react';
+import { SavedSearchDialog } from '@/components/saved-search-dialog';
+import { toast } from '@/components/toast';
 import { type SearchFilters } from '@/lib/hooks/use-search';
 
 interface SavedSearch {
   id: string;
   name: string;
-  filters: SearchFilters;
-  alertsEnabled: boolean;
-  createdAt: Date;
-  lastUsed: Date;
+  query: string;
+  filters: any;
+  alertEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface SavedSearchesProps {
-  currentFilters: SearchFilters;
-  onApplySearch: (filters: SearchFilters) => void;
+  currentQuery?: string;
+  currentFilters?: SearchFilters;
+  onApplySearch?: (query: string, filters: SearchFilters) => void;
 }
 
-export function SavedSearches({ currentFilters, onApplySearch }: SavedSearchesProps) {
+export function SavedSearches({ currentQuery = '', currentFilters, onApplySearch }: SavedSearchesProps) {
+  const router = useRouter();
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchName, setSearchName] = useState('');
-  const [enableAlerts, setEnableAlerts] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Load saved searches from localStorage on mount
+  // Load saved searches from API
   useEffect(() => {
-    const saved = localStorage.getItem('savedSearches');
-    if (saved) {
-      try {
-        const searches = JSON.parse(saved);
-        setSavedSearches(searches.map((s: any) => ({
-          ...s,
-          createdAt: new Date(s.createdAt),
-          lastUsed: new Date(s.lastUsed),
-        })));
-      } catch (error) {
-        console.error('Failed to load saved searches:', error);
-      }
-    }
+    fetchSavedSearches();
   }, []);
 
-  // Save searches to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-  }, [savedSearches]);
-
-  const saveCurrentSearch = () => {
-    if (!searchName.trim()) return;
-
-    const newSearch: SavedSearch = {
-      id: Date.now().toString(),
-      name: searchName.trim(),
-      filters: currentFilters,
-      alertsEnabled: enableAlerts,
-      createdAt: new Date(),
-      lastUsed: new Date(),
-    };
-
-    setSavedSearches(prev => [newSearch, ...prev]);
-    setSearchName('');
-    setIsDialogOpen(false);
+  const fetchSavedSearches = async () => {
+    try {
+      const response = await fetch('/api/saved-searches');
+      if (!response.ok) throw new Error('Failed to fetch saved searches');
+      
+      const data = await response.json();
+      setSavedSearches(data.savedSearches);
+    } catch (error) {
+      console.error('Failed to load saved searches:', error);
+      toast.error('Failed to load saved searches');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteSearch = (id: string) => {
-    setSavedSearches(prev => prev.filter(s => s.id !== id));
+  const deleteSearch = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/saved-searches?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete search');
+
+      setSavedSearches(prev => prev.filter(s => s.id !== id));
+      toast.success('Search deleted');
+    } catch (error) {
+      console.error('Failed to delete search:', error);
+      toast.error('Failed to delete search');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  const toggleAlerts = (id: string) => {
-    setSavedSearches(prev => 
-      prev.map(s => 
-        s.id === id ? { ...s, alertsEnabled: !s.alertsEnabled } : s
-      )
-    );
+  const toggleAlerts = async (id: string, currentEnabled: boolean) => {
+    try {
+      const response = await fetch(`/api/saved-searches/${id}/toggle-alerts`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alertEnabled: !currentEnabled }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update alerts');
+
+      setSavedSearches(prev => 
+        prev.map(s => 
+          s.id === id ? { ...s, alertEnabled: !currentEnabled } : s
+        )
+      );
+
+      toast.success(currentEnabled ? 'Alerts disabled' : 'Alerts enabled');
+    } catch (error) {
+      console.error('Failed to toggle alerts:', error);
+      toast.error('Failed to update alert settings');
+    }
   };
 
   const applySearch = (search: SavedSearch) => {
-    setSavedSearches(prev => 
-      prev.map(s => 
-        s.id === search.id ? { ...s, lastUsed: new Date() } : s
-      )
-    );
-    onApplySearch(search.filters);
-  };
-
-  const hasActiveFilters = Object.keys(currentFilters).some(
-    key => key !== 'sortBy' && currentFilters[key as keyof SearchFilters]
-  );
-
-  const getSearchDescription = (filters: SearchFilters) => {
-    const parts = [];
-    if (filters.query) parts.push(`"${filters.query}"`);
-    if (filters.categories?.length) parts.push(`${filters.categories.length} categories`);
-    if (filters.brands?.length) parts.push(`${filters.brands.length} brands`);
-    if (filters.conditions?.length) parts.push(`${filters.conditions.length} conditions`);
-    if (filters.priceMin || filters.priceMax) {
-      parts.push(`$${filters.priceMin || 0}-${filters.priceMax || '∞'}`);
+    if (onApplySearch) {
+      onApplySearch(search.query, search.filters || {});
+    } else {
+      // Navigate to search page with params
+      const params = new URLSearchParams({ q: search.query });
+      if (search.filters) {
+        Object.entries(search.filters).forEach(([key, value]) => {
+          if (value) params.set(key, String(value));
+        });
+      }
+      router.push(`/search?${params.toString()}`);
     }
-    return parts.join(', ') || 'All products';
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -136,84 +139,24 @@ export function SavedSearches({ currentFilters, onApplySearch }: SavedSearchesPr
           Saved Searches
         </h3>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              disabled={!hasActiveFilters}
-            >
-              <BookmarkPlus className="h-3 w-3 mr-1" />
-              Save
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Save Search</DialogTitle>
-              <DialogDescription>
-                Save your current search filters for quick access later
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="searchName">Search Name</Label>
-                <Input
-                  id="searchName"
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  placeholder="e.g. Designer Dresses Under $100"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Current Filters</Label>
-                <p className="text-sm text-muted-foreground">
-                  {getSearchDescription(currentFilters)}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="enableAlerts"
-                  checked={enableAlerts}
-                  onChange={(e) => setEnableAlerts(e.target.checked)}
-                  className="h-4 w-4"
-                />
-                <Label htmlFor="enableAlerts" className="text-sm">
-                  Get notified when new items match this search
-                </Label>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={saveCurrentSearch}
-                disabled={!searchName.trim()}
-              >
-                Save Search
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {currentQuery && (
+          <SavedSearchDialog
+            query={currentQuery}
+            filters={currentFilters}
+            onSave={fetchSavedSearches}
+          />
+        )}
       </div>
 
       {savedSearches.length === 0 ? (
         <div className="text-center py-6 text-sm text-muted-foreground">
           <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>No saved searches yet</p>
-          <p>Save your favorite searches for quick access</p>
+          <p>Save your searches for quick access</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {savedSearches.slice(0, 5).map((search) => (
+          {savedSearches.map((search) => (
             <div 
               key={search.id}
               className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -224,22 +167,35 @@ export function SavedSearches({ currentFilters, onApplySearch }: SavedSearchesPr
               >
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium text-sm">{search.name}</h4>
-                  {search.alertsEnabled && (
+                  {search.alertEnabled ? (
                     <Bell className="h-3 w-3 text-blue-500" />
+                  ) : (
+                    <BellOff className="h-3 w-3 text-muted-foreground" />
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {getSearchDescription(search.filters)}
+                  "{search.query}"
+                  {search.filters && Object.keys(search.filters).length > 0 && (
+                    <> • {Object.keys(search.filters).length} filters</>
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Used {search.lastUsed.toLocaleDateString()}
+                  Saved {new Date(search.createdAt).toLocaleDateString()}
                 </p>
               </div>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    disabled={deletingId === search.id}
+                  >
+                    {deletingId === search.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MoreVertical className="h-4 w-4" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -247,9 +203,18 @@ export function SavedSearches({ currentFilters, onApplySearch }: SavedSearchesPr
                     <Search className="h-4 w-4 mr-2" />
                     Apply Search
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleAlerts(search.id)}>
-                    <Bell className="h-4 w-4 mr-2" />
-                    {search.alertsEnabled ? 'Disable' : 'Enable'} Alerts
+                  <DropdownMenuItem onClick={() => toggleAlerts(search.id, search.alertEnabled)}>
+                    {search.alertEnabled ? (
+                      <>
+                        <BellOff className="h-4 w-4 mr-2" />
+                        Disable Alerts
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-4 w-4 mr-2" />
+                        Enable Alerts
+                      </>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -263,12 +228,6 @@ export function SavedSearches({ currentFilters, onApplySearch }: SavedSearchesPr
               </DropdownMenu>
             </div>
           ))}
-          
-          {savedSearches.length > 5 && (
-            <Button variant="ghost" size="sm" className="w-full">
-              View All ({savedSearches.length})
-            </Button>
-          )}
         </div>
       )}
     </div>

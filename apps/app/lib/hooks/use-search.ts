@@ -76,7 +76,14 @@ export interface SuggestionsResponse {
   configured: boolean;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+// SECURITY: Production-safe API URL handling - no localhost fallbacks
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (
+  typeof window !== 'undefined' 
+    ? window.location.origin 
+    : process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : undefined
+);
 
 export function useSearch(initialFilters: SearchFilters = {}) {
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
@@ -90,6 +97,11 @@ export function useSearch(initialFilters: SearchFilters = {}) {
   const debouncedQuery = useDebounce(filters.query || '', 300);
 
   const buildSearchUrl = useCallback((searchFilters: SearchFilters, searchPage: number) => {
+    // SECURITY: Validate API_BASE is available
+    if (!API_BASE) {
+      throw new Error('API URL not configured');
+    }
+
     const params = new URLSearchParams();
     
     if (debouncedQuery) params.set('q', debouncedQuery);
@@ -137,6 +149,17 @@ export function useSearch(initialFilters: SearchFilters = {}) {
       
       if (data.source === 'error') {
         setError('Search service temporarily unavailable');
+      } else if (searchPage === 0 && debouncedQuery) {
+        // Track search history for first page of results
+        fetch('/api/search-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: debouncedQuery,
+            filters: searchFilters,
+            resultCount: data.results?.totalHits || 0,
+          }),
+        }).catch(err => console.error('Failed to track search history:', err));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Search failed';

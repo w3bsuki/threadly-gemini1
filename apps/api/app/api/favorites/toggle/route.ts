@@ -15,6 +15,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get database user from Clerk ID
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { productId } = toggleFavoriteSchema.parse(body);
 
@@ -31,7 +41,7 @@ export async function POST(request: NextRequest) {
     const existingFavorite = await database.favorite.findUnique({
       where: {
         userId_productId: {
-          userId: user.id,
+          userId: dbUser.id,
           productId,
         },
       },
@@ -45,7 +55,7 @@ export async function POST(request: NextRequest) {
       await database.favorite.delete({
         where: {
           userId_productId: {
-            userId: user.id,
+            userId: dbUser.id,
             productId,
           },
         },
@@ -56,7 +66,7 @@ export async function POST(request: NextRequest) {
       // Add favorite
       await database.favorite.create({
         data: {
-          userId: user.id,
+          userId: dbUser.id,
           productId,
         },
       });

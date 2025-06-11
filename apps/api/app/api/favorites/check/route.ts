@@ -10,6 +10,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get database user from Clerk ID
+    const dbUser = await database.user.findUnique({
+      where: { clerkId: user.id },
+      select: { id: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const productIds = searchParams.get('productIds')?.split(',').filter(Boolean);
 
@@ -31,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Get user's favorites for these products
     const favorites = await database.favorite.findMany({
       where: {
-        userId: user.id,
+        userId: dbUser.id,
         productId: { in: productIds },
       },
       select: {

@@ -20,12 +20,33 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // THREADLY BRAND VARIANTS
+        "brand-primary":
+          "bg-[oklch(var(--brand-primary))] text-[oklch(var(--brand-primary-foreground))] shadow-xs hover:bg-[oklch(var(--brand-primary)/.9)] focus-visible:ring-[oklch(var(--brand-primary)/.3)] hover:shadow-md transition-all duration-200",
+        "brand-secondary": 
+          "bg-[oklch(var(--brand-secondary))] text-[oklch(var(--brand-secondary-foreground))] shadow-xs hover:bg-[oklch(var(--brand-secondary)/.9)] focus-visible:ring-[oklch(var(--brand-secondary)/.3)] hover:shadow-md transition-all duration-200",
+        "brand-accent":
+          "bg-[oklch(var(--brand-accent))] text-[oklch(var(--brand-accent-foreground))] shadow-xs hover:bg-[oklch(var(--brand-accent)/.9)] focus-visible:ring-[oklch(var(--brand-accent)/.3)] hover:shadow-md transition-all duration-200",
+        "brand-gradient":
+          "bg-gradient-to-r from-[oklch(var(--brand-primary))] via-[oklch(var(--brand-purple))] to-[oklch(var(--brand-accent))] text-white shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.97] focus-visible:ring-[oklch(var(--brand-primary)/.4)] animate-gradient bg-[length:200%_200%] font-semibold",
+        "brand-outline":
+          "border border-[oklch(var(--brand-primary))] text-[oklch(var(--brand-primary))] bg-background hover:bg-[oklch(var(--brand-primary))] hover:text-[oklch(var(--brand-primary-foreground))] focus-visible:ring-[oklch(var(--brand-primary)/.3)] transition-all duration-200",
+        "brand-ghost":
+          "text-[oklch(var(--brand-primary))] hover:bg-[oklch(var(--brand-primary)/.1)] hover:text-[oklch(var(--brand-primary))] focus-visible:ring-[oklch(var(--brand-primary)/.2)]",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        xl: "h-12 rounded-lg px-8 has-[>svg]:px-6 text-base",
         icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10", 
+        "icon-xl": "size-12",
+        // Mobile-optimized sizes (44px minimum touch target)
+        "mobile": "h-11 px-4 py-2 has-[>svg]:px-3 min-h-[44px]",
+        "mobile-lg": "h-12 px-6 py-3 has-[>svg]:px-4 min-h-[44px] text-base",
+        "mobile-icon": "size-11 min-h-[44px] min-w-[44px]",
       },
     },
     defaultVariants: {

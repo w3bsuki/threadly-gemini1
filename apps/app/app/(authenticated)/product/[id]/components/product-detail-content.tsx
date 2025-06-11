@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { ProductImageGallery } from '@repo/design-system/components/marketplace/product-image';
+import { LazyImage } from '@repo/design-system/components/ui/lazy-image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
@@ -10,6 +11,7 @@ import { Badge } from '@repo/design-system/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/design-system/components/ui/avatar';
 import { Separator } from '@repo/design-system/components/ui/separator';
 import { toast } from '@/components/toast';
+import { ReportDialog } from '@/components/report-dialog';
 import {
   Heart,
   Share2,
@@ -26,8 +28,15 @@ import {
   Eye,
   User,
   CreditCard,
-  ArrowLeft
+  ArrowLeft,
+  MoreVertical
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@repo/design-system/components/ui/dropdown-menu';
 import { cn } from '@repo/design-system/lib/utils';
 
 interface ProductDetailContentProps {
@@ -155,71 +164,14 @@ export const ProductDetailContent = ({
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Product Images */}
         <div className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <div className="aspect-square relative overflow-hidden rounded-lg">
-                {product.images.length > 0 ? (
-                  <>
-                    <Image
-                      src={product.images[currentImageIndex]?.imageUrl}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                    {product.images.length > 1 && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
-                          onClick={prevImage}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
-                          onClick={nextImage}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center">
-                    <Package className="h-24 w-24 text-white opacity-80" />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Image Thumbnails */}
-          {product.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image: any, index: number) => (
-                <button
-                  key={image.id}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={cn(
-                    "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2",
-                    currentImageIndex === index ? "border-primary" : "border-transparent"
-                  )}
-                >
-                  <Image
-                    src={image.imageUrl}
-                    alt={`${product.title} ${index + 1}`}
-                    width={80}
-                    height={80}
-                    className="object-cover w-full h-full"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          <ProductImageGallery
+            images={product.images || []}
+            currentIndex={currentImageIndex}
+            onImageChange={setCurrentImageIndex}
+            aspectRatio="1/1"
+            showThumbnails={true}
+            className="w-full"
+          />
         </div>
 
         {/* Product Details */}
@@ -245,6 +197,24 @@ export const ProductDetailContent = ({
                 <Button variant="outline" size="icon" onClick={shareProduct}>
                   <Share2 className="h-4 w-4" />
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <ReportDialog
+                      type="PRODUCT"
+                      targetId={product.id}
+                      targetName={product.title}
+                    >
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        Report Product
+                      </DropdownMenuItem>
+                    </ReportDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             
@@ -403,20 +373,15 @@ export const ProductDetailContent = ({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {similarProducts.map((item) => (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                  {item.images[0] ? (
-                    <Image
-                      src={item.images[0].imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-200"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center">
-                      <Package className="h-8 w-8 text-white opacity-80" />
-                    </div>
-                  )}
-                </div>
+                <LazyImage
+                  src={item.images[0]?.imageUrl || ''}
+                  alt={item.title}
+                  aspectRatio="square"
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-200 rounded-t-lg"
+                  quality={75}
+                  blur={true}
+                />
                 <CardContent className="p-4">
                   <h3 className="font-medium line-clamp-2 mb-2">{item.title}</h3>
                   <div className="flex items-center justify-between">
@@ -443,20 +408,15 @@ export const ProductDetailContent = ({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {sellerProducts.map((item) => (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                  {item.images[0] ? (
-                    <Image
-                      src={item.images[0].imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-200"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center">
-                      <Package className="h-8 w-8 text-white opacity-80" />
-                    </div>
-                  )}
-                </div>
+                <LazyImage
+                  src={item.images[0]?.imageUrl || ''}
+                  alt={item.title}
+                  aspectRatio="square"
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-200 rounded-t-lg"
+                  quality={75}
+                  blur={true}
+                />
                 <CardContent className="p-4">
                   <h3 className="font-medium line-clamp-2 mb-2">{item.title}</h3>
                   <div className="flex items-center justify-between">

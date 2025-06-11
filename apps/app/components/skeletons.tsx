@@ -47,21 +47,50 @@ export function OrderListSkeleton() {
   );
 }
 
+// Enhanced Product Card Skeleton to match actual product card structure
+export function ProductCardSkeleton() {
+  return (
+    <div className="group cursor-pointer rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+      {/* Image skeleton */}
+      <div className="aspect-square relative bg-muted">
+        <Skeleton className="w-full h-full rounded-none" />
+      </div>
+      
+      {/* Content skeleton */}
+      <div className="p-3 space-y-2">
+        {/* Title */}
+        <Skeleton className="h-4 w-3/4" />
+        
+        {/* Seller name */}
+        <Skeleton className="h-3 w-1/2" />
+        
+        {/* Badges */}
+        <div className="flex items-center gap-1">
+          <Skeleton className="h-5 w-12 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        
+        {/* Price and button */}
+        <div className="flex items-center justify-between mt-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-8 w-8 rounded-full" />
+        </div>
+        
+        {/* Metadata */}
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="space-y-3">
-          <Skeleton className="aspect-square rounded-lg" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-4 w-12" />
-            </div>
-          </div>
-        </div>
+        <ProductCardSkeleton key={i} />
       ))}
     </div>
   );
@@ -279,5 +308,55 @@ export function ButtonLoading({ children, loading, ...props }: {
         children
       )}
     </button>
+  );
+}
+
+// Admin table skeleton
+export function AdminTableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="border-b p-4 bg-muted/50">
+        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+          {Array.from({ length: cols }).map((_, i) => (
+            <Skeleton key={i} className="h-4 w-20" />
+          ))}
+        </div>
+      </div>
+      
+      {/* Rows */}
+      <div className="divide-y">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="p-4">
+            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+              {Array.from({ length: cols }).map((_, j) => (
+                <div key={j} className="flex items-center gap-2">
+                  {j === 0 && <Skeleton className="h-8 w-8 rounded-full" />}
+                  <Skeleton className="h-4 flex-1" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Notification skeleton
+export function NotificationSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-start gap-3 p-3 border rounded-lg">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <div className="flex-1 space-y-1">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <Skeleton className="h-3 w-12" />
+        </div>
+      ))}
+    </div>
   );
 }

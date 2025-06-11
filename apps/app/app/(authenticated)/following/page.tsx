@@ -43,47 +43,78 @@ const FollowingPage = async () => {
     redirect('/sign-in');
   }
 
-  // Note: Following system would need to be implemented in the database schema
-  // For now, we'll show potential users to follow based on recent activity
-  
-  // Get top sellers (users with most recent products/sales)
+  // Get users that current user is following
+  const followingUsers = await database.follow.findMany({
+    where: { followerId: dbUser.id },
+    include: {
+      following: {
+        include: {
+          _count: {
+            select: {
+              listings: { where: { status: 'AVAILABLE' } },
+              receivedReviews: true,
+            },
+          }
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  // Get recent items from followed users (feed)
+  const followedUserIds = followingUsers.map(f => f.followingId);
+  const feedItems = followedUserIds.length > 0 ? await database.product.findMany({
+    where: {
+      sellerId: { in: followedUserIds },
+      status: 'AVAILABLE'
+    },
+    include: {
+      seller: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          imageUrl: true,
+          averageRating: true
+        }
+      },
+      images: {
+        take: 1,
+        orderBy: { displayOrder: 'asc' }
+      },
+      category: { select: { name: true } },
+      _count: {
+        select: { favorites: true }
+      }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 20
+  }) : [];
+
+  // Get suggested sellers (users not already followed)
   const topSellers = await database.user.findMany({
     where: {
       NOT: {
-        id: dbUser.id, // Exclude current user
+        OR: [
+          { id: dbUser.id }, // Exclude current user
+          { id: { in: followedUserIds } } // Exclude already followed users
+        ]
       },
     },
     include: {
       _count: {
         select: {
-          listings: {
-            where: {
-              status: 'AVAILABLE'
-            }
-          },
+          listings: { where: { status: 'AVAILABLE' } },
           receivedReviews: true,
         },
       },
       listings: {
-        where: {
-          status: 'AVAILABLE'
-        },
+        where: { status: 'AVAILABLE' },
         take: 3,
-        orderBy: {
-          createdAt: 'desc'
-        },
+        orderBy: { createdAt: 'desc' },
         include: {
-          images: {
-            take: 1,
-            orderBy: {
-              displayOrder: 'asc'
-            }
-          },
-          category: {
-            select: {
-              name: true
-            }
-          }
+          images: { take: 1, orderBy: { displayOrder: 'asc' } },
+          category: { select: { name: true } }
         }
       }
     },
@@ -91,7 +122,7 @@ const FollowingPage = async () => {
       { averageRating: 'desc' },
       { joinedAt: 'desc' }
     ],
-    take: 12
+    take: 8
   });
 
   const getUserName = (user: any) => {
@@ -132,39 +163,134 @@ const FollowingPage = async () => {
           </Button>
         </div>
 
-        {/* Currently Following (Empty State) */}
+        {/* Feed from Followed Users */}
+        {feedItems.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Latest from People You Follow</h2>
+              <Badge variant="secondary">{feedItems.length} new items</Badge>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {feedItems.map((item) => (
+                <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-0">
+                    <div className="aspect-square relative bg-muted">
+                      {item.images[0] ? (
+                        <img
+                          src={item.images[0].imageUrl}
+                          alt={item.title}
+                          className="object-cover w-full h-full rounded-t-lg"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+                          <Package className="h-8 w-8" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-black/50 text-white border-0">
+                          {formatPrice(item.price)}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      <h3 className="font-medium text-sm truncate mb-1">{item.title}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarImage src={item.seller.imageUrl || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(item.seller)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground">
+                          {getUserName(item.seller)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{item.category?.name}</span>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3" />
+                          {item._count.favorites}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Currently Following */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              People You Follow
+              People You Follow ({followingUsers.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <UserPlus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No one followed yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Start following sellers to see their latest items and updates
-              </p>
-              <Button asChild>
-                <Link href="/browse">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Find People to Follow
-                </Link>
-              </Button>
-            </div>
+            {followingUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <UserPlus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No one followed yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start following sellers to see their latest items and updates
+                </p>
+                <Button asChild>
+                  <Link href="/browse">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Find People to Follow
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {followingUsers.map((follow) => (
+                  <div key={follow.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={follow.following.imageUrl || undefined} />
+                      <AvatarFallback>
+                        {getInitials(follow.following)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">
+                        {getUserName(follow.following)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {follow.following._count.listings} items • 
+                        {follow.following.averageRating && follow.following.averageRating > 0 
+                          ? ` ${follow.following.averageRating.toFixed(1)} ⭐` 
+                          : ' New seller'}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/messages?user=${follow.following.id}`}>
+                          <MessageCircle className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <FollowButton userId={follow.following.id} size="sm" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Suggested Sellers */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Suggested Sellers</h2>
-            <Badge variant="secondary">
-              Based on your activity
-            </Badge>
-          </div>
+        {topSellers.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Discover New Sellers</h2>
+              <Badge variant="secondary">
+                {topSellers.length} recommendations
+              </Badge>
+            </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {topSellers.map((seller) => (
@@ -238,6 +364,7 @@ const FollowingPage = async () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* Follow Benefits */}
         <Card className="border-blue-200 bg-blue-50">

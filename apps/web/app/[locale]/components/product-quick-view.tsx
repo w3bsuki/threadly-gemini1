@@ -86,9 +86,25 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
     );
   };
 
-  const handleToggleLike = () => {
-    setIsLiked(!isLiked);
-    // TODO: Implement favorites API call
+  const handleToggleLike = async () => {
+    try {
+      const newLikedState = !isLiked;
+      setIsLiked(newLikedState);
+      
+      const response = await fetch('/api/favorites/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle favorite');
+      }
+    } catch (error) {
+      // Rollback on error
+      setIsLiked(isLiked);
+      toast.error('Failed to save favorite');
+    }
   };
 
   const handleAddToCart = () => {
@@ -377,7 +393,22 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
                   {isLiked ? 'Saved' : 'Save'}
                 </Button>
                 
-                <Button variant="outline" className="h-10">
+                <Button 
+                  variant="outline" 
+                  className="h-10"
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: product.title,
+                        text: `Check out ${product.title} for $${product.price}`,
+                        url: window.location.href,
+                      });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success('Link copied to clipboard');
+                    }
+                  }}
+                >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>

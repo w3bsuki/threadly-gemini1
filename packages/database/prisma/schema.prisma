@@ -14,38 +14,45 @@ datasource db {
 
 // User model extended for marketplace functionality
 model User {
-  id                      String   @id @default(cuid())
-  clerkId                 String   @unique
-  email                   String   @unique
+  id                      String    @id @default(cuid())
+  clerkId                 String    @unique
+  email                   String    @unique
   firstName               String?
   lastName                String?
   imageUrl                String?
   bio                     String?
   location                String?
-  joinedAt                DateTime @default(now())
-  verified                Boolean  @default(false)
-  totalSales              Int      @default(0)
-  totalPurchases          Int      @default(0)
+  joinedAt                DateTime  @default(now())
+  verified                Boolean   @default(false)
+  totalSales              Int       @default(0)
+  totalPurchases          Int       @default(0)
   averageRating           Float?
-  stripeAccountId         String?  @unique
+  stripeAccountId         String?   @unique
   notificationPreferences String?
-  role                    UserRole @default(USER)
+  role                    UserRole  @default(USER)
+  suspended               Boolean   @default(false)
+  suspendedAt             DateTime?
+  suspendedReason         String?
 
   // Relations
   listings            Product[]
-  purchases           Order[]        @relation("Buyer")
-  sales               Order[]        @relation("Seller")
-  reviews             Review[]       @relation("Reviewer")
-  receivedReviews     Review[]       @relation("Reviewed")
-  sentMessages        Message[]      @relation("SentMessages")
-  buyerConversations  Conversation[] @relation("BuyerConversations")
-  sellerConversations Conversation[] @relation("SellerConversations")
+  purchases           Order[]         @relation("Buyer")
+  sales               Order[]         @relation("Seller")
+  reviews             Review[]        @relation("Reviewer")
+  receivedReviews     Review[]        @relation("Reviewed")
+  sentMessages        Message[]       @relation("SentMessages")
+  buyerConversations  Conversation[]  @relation("BuyerConversations")
+  sellerConversations Conversation[]  @relation("SellerConversations")
   favorites           Favorite[]
   cart                CartItem[]
-  following           Follow[]       @relation("Follower")
-  followers           Follow[]       @relation("Following")
+  following           Follow[]        @relation("Follower")
+  followers           Follow[]        @relation("Following")
   notifications       Notification[]
   addresses           Address[]
+  reports             Report[]        @relation("Reporter")
+  reportsAbout        Report[]        @relation("ReportedUser")
+  savedSearches       SavedSearch[]
+  searchHistory       SearchHistory[]
 
   @@index([clerkId])
   @@index([email])
@@ -56,7 +63,7 @@ model Product {
   id          String        @id @default(cuid())
   title       String
   description String
-  price       Float
+  price       Decimal       @db.Decimal(10, 2)
   condition   Condition
   size        String?
   brand       String?
@@ -76,6 +83,7 @@ model Product {
   cartItems     CartItem[]
   orders        Order[]
   conversations Conversation[]
+  reports       Report[]
 
   @@index([sellerId])
   @@index([categoryId])
@@ -125,16 +133,16 @@ model Order {
   buyerId        String
   sellerId       String
   productId      String
-  amount         Float
+  amount         Decimal     @db.Decimal(10, 2)
   status         OrderStatus @default(PENDING)
   createdAt      DateTime    @default(now())
   shippedAt      DateTime?
   deliveredAt    DateTime?
   trackingNumber String?
 
-  buyer   User     @relation("Buyer", fields: [buyerId], references: [id])
-  seller  User     @relation("Seller", fields: [sellerId], references: [id])
-  product Product  @relation(fields: [productId], references: [id])
+  buyer   User     @relation("Buyer", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller  User     @relation("Seller", fields: [sellerId], references: [id], onDelete: Restrict)
+  product Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
   payment Payment?
   review  Review?
 
@@ -154,11 +162,11 @@ model Payment {
   id              String   @id @default(cuid())
   orderId         String   @unique
   stripePaymentId String   @unique
-  amount          Float
+  amount          Decimal  @db.Decimal(10, 2)
   status          String
   createdAt       DateTime @default(now())
 
-  order Order @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([stripePaymentId])
 }
@@ -173,9 +181,9 @@ model Conversation {
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
-  buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id])
-  seller   User      @relation("SellerConversations", fields: [sellerId], references: [id])
-  product  Product   @relation(fields: [productId], references: [id])
+  buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller   User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Restrict)
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   messages Message[]
 
   @@unique([buyerId, sellerId, productId])
@@ -199,7 +207,7 @@ model Message {
   createdAt      DateTime @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation("SentMessages", fields: [senderId], references: [id])
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Restrict)
 
   @@index([conversationId])
   @@index([senderId])
@@ -221,9 +229,9 @@ model Review {
   comment    String?
   createdAt  DateTime @default(now())
 
-  order    Order @relation(fields: [orderId], references: [id])
-  reviewer User  @relation("Reviewer", fields: [reviewerId], references: [id])
-  reviewed User  @relation("Reviewed", fields: [reviewedId], references: [id])
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewer User  @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewed User  @relation("Reviewed", fields: [reviewedId], references: [id], onDelete: Restrict)
 
   @@index([reviewerId])
   @@index([reviewedId])
@@ -320,6 +328,71 @@ model Address {
   @@index([type])
 }
 
+// Report system for content moderation
+model Report {
+  id             String       @id @default(cuid())
+  reporterId     String
+  type           ReportType
+  status         ReportStatus @default(PENDING)
+  reason         String
+  description    String?
+  productId      String?
+  reportedUserId String?
+  messageId      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  resolution     String?
+
+  // Relations
+  reporter     User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  reportedUser User?    @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([productId])
+  @@index([reportedUserId])
+}
+
+// Saved searches for alerts
+model SavedSearch {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  query         String
+  filters       Json? // Store filter state (categories, price range, etc.)
+  alertEnabled  Boolean   @default(true)
+  lastAlertSent DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([alertEnabled])
+  @@index([createdAt])
+}
+
+// Search history for suggestions
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  query       String
+  filters     Json?
+  resultCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([query])
+  @@index([createdAt])
+}
+
 // Enums
 enum UserRole {
   USER
@@ -366,4 +439,17 @@ enum NotificationType {
 enum AddressType {
   SHIPPING
   BILLING
+}
+
+enum ReportType {
+  PRODUCT
+  USER
+  MESSAGE
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
 }

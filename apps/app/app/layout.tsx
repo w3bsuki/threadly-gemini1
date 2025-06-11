@@ -1,4 +1,5 @@
 import { env } from '@/env';
+import '@repo/design-system/styles/globals.css';
 import './styles.css';
 import { DesignSystemProvider } from '@repo/design-system';
 import { fonts } from '@repo/design-system/lib/fonts';

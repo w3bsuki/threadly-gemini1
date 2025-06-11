@@ -4,7 +4,7 @@ import { ThemeProvider } from '@repo/design-system/providers/theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview } from '@storybook/react';
 
-import '@repo/design-system/styles/globals.css';
+import '../styles.css';
 
 const preview: Preview = {
   parameters: {

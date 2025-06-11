@@ -32,9 +32,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SECURITY: Get database user to ensure proper ID comparison
+    const user = await database.user.findUnique({
+      where: { clerkId: clerkUser.id },
+      select: { id: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -62,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Don't allow buying own products
+    // SECURITY: Proper ID comparison - database user ID vs database seller ID
     if (product.sellerId === user.id) {
       return NextResponse.json(
         { error: 'Cannot purchase your own product' },

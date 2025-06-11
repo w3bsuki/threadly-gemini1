@@ -1,37 +1,94 @@
 'use server';
 
 import { canModerate } from '@repo/auth/admin';
+import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { revalidatePath } from 'next/cache';
 
-export async function resolveReport(reportId: string, resolution: 'APPROVED' | 'RESOLVED') {
+export async function resolveReport(reportId: string, resolution: string) {
   const isModerator = await canModerate();
   if (!isModerator) {
     throw new Error('Unauthorized');
   }
-  
-  // Note: In a real implementation, you would:
-  // 1. Update the report status in the database
-  // 2. If APPROVED, take action on the reported content (remove product, suspend user, etc.)
-  // 3. Send notifications to the reporter and reported user
-  // 4. Log the moderation action
-  
-  console.log(`Report ${reportId} resolved with ${resolution}`);
-  
-  // Mock database update
-  // await database.report.update({
-  //   where: { id: reportId },
-  //   data: { 
-  //     status: resolution,
-  //     resolvedAt: new Date(),
-  //     resolvedBy: moderatorId
-  //   }
-  // });
-  
-  // If approved, take action on the content
+
+  const user = await currentUser();
+  const moderator = await database.user.findUnique({
+    where: { clerkId: user!.id },
+    select: { id: true }
+  });
+
+  // Get the report details
+  const report = await database.report.findUnique({
+    where: { id: reportId },
+    include: {
+      product: true,
+      reportedUser: true,
+    }
+  });
+
+  if (!report) {
+    throw new Error('Report not found');
+  }
+
+  // Update report status
+  await database.report.update({
+    where: { id: reportId },
+    data: {
+      status: 'RESOLVED',
+      resolvedAt: new Date(),
+      resolvedBy: moderator!.id,
+      resolution,
+    }
+  });
+
+  // Take action based on the report type and resolution
   if (resolution === 'APPROVED') {
-    // This would involve calling removeProduct() or suspendUser() 
-    // based on the report type and target
+    if (report.type === 'PRODUCT' && report.product) {
+      // Remove the product
+      await database.product.update({
+        where: { id: report.product.id },
+        data: { status: 'REMOVED' }
+      });
+
+      // Notify the seller
+      await database.notification.create({
+        data: {
+          userId: report.product.sellerId,
+          title: 'Product Removed',
+          message: `Your product "${report.product.title}" has been removed due to policy violations.`,
+          type: 'SYSTEM',
+          metadata: JSON.stringify({
+            productId: report.product.id,
+            reportId: report.id,
+            reason: report.reason,
+          }),
+        },
+      });
+    } else if (report.type === 'USER' && report.reportedUser) {
+      // Suspend the user
+      await database.user.update({
+        where: { id: report.reportedUser.id },
+        data: {
+          suspended: true,
+          suspendedAt: new Date(),
+          suspendedReason: report.reason,
+        }
+      });
+
+      // Notify the user
+      await database.notification.create({
+        data: {
+          userId: report.reportedUser.id,
+          title: 'Account Suspended',
+          message: 'Your account has been suspended due to policy violations.',
+          type: 'SYSTEM',
+          metadata: JSON.stringify({
+            reportId: report.id,
+            reason: report.reason,
+          }),
+        },
+      });
+    }
   }
   
   revalidatePath('/admin/reports');
@@ -43,18 +100,23 @@ export async function dismissReport(reportId: string) {
   if (!isModerator) {
     throw new Error('Unauthorized');
   }
+
+  const user = await currentUser();
+  const moderator = await database.user.findUnique({
+    where: { clerkId: user!.id },
+    select: { id: true }
+  });
   
-  console.log(`Report ${reportId} dismissed`);
-  
-  // Mock database update
-  // await database.report.update({
-  //   where: { id: reportId },
-  //   data: { 
-  //     status: 'DISMISSED',
-  //     resolvedAt: new Date(),
-  //     resolvedBy: moderatorId
-  //   }
-  // });
+  // Update report status to dismissed
+  await database.report.update({
+    where: { id: reportId },
+    data: {
+      status: 'DISMISSED',
+      resolvedAt: new Date(),
+      resolvedBy: moderator!.id,
+      resolution: 'Report dismissed - no action required',
+    }
+  });
   
   revalidatePath('/admin/reports');
   return { success: true };
@@ -66,47 +128,37 @@ export async function escalateReport(reportId: string) {
     throw new Error('Unauthorized');
   }
   
-  console.log(`Report ${reportId} escalated`);
-  
-  // Mock database update
-  // await database.report.update({
-  //   where: { id: reportId },
-  //   data: { 
-  //     status: 'ESCALATED',
-  //     escalatedAt: new Date(),
-  //     escalatedBy: moderatorId
-  //   }
-  // });
-  
-  // Notify admin users about escalation
-  // This would send notifications to all admin users
+  // Update report status to under review
+  await database.report.update({
+    where: { id: reportId },
+    data: {
+      status: 'UNDER_REVIEW',
+    }
+  });
+
+  // Notify all admins
+  const admins = await database.user.findMany({
+    where: { role: 'ADMIN' },
+    select: { id: true }
+  });
+
+  const notifications = admins.map(admin => ({
+    userId: admin.id,
+    title: 'Report Escalated',
+    message: `A report requires admin review. Report ID: ${reportId}`,
+    type: 'SYSTEM' as const,
+    metadata: JSON.stringify({
+      reportId,
+      action: 'escalated',
+    }),
+  }));
+
+  if (notifications.length > 0) {
+    await database.notification.createMany({
+      data: notifications,
+    });
+  }
   
   revalidatePath('/admin/reports');
-  return { success: true };
-}
-
-export async function createReport(data: {
-  targetId: string;
-  targetType: 'PRODUCT' | 'USER' | 'MESSAGE';
-  reason: string;
-  description?: string;
-}) {
-  // This would be called from the main app when users report content
-  console.log('Report created:', data);
-  
-  // Mock database create
-  // const report = await database.report.create({
-  //   data: {
-  //     targetId: data.targetId,
-  //     targetType: data.targetType,
-  //     reason: data.reason,
-  //     description: data.description,
-  //     reporterId: currentUserId,
-  //     status: 'PENDING'
-  //   }
-  // });
-  
-  // Notify moderators about new report
-  
   return { success: true };
 }

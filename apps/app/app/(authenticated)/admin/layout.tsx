@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   BarChart,
   Settings,
-  Shield
+  Shield,
+  Activity
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@repo/design-system/lib/utils';
@@ -17,6 +18,11 @@ const adminNavItems = [
     title: 'Dashboard',
     href: '/admin',
     icon: BarChart,
+  },
+  {
+    title: 'Platform Health',
+    href: '/admin/health',
+    icon: Activity,
   },
   {
     title: 'Users',

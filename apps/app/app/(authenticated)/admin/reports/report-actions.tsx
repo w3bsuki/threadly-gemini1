@@ -25,7 +25,8 @@ interface ReportActionsProps {
     type: string;
     reason: string;
     status: string;
-    target: any;
+    product?: any;
+    reportedUser?: any;
   };
 }
 

@@ -12,6 +12,7 @@ import {
 import { Badge } from '@repo/design-system/components/ui/badge';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { NotificationSkeleton } from '@/components/skeletons';
 
 export function NotificationBell() {
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
@@ -27,7 +28,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
+        <Button variant="ghost" size="sm" className="relative touch-target">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
@@ -62,8 +63,8 @@ export function NotificationBell() {
         <DropdownMenuSeparator />
         
         {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Loading notifications...
+          <div className="p-2">
+            <NotificationSkeleton />
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">

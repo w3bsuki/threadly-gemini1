@@ -16,48 +16,56 @@ import { ReportActions } from './report-actions';
 import Link from 'next/link';
 
 export default async function AdminReportsPage() {
-  // For now, we'll use a mock structure since the Report model might not exist
-  // In a real implementation, you'd have a Report table with fields like:
-  // id, reporterId, targetId, targetType, reason, status, description, createdAt
-  
-  const mockReports = [
-    {
-      id: '1',
-      type: 'PRODUCT',
-      reason: 'Inappropriate content',
-      description: 'Product contains inappropriate images',
-      status: 'PENDING',
-      reportedBy: 'user123',
-      reportedAt: new Date(),
-      target: {
-        id: 'prod1',
-        title: 'Sample Product',
-        seller: 'John Doe'
+  // Get reports from database
+  const reports = await database.report.findMany({
+    where: {
+      status: { in: ['PENDING', 'UNDER_REVIEW'] }
+    },
+    include: {
+      reporter: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        }
+      },
+      product: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          seller: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            }
+          }
+        }
+      },
+      reportedUser: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        }
       }
     },
-    {
-      id: '2',
-      type: 'USER',
-      reason: 'Spam/Scam',
-      description: 'User is posting fake listings',
-      status: 'UNDER_REVIEW',
-      reportedBy: 'user456',
-      reportedAt: new Date(Date.now() - 86400000),
-      target: {
-        id: 'user1',
-        name: 'Jane Smith',
-        email: 'jane@example.com'
-      }
-    }
-  ];
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
 
-  // Stats would come from database queries
-  const stats = {
-    pending: 5,
-    underReview: 3,
-    resolved: 25,
-    dismissed: 12
-  };
+  // Get stats
+  const [pending, underReview, resolved, dismissed] = await Promise.all([
+    database.report.count({ where: { status: 'PENDING' } }),
+    database.report.count({ where: { status: 'UNDER_REVIEW' } }),
+    database.report.count({ where: { status: 'RESOLVED' } }),
+    database.report.count({ where: { status: 'DISMISSED' } }),
+  ]);
+
+  const stats = { pending, underReview, resolved, dismissed };
 
   return (
     <div className="space-y-6">
@@ -114,7 +122,7 @@ export default async function AdminReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockReports.map((report) => (
+            {reports.map((report) => (
               <div key={report.id} className="border rounded-lg p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
@@ -138,7 +146,7 @@ export default async function AdminReportsPage() {
                       </div>
                       
                       <p className="text-sm text-muted-foreground mb-2">
-                        {report.description}
+                        {report.description || 'No additional details provided'}
                       </p>
                       
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -146,23 +154,31 @@ export default async function AdminReportsPage() {
                           Type: <span className="font-medium">{report.type}</span>
                         </span>
                         <span>
-                          Target: {report.type === 'PRODUCT' ? report.target.title : report.target.name}
+                          Target: {report.type === 'PRODUCT' ? 
+                            report.product?.title || 'Deleted Product' : 
+                            `${report.reportedUser?.firstName || ''} ${report.reportedUser?.lastName || ''}`.trim() || 'Unknown User'
+                          }
+                        </span>
+                        <span>
+                          Reported by: {`${report.reporter.firstName || ''} ${report.reporter.lastName || ''}`.trim() || report.reporter.email}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {report.reportedAt.toLocaleDateString()}
+                          {new Date(report.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/reports/${report.id}`}>
-                        <Eye className="h-3 w-3 mr-1" />
-                        Review
-                      </Link>
-                    </Button>
+                    {report.type === 'PRODUCT' && report.product && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/product/${report.product.id}`} target="_blank">
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Link>
+                      </Button>
+                    )}
                     
                     <ReportActions report={report} />
                   </div>
@@ -171,7 +187,7 @@ export default async function AdminReportsPage() {
             ))}
           </div>
 
-          {mockReports.length === 0 && (
+          {reports.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-semibold mb-2">No reports to review</h3>

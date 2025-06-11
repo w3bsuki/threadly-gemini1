@@ -4,12 +4,14 @@ import { useSearch, type SearchFilters } from '@/lib/hooks/use-search';
 import { AddToCartButton } from '@/components/add-to-cart-button';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
+import { LazyImage } from '@repo/design-system/components/ui/lazy-image';
 import { AlertCircle, Loader2, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@repo/design-system/components/ui/alert';
 import { SearchFilters as SearchFiltersComponent } from './search-filters';
 import { SavedSearches } from './saved-searches';
 import { SearchHistory } from './search-history';
 import { RecentlyViewed } from './recently-viewed';
+import { SearchResultsSkeleton } from '@/components/skeletons';
 
 interface SearchResultsProps {
   initialQuery?: string;
@@ -34,12 +36,7 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
 
   // Loading state
   if (loading && !results) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">Searching products...</p>
-      </div>
-    );
+    return <SearchResultsSkeleton />;
   }
 
   // Error state
@@ -71,8 +68,8 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <SavedSearches 
+            currentQuery={filters.query}
             currentFilters={filters}
-            onApplySearch={updateFilters}
           />
           <SearchHistory
             onSearchSelect={(query) => updateFilters({ query })}
@@ -119,11 +116,19 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
           </Badge>
         </div>
         
-        {results && (
-          <p className="text-xs text-muted-foreground">
-            Found in {results.processingTimeMS}ms
-          </p>
-        )}
+        <div className="flex items-center gap-2">
+          {filters.query && (
+            <SavedSearches 
+              currentQuery={filters.query}
+              currentFilters={filters}
+            />
+          )}
+          {results && (
+            <p className="text-xs text-muted-foreground">
+              Found in {results.processingTimeMS}ms
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Results grid */}
@@ -133,19 +138,15 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
             key={product.id} 
             className="group cursor-pointer rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden hover:shadow-md transition-shadow"
           >
-            <div className="aspect-square relative bg-muted">
-              {product.images[0] ? (
-                <img
-                  src={product.images[0]}
-                  alt={product.title}
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full text-muted-foreground">
-                  No Image
-                </div>
-              )}
-            </div>
+            <LazyImage
+              src={product.images[0] || ''}
+              alt={product.title}
+              aspectRatio="square"
+              fill
+              className="object-cover w-full h-full"
+              quality={80}
+              blur={true}
+            />
             <div className="p-3">
               <h3 className="font-medium text-sm truncate">{product.title}</h3>
               <p className="text-xs text-muted-foreground truncate">
@@ -181,6 +182,7 @@ export function SearchResults({ initialQuery = '', initialFilters }: SearchResul
                   }} 
                   size="sm" 
                   showText={false}
+                  className="touch-target"
                 />
               </div>
               

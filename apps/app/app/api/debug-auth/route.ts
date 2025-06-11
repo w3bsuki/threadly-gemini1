@@ -2,30 +2,38 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@repo/auth/server';
 
 export async function GET() {
+  // SECURITY: Only allow in development mode
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Endpoint disabled in production' },
+      { status: 404 }
+    );
+  }
+
   try {
     const { userId } = await auth();
     const user = await currentUser();
     
+    // SECURITY: Limited information exposure, no sensitive env vars
     return NextResponse.json({
       success: true,
       auth: {
-        userId: userId || null,
-        hasUser: !!user,
-        userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
-        firstName: user?.firstName || null,
+        isAuthenticated: !!userId,
+        hasUserProfile: !!user,
+        userRole: user?.publicMetadata?.role || 'user',
       },
-      env: {
-        hasPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-        hasSecretKey: !!process.env.CLERK_SECRET_KEY,
-        nodeEnv: process.env.NODE_ENV,
-        signInUrl: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/sign-in',
+      config: {
+        environment: process.env.NODE_ENV,
+        authConfigured: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
       },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    // SECURITY: Generic error messages only
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Auth check failed',
+      error: 'Authentication check failed',
+      environment: process.env.NODE_ENV,
       timestamp: new Date().toISOString(),
     }, { status: 500 });
   }

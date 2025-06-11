@@ -28,6 +28,8 @@ export { HoverCard, HoverCardContent, HoverCardTrigger } from './components/ui/h
 export { Input } from './components/ui/input';
 export { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from './components/ui/input-otp';
 export { Label } from './components/ui/label';
+export { LazyImage, LazyAvatar } from './components/ui/lazy-image';
+export type { LazyImageProps, LazyAvatarProps } from './components/ui/lazy-image';
 export { Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarLabel, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from './components/ui/menubar';
 export { NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, NavigationMenuViewport } from './components/ui/navigation-menu';
 export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './components/ui/pagination';
@@ -55,6 +57,76 @@ export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './comp
 // Custom components
 export { ModeToggle } from './components/mode-toggle';
 export { ServiceWorkerRegistration, useServiceWorker } from './components/ui/service-worker-registration';
+
+// Micro-interactions for enhanced UX
+export { 
+  AnimatedHeartButton,
+  AnimatedCartButton,
+  AnimatedRatingStars,
+  FloatingActionButton,
+  LoadingDots,
+  StaggerContainer,
+  CartFloatAnimation
+} from './components/ui/micro-interactions';
+export type {
+  AnimatedHeartButtonProps,
+  AnimatedCartButtonProps,
+  AnimatedRatingStarsProps,
+  FloatingActionButtonProps,
+  StaggerContainerProps
+} from './components/ui/micro-interactions';
+
+// Brand components - Threadly marketplace specific
+export { 
+  BrandButtonShowcase, 
+  brandButtonExamples,
+  BrandIconShowcase,
+  ThreadlyIcons,
+  ThreadlyLogo,
+  PremiumBadge,
+  VerifiedBadge,
+  FashionHanger,
+  DesignerTag,
+  ConditionStars,
+  DressIcon,
+  ShirtIcon,
+  ShoesIcon,
+  AccessoriesIcon,
+  HeartAnimation,
+  QuickViewIcon,
+  SecurePaymentIcon,
+  THREADLY_BRAND_COLORS, 
+  BRAND_BUTTON_VARIANTS 
+} from './components/brand';
+export type { BrandButtonVariant } from './components/brand';
+
+// Error boundaries
+export { AppErrorBoundary, PaymentErrorBoundary, ProductErrorBoundary, APIErrorBoundary } from './components/error-boundaries';
+
+// Marketplace components - Production-ready marketplace features
+export { 
+  ProductCard, 
+  ProductGrid, 
+  ProductImage,
+  ProductImageGallery,
+  SellerProfile, 
+  TrustBadge, 
+  TrustBadgeCollection, 
+  MarketplaceTrustSection,
+  threadlyTrustFeatures 
+} from './components/marketplace';
+export type { 
+  ProductCardProps, 
+  ProductImageProps,
+  ProductImageGalleryProps,
+  SellerProfileProps, 
+  TrustBadgeProps, 
+  TrustBadgeCollectionProps, 
+  MarketplaceTrustSectionProps,
+  ProductData,
+  SellerData,
+  SellerStats
+} from './components/marketplace';
 
 // Hooks
 export { useIsMobile } from './hooks/use-mobile';
