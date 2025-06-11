@@ -19,9 +19,9 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold text-gray-900 mb-3">Discover</h3>
             <ul className="space-y-2">
-              <li><Link href="/women" className="text-sm text-gray-600 hover:text-gray-900">Women</Link></li>
-              <li><Link href="/men" className="text-sm text-gray-600 hover:text-gray-900">Men</Link></li>
-              <li><Link href="/kids" className="text-sm text-gray-600 hover:text-gray-900">Kids</Link></li>
+              <li><Link href="/products?gender=women" className="text-sm text-gray-600 hover:text-gray-900">Women</Link></li>
+              <li><Link href="/products?gender=men" className="text-sm text-gray-600 hover:text-gray-900">Men</Link></li>
+              <li><Link href="/products?gender=kids" className="text-sm text-gray-600 hover:text-gray-900">Kids</Link></li>
               <li><Link href="/categories/home" className="text-sm text-gray-600 hover:text-gray-900">Home</Link></li>
             </ul>
           </div>

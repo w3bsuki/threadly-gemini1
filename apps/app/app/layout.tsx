@@ -4,6 +4,8 @@ import { DesignSystemProvider } from '@repo/design-system';
 import { fonts } from '@repo/design-system/lib/fonts';
 import { Toolbar } from '@repo/feature-flags/components/toolbar';
 import { AuthProvider } from '@repo/auth/provider';
+import { AnalyticsProvider } from '@repo/analytics';
+import { ToastProvider } from '@/components/toast';
 import type { ReactNode } from 'react';
 
 type RootLayoutProperties = {
@@ -21,16 +23,19 @@ const RootLayout = ({ children }: RootLayoutProperties) => (
         termsUrl={new URL('/legal/terms', env.NEXT_PUBLIC_WEB_URL).toString()}
         helpUrl={env.NEXT_PUBLIC_DOCS_URL}
       >
-        <DesignSystemProvider
-          privacyUrl={new URL(
-            '/legal/privacy',
-            env.NEXT_PUBLIC_WEB_URL
-          ).toString()}
-          termsUrl={new URL('/legal/terms', env.NEXT_PUBLIC_WEB_URL).toString()}
-          helpUrl={env.NEXT_PUBLIC_DOCS_URL}
-        >
-          {children}
-        </DesignSystemProvider>
+        <AnalyticsProvider>
+          <DesignSystemProvider
+            privacyUrl={new URL(
+              '/legal/privacy',
+              env.NEXT_PUBLIC_WEB_URL
+            ).toString()}
+            termsUrl={new URL('/legal/terms', env.NEXT_PUBLIC_WEB_URL).toString()}
+            helpUrl={env.NEXT_PUBLIC_DOCS_URL}
+          >
+            <ToastProvider />
+            {children}
+          </DesignSystemProvider>
+        </AnalyticsProvider>
       </AuthProvider>
       <Toolbar />
     </body>

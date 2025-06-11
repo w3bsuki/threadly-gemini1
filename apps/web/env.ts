@@ -1,3 +1,4 @@
+import { keys as analytics } from '@repo/analytics/keys';
 import { keys as cache } from '@repo/cache/keys';
 import { keys as cms } from '@repo/cms/keys';
 import { keys as email } from '@repo/email/keys';
@@ -11,6 +12,7 @@ import { createEnv } from '@t3-oss/env-nextjs';
 
 export const env = createEnv({
   extends: [
+    analytics(),
     cache(),
     cms(),
     core(),

@@ -1,5 +1,6 @@
 import { getDictionary } from '@repo/internationalization';
 import { createMetadata } from '@repo/seo/metadata';
+import { organizationStructuredData, websiteStructuredData } from '@repo/seo/structured-data';
 import type { Metadata } from 'next';
 import { ProductGridServer } from '../../../components/product-grid-server';
 import { Button } from '@repo/design-system/components/ui/button';
@@ -30,7 +31,20 @@ const Home = async ({ params }: HomeProps) => {
   const dictionary = await getDictionary(locale);
 
   return (
-    <main className="min-h-screen bg-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(websiteStructuredData),
+        }}
+      />
+      <main className="min-h-screen bg-white">
       {/* Main Action Buttons - Buy/Sell */}
       <div className="sticky top-16 z-40 bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -84,6 +98,7 @@ const Home = async ({ params }: HomeProps) => {
         <ProductGridServer limit={50} />
       </div>
     </main>
+    </>
   );
 };
 

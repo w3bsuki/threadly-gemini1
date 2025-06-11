@@ -71,7 +71,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       data: {
         title: sanitizedData.title,
         description: sanitizedData.description,
-        price: sanitizedData.price / 100, // Convert cents to dollars for database
+        price: sanitizedData.price, // Price is already in cents from form
         categoryId: sanitizedData.categoryId,
         condition: sanitizedData.condition,
         brand: sanitizedData.brand,

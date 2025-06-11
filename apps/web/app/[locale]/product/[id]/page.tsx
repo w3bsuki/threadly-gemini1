@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { database } from "@repo/database";
 import { ProductDetail } from "./components/product-detail";
+import { generateProductStructuredData, generateBreadcrumbStructuredData } from "@repo/seo/structured-data";
 
 interface ProductPageProps {
   params: Promise<{
@@ -154,10 +155,46 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
+  // Generate structured data
+  const productStructuredData = generateProductStructuredData({
+    id: product.id,
+    title: product.title,
+    description: product.description,
+    price: product.price,
+    condition: product.condition,
+    brand: product.brand,
+    size: product.size,
+    color: product.color,
+    images: product.images,
+    seller: product.seller,
+    category: product.category,
+  });
+
+  const breadcrumbStructuredData = generateBreadcrumbStructuredData([
+    { name: 'Home', url: 'https://threadly.com' },
+    { name: 'Products', url: 'https://threadly.com/products' },
+    { name: product.category.name, url: `https://threadly.com/products?category=${product.category.slug}` },
+    { name: product.title, url: `https://threadly.com/product/${product.id}` },
+  ]);
+
   return (
-    <ProductDetail
-      product={product}
-      similarProducts={similarProducts}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbStructuredData),
+        }}
+      />
+      <ProductDetail
+        product={product}
+        similarProducts={similarProducts}
+      />
+    </>
   );
 }

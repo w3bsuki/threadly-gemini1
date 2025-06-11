@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "../../../../../lib/stores/cart-store";
 import { useFavorites } from "../../../../../lib/hooks/use-favorites";
+import { useAnalyticsEvents } from "@repo/analytics";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { SignInCTA } from "../../../../../components/sign-in-cta";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Breadcrumb,
@@ -114,22 +117,87 @@ const conditionColors = {
 export function ProductDetail({ product, similarProducts }: ProductDetailProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageGalleryOpen, setIsImageGalleryOpen] = useState(false);
-  const { addItem } = useCartStore();
+  const { addItem, isInCart } = useCartStore();
   const { toggleFavorite, checkFavorite, isFavorited, isPending } = useFavorites();
+  const { trackProductView, trackCartAdd, trackProductFavorite } = useAnalyticsEvents();
   const galleryRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  
+  const isProductInCart = isInCart(product.id);
 
   const memberSince = new Date(product.seller.joinedAt).getFullYear();
 
-  // Check if product is already favorited on mount
+  // Check if product is already favorited on mount and track product view
   useEffect(() => {
     checkFavorite(product.id);
-  }, [product.id, checkFavorite]);
+    
+    // Track product view for analytics
+    trackProductView({
+      id: product.id,
+      title: product.title,
+      price: product.price / 100, // Convert to dollars
+      brand: product.brand,
+      category: product.category.name,
+      condition: product.condition,
+      seller_id: product.seller.id,
+    });
+  }, [product, checkFavorite, trackProductView]);
 
   const handleToggleFavorite = async () => {
     const result = await toggleFavorite(product.id);
     if (!result.success) {
       console.error('Failed to toggle favorite:', result.error);
+    } else {
+      // Track favorite action
+      trackProductFavorite({
+        id: product.id,
+        title: product.title,
+        price: product.price / 100,
+        category: product.category.name,
+      }, result.isFavorited);
     }
+  };
+
+  const handleAddToCart = () => {
+    try {
+      const sellerName = product.seller.firstName && product.seller.lastName
+        ? `${product.seller.firstName} ${product.seller.lastName}`
+        : "Anonymous Seller";
+        
+      addItem({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        imageUrl: product.images[0]?.imageUrl || '',
+        sellerId: product.seller.id,
+        sellerName,
+        condition: product.condition,
+        size: product.size,
+      });
+      
+      // Track add to cart
+      trackCartAdd({
+        id: product.id,
+        title: product.title,
+        price: product.price / 100,
+        category: product.category.name,
+        brand: product.brand,
+        condition: product.condition,
+      });
+      
+      toast.success("Added to cart", {
+        description: `${product.title} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast.error("Error", {
+        description: "Failed to add item to cart. Please try again.",
+      });
+    }
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    router.push('/cart');
   };
 
   const handleImageNavigation = (direction: 'prev' | 'next') => {
@@ -360,11 +428,13 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm text-gray-900 truncate">
-                      {product.seller.firstName && product.seller.lastName 
-                        ? `${product.seller.firstName} ${product.seller.lastName}` 
-                        : "Anonymous Seller"}
-                    </h3>
+                    <Link href={`/seller/${product.seller.id}`} className="hover:underline">
+                      <h3 className="font-semibold text-sm text-gray-900 truncate">
+                        {product.seller.firstName && product.seller.lastName 
+                          ? `${product.seller.firstName} ${product.seller.lastName}` 
+                          : "Anonymous Seller"}
+                      </h3>
+                    </Link>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -377,10 +447,12 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
                       <span className="sm:hidden">{memberSince}</span>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Chat
-                  </Button>
+                  <Link href={`/messages?sellerId=${product.seller.id}&productId=${product.id}`}>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <MessageCircle className="h-3 w-3 mr-1" />
+                      Message
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -424,26 +496,47 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
 
             {/* Desktop Action Buttons */}
             <div className="hidden md:block space-y-3">
-              <SignInCTA 
-                size="lg" 
-                fullWidth 
-                redirectPath={`/product/${product.id}`}
-                className="bg-black text-white hover:bg-gray-800 h-12 text-base font-medium"
-              >
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Buy Now
-              </SignInCTA>
+              {isProductInCart ? (
+                <Button 
+                  size="lg" 
+                  className="w-full bg-gray-800 text-white hover:bg-gray-700 h-12 text-base font-medium"
+                  onClick={() => router.push('/cart')}
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  View Cart
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-medium"
+                    onClick={handleBuyNow}
+                  >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Buy Now
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="w-full h-12 text-base font-medium"
+                    onClick={handleAddToCart}
+                  >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
+                  </Button>
+                </>
+              )}
               
               <div className="grid grid-cols-2 gap-3">
-                <SignInCTA 
+                <Button 
                   variant="outline" 
-                  fullWidth
-                  redirectPath={`/favorites`}
-                  className="h-10"
+                  className="w-full h-10"
+                  onClick={handleToggleFavorite}
+                  disabled={isPending}
                 >
-                  <Heart className="mr-2 h-4 w-4" />
-                  Save
-                </SignInCTA>
+                  <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} />
+                  {isFavorited ? "Saved" : "Save"}
+                </Button>
                 <Button variant="outline" className="w-full h-10">
                   <Share2 className="mr-2 h-4 w-4" />
                   Share
@@ -510,27 +603,38 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
       {/* Mobile Sticky Action Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 space-y-3">
         <div className="flex gap-3">
-          <SignInCTA 
+          <Button 
             variant="outline" 
             className="flex-1 h-12 border-black text-black hover:bg-gray-50"
-            redirectPath={`/favorites`}
+            onClick={handleToggleFavorite}
+            disabled={isPending}
           >
-            <Heart className="mr-2 h-4 w-4" />
-            Save
-          </SignInCTA>
+            <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} />
+            {isFavorited ? "Saved" : "Save"}
+          </Button>
           <Button variant="outline" className="h-12 px-4 border-gray-300">
             <Share2 className="h-4 w-4" />
           </Button>
         </div>
-        <SignInCTA 
-          size="lg" 
-          fullWidth 
-          redirectPath={`/product/${product.id}`}
-          className="bg-black text-white hover:bg-gray-800 h-12 text-base font-medium"
-        >
-          <ShoppingCart className="mr-2 h-5 w-5" />
-          Buy Now - {formatCurrency(product.price)}
-        </SignInCTA>
+        {isProductInCart ? (
+          <Button 
+            size="lg" 
+            className="w-full bg-gray-800 text-white hover:bg-gray-700 h-12 text-base font-medium"
+            onClick={() => router.push('/cart')}
+          >
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            View Cart
+          </Button>
+        ) : (
+          <Button 
+            size="lg" 
+            className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-medium"
+            onClick={handleBuyNow}
+          >
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            Buy Now - {formatCurrency(product.price)}
+          </Button>
+        )}
       </div>
 
       {/* Mobile bottom padding */}

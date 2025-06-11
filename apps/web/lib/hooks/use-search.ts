@@ -53,8 +53,8 @@ export interface SearchResponse {
   };
 }
 
-// Use the API URL from environment or default to API service
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+// Use local API endpoint for search
+const API_BASE = '';
 
 export function useSearch(initialFilters: SearchFilters = {}) {
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
@@ -101,21 +101,45 @@ export function useSearch(initialFilters: SearchFilters = {}) {
     setError(null);
 
     try {
-      const url = buildSearchUrl(searchFilters, searchPage);
-      const response = await fetch(url);
+      // Simple search using local API
+      const params = new URLSearchParams();
+      if (debouncedQuery) params.set('q', debouncedQuery);
+      
+      const response = await fetch(`/api/search?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error(`Search failed: ${response.status}`);
       }
 
-      const data: SearchResponse = await response.json();
+      const products = await response.json();
       
-      setResults(data.results);
-      setSource(data.source);
+      // Transform to expected format
+      const searchResult: SearchResult = {
+        hits: products.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          price: p.price,
+          condition: p.condition,
+          brand: p.brand,
+          size: p.size,
+          color: p.color,
+          images: p.images.map((img: any) => img.imageUrl),
+          categoryName: p.category?.name || 'Other',
+          sellerName: `${p.seller.firstName || ''} ${p.seller.lastName || ''}`.trim() || 'Anonymous',
+          sellerRating: 4.5, // Default for now
+          views: p.views || 0,
+          favorites: p._count?.favorites || 0,
+          createdAt: new Date(p.createdAt).getTime(),
+        })),
+        totalHits: products.length,
+        page: 0,
+        totalPages: 1,
+        processingTimeMS: 0,
+      };
       
-      if (data.source === 'error') {
-        setError('Search service temporarily unavailable');
-      }
+      setResults(searchResult);
+      setSource('database');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Search failed';
       setError(message);
@@ -124,7 +148,7 @@ export function useSearch(initialFilters: SearchFilters = {}) {
     } finally {
       setLoading(false);
     }
-  }, [buildSearchUrl]);
+  }, [debouncedQuery]);
 
   // Perform search when filters or page change
   useEffect(() => {

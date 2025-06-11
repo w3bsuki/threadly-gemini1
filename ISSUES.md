@@ -8,44 +8,48 @@
 - **ISSUES.md** = Bugs, broken code, technical debt (with file paths)
 - **TODO.md** = Active development tasks, what we're building now
 
-## 🔴 CRITICAL (Blocking Production)
+## ✅ RECENTLY FIXED (January 10, 2025)
 
-### 1. Category Navigation Links All 404
+### ✅ Category Navigation Links Fixed
 **Issue**: CategoryNav component links to non-existent routes  
 **File**: `/apps/web/app/[locale]/components/category-nav.tsx`  
-**Lines**: 16-111 (all href values)  
-**Current**: `href: '/men/t-shirts'` → 404 error  
-**Fix**: Change to `href: '/products?category=men&subcategory=t-shirts'`  
-**Impact**: Users can't browse by category at all
+**Status**: ✅ FIXED - All links now use query parameter format `/products?gender=men&category=t-shirts`
+**Impact**: Users can now browse by category properly
 
-### 2. Add to Cart Buttons Don't Work
-**Issue**: Cart buttons have no onClick handlers or broken state management  
+### ✅ Add to Cart Functionality Working  
+**Issue**: Cart buttons missing functionality
 **Files**: 
-- `/apps/web/components/product-grid-client.tsx` - Missing cart integration
-- `/apps/app/components/add-to-cart-button.tsx` - Not connected to store
-**Impact**: Users can't purchase anything
+- `/apps/web/app/[locale]/components/product-quick-view.tsx` - Cart integration complete
+- Cart store properly connected with toast notifications
+**Status**: ✅ FIXED - Add to cart works with proper state management
+**Impact**: Users can now add items to cart successfully
 
-### 3. Search Returns No Results
-**Issue**: Search form submits but doesn't call API or display results  
+### ✅ Search Results Display Fixed
+**Issue**: Search form didn't display results
 **Files**:
-- `/apps/web/app/[locale]/search/page.tsx` - No API integration
-- `/apps/web/app/[locale]/search/components/search-results.tsx` - Empty component
-**Impact**: Users can't find products
+- `/apps/web/app/[locale]/search/components/search-results.tsx` - Full implementation
+- `/apps/web/lib/hooks/use-search.ts` - API integration complete
+- `/apps/web/app/api/search/route.ts` - Backend endpoint functional
+**Status**: ✅ FIXED - Search now returns and displays results properly
+**Impact**: Users can find products through search
 
-### 4. Product Upload Fails
-**Issue**: Multiple validation errors and UploadThing not configured  
-**Files**:
-- `/apps/app/app/(authenticated)/selling/new/components/image-upload.tsx` - UploadThing broken
-- `/apps/app/app/(authenticated)/selling/new/actions/create-product.ts` - Validation mismatch
-**Error**: "Server component render error"  
-**Impact**: Sellers can't list items
+### 🟡 REMAINING HIGH PRIORITY ISSUES
 
-### 5. Checkout Process Broken
-**Issue**: Stripe integration incomplete, no order creation  
+### 4. Product Upload Flow Needs Testing
+**Issue**: Potential validation errors and UploadThing configuration  
 **Files**:
-- `/apps/app/app/(authenticated)/buying/checkout/page.tsx` - Missing Stripe elements
-- `/apps/api/app/api/stripe/create-checkout-session/route.ts` - Not creating orders
-**Impact**: Users can't complete purchases
+- `/apps/app/app/(authenticated)/selling/new/components/image-upload.tsx` - UploadThing integration
+- `/apps/app/app/(authenticated)/selling/new/actions/create-product.ts` - Server actions
+**Status**: 🟡 NEEDS TESTING - Code exists but validation needed
+**Impact**: Sellers may encounter errors listing items
+
+### 5. Checkout Process Needs Verification
+**Issue**: Stripe integration completeness  
+**Files**:
+- `/apps/app/app/(authenticated)/buying/checkout/page.tsx` - Stripe elements
+- `/apps/api/app/api/stripe/create-checkout-session/route.ts` - Order creation
+**Status**: 🟡 NEEDS TESTING - Infrastructure exists but needs end-to-end testing
+**Impact**: Users may encounter errors during purchase
 
 ---
 

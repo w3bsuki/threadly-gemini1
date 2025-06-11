@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTrigger } from '@repo/design-system/components/ui/dialog';
 import { Button } from '@repo/design-system/components/ui/button';
 import { Badge } from '@repo/design-system/components/ui/badge';
@@ -14,11 +15,14 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Plus
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@repo/design-system/lib/utils';
+import { useCartStore } from '../../../lib/stores/cart-store';
+import { toast } from 'sonner';
 
 interface ProductQuickViewProps {
   product: {
@@ -65,6 +69,10 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  
+  const { addItem, isInCart } = useCartStore();
+  const isProductInCart = isInCart(product.id);
+  const router = useRouter();
 
   const handlePrevImage = () => {
     setCurrentImageIndex(prev => 
@@ -81,6 +89,28 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
   const handleToggleLike = () => {
     setIsLiked(!isLiked);
     // TODO: Implement favorites API call
+  };
+
+  const handleAddToCart = () => {
+    try {
+      addItem({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        imageUrl: product.images[0] || '',
+        sellerId: product.seller.id,
+        sellerName: product.seller.name,
+        condition: product.condition,
+        size: product.size,
+      });
+      toast.success("Added to cart", {
+        description: `${product.title} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast.error("Error", {
+        description: "Failed to add item to cart. Please try again.",
+      });
+    }
   };
 
   const formatTimeAgo = (date: Date) => {
@@ -197,16 +227,40 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
           <div className="flex-1 flex flex-col">
             {/* Mobile: Sticky action bar at bottom */}
             <div className="md:hidden order-last bg-white border-t p-4 space-y-3">
-              <Button 
-                className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base font-medium"
-                onClick={() => {
-                  setIsOpen(false);
-                  window.location.href = `/checkout/${product.id}`;
-                }}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Buy Now - ${product.price.toFixed(2)}
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  className="h-12 text-base font-medium"
+                  variant={isProductInCart ? "secondary" : "default"}
+                  onClick={handleAddToCart}
+                  disabled={isProductInCart}
+                >
+                  {isProductInCart ? (
+                    <>
+                      <ShoppingCart className="h-5 w-5 mr-2 fill-current" />
+                      In Cart
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5 mr-2" />
+                      Add to Cart
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  className="h-12 text-base font-medium bg-black text-white hover:bg-gray-800"
+                  onClick={() => {
+                    if (!isProductInCart) {
+                      handleAddToCart();
+                    }
+                    setIsOpen(false);
+                    window.location.href = '/cart';
+                  }}
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Buy Now
+                </Button>
+              </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <Button 
@@ -228,7 +282,7 @@ export function ProductQuickView({ product, trigger }: ProductQuickViewProps) {
                   asChild
                 >
                   <Link href={`/product/${product.id}`}>
-                    View More
+                    View Details
                   </Link>
                 </Button>
               </div>

@@ -9,6 +9,7 @@ const ITEMS_PER_PAGE = 12;
 interface ProductsContentProps {
   searchParams: {
     category?: string;
+    gender?: string;
     minPrice?: string;
     maxPrice?: string;
     condition?: string;
@@ -26,8 +27,44 @@ export async function ProductsContent({ searchParams }: ProductsContentProps) {
     status: "AVAILABLE",
   };
 
+  // Handle gender filtering by category name
+  if (searchParams.gender) {
+    where.category = {
+      OR: [
+        { name: { contains: searchParams.gender, mode: 'insensitive' } },
+        { slug: { contains: searchParams.gender, mode: 'insensitive' } }
+      ]
+    };
+  }
+
+  // Handle specific category within gender
   if (searchParams.category) {
-    where.categoryId = searchParams.category;
+    if (searchParams.gender) {
+      // Refine the category search to be more specific
+      where.category = {
+        AND: [
+          {
+            OR: [
+              { name: { contains: searchParams.gender, mode: 'insensitive' } },
+              { slug: { contains: searchParams.gender, mode: 'insensitive' } }
+            ]
+          },
+          {
+            OR: [
+              { name: { contains: searchParams.category, mode: 'insensitive' } },
+              { slug: { contains: searchParams.category, mode: 'insensitive' } }
+            ]
+          }
+        ]
+      };
+    } else {
+      where.category = {
+        OR: [
+          { name: { contains: searchParams.category, mode: 'insensitive' } },
+          { slug: { contains: searchParams.category, mode: 'insensitive' } }
+        ]
+      };
+    }
   }
 
   if (searchParams.minPrice || searchParams.maxPrice) {
