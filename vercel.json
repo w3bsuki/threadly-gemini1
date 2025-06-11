@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && pnpm build",
+  "buildCommand": "pnpm build --filter=web",
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install",
   "ignoreCommand": "node apps/web/scripts/skip-ci.js"
