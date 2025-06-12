@@ -159,7 +159,9 @@ export function useSearch(initialFilters: SearchFilters = {}) {
             filters: searchFilters,
             resultCount: data.results?.totalHits || 0,
           }),
-        }).catch(err => console.error('Failed to track search history:', err));
+        }).catch(err => {
+          if (process.env.NODE_ENV === "development") console.error('Failed to track search history:', err);
+        });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Search failed';

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ searchHistory });
   } catch (error) {
-    console.error('Error fetching search history:', error);
+    logError('Error fetching search history:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error creating search history:', error);
+    logError('Error creating search history:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -115,7 +117,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error clearing search history:', error);
+    logError('Error clearing search history:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

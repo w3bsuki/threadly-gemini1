@@ -103,20 +103,20 @@ export const Header = () => {
       }
 
       try {
-        console.log('Fetching suggestions for:', searchQuery); // Debug log
+        if (process.env.NODE_ENV === "development") console.log('Fetching suggestions for:', searchQuery); // Debug log
         const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(searchQuery.trim())}`);
-        console.log('Response status:', response.status); // Debug log
+        if (process.env.NODE_ENV === "development") console.log('Response status:', response.status); // Debug log
         if (response.ok) {
           const data = await response.json();
-          console.log('Suggestions data:', data); // Debug log
+          if (process.env.NODE_ENV === "development") console.log('Suggestions data:', data); // Debug log
           setSuggestions(data || []);
           setShowSuggestions(data && data.length > 0);
           setSelectedSuggestion(-1);
         } else {
-          console.error('Suggestions API error:', response.status);
+          if (process.env.NODE_ENV === "development") console.error('Suggestions API error:', response.status);
         }
       } catch (error) {
-        console.error('Failed to fetch suggestions:', error);
+        if (process.env.NODE_ENV === "development") console.error('Failed to fetch suggestions:', error);
         setSuggestions([]);
         setShowSuggestions(false);
       }

@@ -6,6 +6,7 @@ import { Heart, Filter, Grid, List, ChevronDown, Crown, X, Loader2 } from 'lucid
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { logError } from '@repo/observability/error';
 
 // Inline ProductPlaceholder component for loading states
 const ProductPlaceholder = ({ className = "w-full h-full" }: { className?: string }) => {
@@ -173,7 +174,7 @@ export const ProductGrid = ({
 
       setProducts(data.data.products);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      logError('Error fetching products:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
       setLoading(false);

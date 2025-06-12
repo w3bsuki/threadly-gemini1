@@ -22,3 +22,31 @@ export const parseError = (error: unknown): string => {
 
   return message;
 };
+
+/**
+ * Safely logs an error with proper type handling
+ * Converts unknown error types to logger-compatible format
+ */
+export const logError = (message: string, error: unknown): void => {
+  try {
+    // Convert unknown error to a format the logger expects
+    if (error instanceof Error) {
+      log.error(message, { 
+        message: error.message, 
+        stack: error.stack, 
+        name: error.name 
+      });
+    } else if (error && typeof error === 'object') {
+      log.error(message, { error: error });
+    } else {
+      log.error(message, { error: String(error) });
+    }
+    
+    // Also capture for external error tracking
+    captureException(error);
+  } catch (loggingError) {
+    // Fallback to console if logging fails
+    // biome-ignore lint/suspicious/noConsole: Need console here
+    console.error('Logging failed:', loggingError, 'Original error:', error);
+  }
+};

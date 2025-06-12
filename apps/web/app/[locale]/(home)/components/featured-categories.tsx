@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { database } from '@repo/database';
 import { getCacheService } from '@repo/cache';
+import { logError } from '@repo/observability/error';
 
 const colorSchemes = [
   'from-pink-500 to-rose-500',
@@ -161,7 +162,7 @@ export const FeaturedCategories = async () => {
     </section>
   );
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
+    logError('Failed to fetch categories:', error);
     return (
       <section className="w-full py-16 lg:py-24">
         <div className="container mx-auto px-4 text-center">

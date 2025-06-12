@@ -3,6 +3,7 @@ import { database } from '@repo/database';
 import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 const shipOrderSchema = z.object({
   trackingNumber: z.string().min(1, 'Tracking number is required').optional(),
@@ -166,7 +167,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Ship order error:', error);
+    logError('Ship order error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

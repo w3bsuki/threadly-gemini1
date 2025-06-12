@@ -84,8 +84,8 @@ export function AddressManagement() {
         setAddresses(data.addresses);
       }
     } catch (error) {
-      console.error('Failed to fetch addresses:', error);
-      console.error('Failed to load addresses');
+      if (process.env.NODE_ENV === "development") console.error('Failed to fetch addresses:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to load addresses');
     } finally {
       setIsLoading(false);
     }
@@ -112,13 +112,13 @@ export function AddressManagement() {
         throw new Error('Failed to save address');
       }
 
-      console.log(editingAddress ? 'Address updated successfully' : 'Address added successfully');
+      if (process.env.NODE_ENV === "development") console.log(editingAddress ? 'Address updated successfully' : 'Address added successfully');
       setDialogOpen(false);
       setEditingAddress(null);
       form.reset();
       fetchAddresses();
     } catch (error) {
-      console.error('Failed to save address');
+      if (process.env.NODE_ENV === "development") console.error('Failed to save address');
     } finally {
       setIsSubmitting(false);
     }
@@ -137,10 +137,10 @@ export function AddressManagement() {
         throw new Error('Failed to delete address');
       }
 
-      console.log('Address deleted successfully');
+      if (process.env.NODE_ENV === "development") console.log('Address deleted successfully');
       fetchAddresses();
     } catch (error) {
-      console.error('Failed to delete address');
+      if (process.env.NODE_ENV === "development") console.error('Failed to delete address');
     }
   };
 

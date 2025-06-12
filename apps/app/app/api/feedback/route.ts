@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const feedbackSchema = z.object({
   type: z.enum(['suggestion', 'bug', 'compliment', 'general']),
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     const validatedData = feedbackSchema.parse(body);
 
     // Log feedback (in production, this would send emails)
-    console.log('New feedback received:', {
+    log.info('New feedback received:', {
       userId,
       type: validatedData.type,
       subject: validatedData.subject,
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
       message: 'Feedback submitted successfully',
     });
   } catch (error) {
-    console.error('Feedback submission error:', error);
+    logError('Feedback submission error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

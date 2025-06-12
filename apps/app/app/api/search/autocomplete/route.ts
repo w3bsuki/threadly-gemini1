@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSearchService } from '@repo/search';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 let searchService: any;
 
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
     const results = await searchService.getAutoComplete(query, limit);
     return NextResponse.json(results);
   } catch (error) {
-    console.error('[Search Autocomplete API] Error:', error);
+    logError('[Search Autocomplete API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to get autocomplete results' },
       { status: 500 }

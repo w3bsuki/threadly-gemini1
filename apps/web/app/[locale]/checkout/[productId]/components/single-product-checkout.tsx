@@ -124,7 +124,7 @@ function CheckoutForm({ user, product, savedAddress }: SingleProductCheckoutProp
       }
     } catch (err) {
       setError('An unexpected error occurred');
-      console.error('Payment error:', err);
+      if (process.env.NODE_ENV === "development") console.error('Payment error:', err);
     } finally {
       setIsProcessing(false);
     }

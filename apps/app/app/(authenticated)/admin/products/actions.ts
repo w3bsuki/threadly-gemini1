@@ -3,6 +3,7 @@
 import { canModerate } from '@repo/auth/admin';
 import { database } from '@repo/database';
 import { revalidatePath } from 'next/cache';
+import { log } from '@repo/observability/log';
 
 export async function approveProduct(productId: string) {
   const isModerator = await canModerate();

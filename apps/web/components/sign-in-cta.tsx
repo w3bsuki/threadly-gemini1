@@ -54,7 +54,7 @@ export function SignInCTA({
 
   // Debug logging for production issues
   if (process.env.NODE_ENV === 'development') {
-    console.log('SignInCTA Debug:', {
+    if (process.env.NODE_ENV === "development") console.log('SignInCTA Debug:', {
       appUrl,
       signInUrl,
       redirectPath,

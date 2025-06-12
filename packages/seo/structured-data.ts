@@ -44,7 +44,7 @@ export const websiteStructuredData: WithContext<WebSite> = {
       urlTemplate: 'https://threadly.com/search?q={search_term_string}',
     },
     'query-input': 'required name=search_term_string',
-  },
+  } as any,
 };
 
 // Product structured data generator
@@ -98,8 +98,8 @@ export function generateProductStructuredData(product: {
     aggregateRating: product.averageRating && product.reviewCount ? {
       '@type': 'AggregateRating',
       ratingValue: product.averageRating.toString(),
-      reviewCount: product.reviewCount.toString(),
-    } : undefined,
+      reviewCount: product.reviewCount,
+    } as any : undefined,
     sku: product.id,
     productID: product.id,
   };

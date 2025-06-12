@@ -131,6 +131,30 @@ export async function ProductsContent({ searchParams }: ProductsContentProps) {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
+  // Transform products to match ProductGrid interface
+  const transformedProducts = products.map(product => ({
+    id: product.id,
+    title: product.title,
+    description: product.description,
+    price: Number(product.price),
+    condition: product.condition,
+    category: product.category.name,
+    brand: product.brand || undefined,
+    images: product.images.map(image => ({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      alt: image.alt || undefined,
+      displayOrder: image.displayOrder,
+    })),
+    seller: {
+      id: product.seller.id,
+      firstName: product.seller.firstName || "Anonymous",
+    },
+    _count: product._count,
+    views: product.views,
+    createdAt: product.createdAt,
+  }));
+
   // Fetch categories for filters
   const categories = await database.category.findMany({
     where: {
@@ -163,7 +187,7 @@ export async function ProductsContent({ searchParams }: ProductsContentProps) {
           </aside>
 
           <main className="lg:col-span-3">
-            {products.length === 0 ? (
+            {transformedProducts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No products found</p>
                 <p className="text-sm text-muted-foreground mt-2">
@@ -172,7 +196,7 @@ export async function ProductsContent({ searchParams }: ProductsContentProps) {
               </div>
             ) : (
               <>
-                <ProductGrid products={products} />
+                <ProductGrid products={transformedProducts} />
                 {totalPages > 1 && (
                   <Pagination
                     currentPage={page}

@@ -1,5 +1,7 @@
 import { database } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -114,7 +116,7 @@ export async function GET(request: NextRequest) {
     // Limit total suggestions and return
     return NextResponse.json(suggestions.slice(0, 7));
   } catch (error) {
-    console.error('Suggestions error:', error);
+    logError('Suggestions error:', error);
     return NextResponse.json([]);
   }
 }

@@ -4,9 +4,11 @@ import { database } from '@repo/database';
 import Stripe from 'stripe';
 import { env } from '@/env';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2025-05-28.basil',
 });
 
 const verifyPaymentSchema = z.object({
@@ -116,9 +118,9 @@ export async function POST(request: NextRequest) {
         order: {
           ...primaryOrder,
           // Virtual properties to match the expected format
-          subtotal: orders.reduce((sum, o) => sum + o.amount, 0),
+          subtotal: orders.reduce((sum, o) => sum + o.amount.toNumber(), 0),
           shippingCost: 9.99, // Default shipping
-          tax: orders.reduce((sum, o) => sum + o.amount, 0) * 0.08,
+          tax: orders.reduce((sum, o) => sum + o.amount.toNumber(), 0) * 0.08,
           total: paymentIntent.amount / 100,
           shippingMethod: 'standard',
           shippingFirstName: user.firstName || '',
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
             productId: o.productId,
             title: o.product.title,
             description: o.product.description || '',
-            price: o.product.price,
+            price: o.product.price.toNumber(),
             quantity: 1,
             condition: o.product.condition,
             product: o.product,
@@ -193,10 +195,10 @@ export async function POST(request: NextRequest) {
     // Transform single order to match expected format
     const transformedOrder = {
       ...order,
-      subtotal: order.amount,
+      subtotal: order.amount.toNumber(),
       shippingCost: 0, // Free shipping for single items
-      tax: order.amount * 0.08,
-      total: order.amount * 1.08,
+      tax: order.amount.toNumber() * 0.08,
+      total: order.amount.toNumber() * 1.08,
       shippingMethod: 'standard',
       shippingFirstName: user.firstName || '',
       shippingLastName: user.lastName || '',
@@ -223,7 +225,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Payment verification error:', error);
+    logError('Payment verification error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -59,7 +59,7 @@ export function SavedSearches({ currentQuery = '', currentFilters, onApplySearch
       const data = await response.json();
       setSavedSearches(data.savedSearches);
     } catch (error) {
-      console.error('Failed to load saved searches:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to load saved searches:', error);
       toast.error('Failed to load saved searches');
     } finally {
       setIsLoading(false);
@@ -78,7 +78,7 @@ export function SavedSearches({ currentQuery = '', currentFilters, onApplySearch
       setSavedSearches(prev => prev.filter(s => s.id !== id));
       toast.success('Search deleted');
     } catch (error) {
-      console.error('Failed to delete search:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to delete search:', error);
       toast.error('Failed to delete search');
     } finally {
       setDeletingId(null);
@@ -103,7 +103,7 @@ export function SavedSearches({ currentQuery = '', currentFilters, onApplySearch
 
       toast.success(currentEnabled ? 'Alerts disabled' : 'Alerts enabled');
     } catch (error) {
-      console.error('Failed to toggle alerts:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to toggle alerts:', error);
       toast.error('Failed to update alert settings');
     }
   };

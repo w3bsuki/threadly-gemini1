@@ -3,6 +3,8 @@
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function createCheckoutSession(productId: string) {
   try {
@@ -32,6 +34,33 @@ export async function createCheckoutSession(productId: string) {
       throw new Error('You cannot buy your own product');
     }
 
+    // Get or create a default shipping address for the user
+    let defaultAddress = await database.address.findFirst({
+      where: {
+        userId: user.id,
+        isDefault: true,
+        type: 'SHIPPING',
+      },
+    });
+
+    if (!defaultAddress) {
+      // Create a placeholder address that will be updated during checkout
+      defaultAddress = await database.address.create({
+        data: {
+          userId: user.id,
+          firstName: user.firstName || 'TBD',
+          lastName: user.lastName || 'TBD',
+          streetLine1: 'To be provided during checkout',
+          city: 'TBD',
+          state: 'TBD',
+          zipCode: '00000',
+          country: 'US',
+          isDefault: true,
+          type: 'SHIPPING',
+        },
+      });
+    }
+
     // Create order with PENDING status
     const order = await database.order.create({
       data: {
@@ -40,6 +69,7 @@ export async function createCheckoutSession(productId: string) {
         productId: product.id,
         amount: product.price,
         status: 'PENDING',
+        shippingAddressId: defaultAddress.id,
       },
     });
 
@@ -55,7 +85,7 @@ export async function createCheckoutSession(productId: string) {
       product,
     };
   } catch (error) {
-    console.error('Failed to create checkout session:', error);
+    logError('Failed to create checkout session:', error);
     
     // If product was reserved but order failed, restore it
     try {

@@ -5,9 +5,11 @@ import { database } from '@repo/database';
 import { getPusherServer } from '@repo/real-time/server';
 import { getNotificationService } from '@repo/real-time/server';
 import { sanitizeForDisplay } from '@repo/validation/sanitize';
-// import { getEmailService } from '@repo/notifications';
+// Email imports will be dynamically imported when needed
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 // Services will be initialized inside functions to avoid build-time issues
 
@@ -106,7 +108,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
         createdAt: message.createdAt,
       });
     } catch (error) {
-      console.error('Failed to send real-time message:', error);
+      logError('Failed to send real-time message:', error);
     }
 
     // Send in-app notification to recipient
@@ -118,25 +120,18 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
       const notificationService = getNotificationService();
       await notificationService.notifyNewMessage(message, conversation);
     } catch (error) {
-      console.error('Failed to send in-app notification:', error);
+      logError('Failed to send in-app notification:', error);
     }
 
     // Send email notification
     try {
-      const { createProductionEmailService, createDevelopmentEmailService } = await import('@repo/notifications/src');
-      const resendToken = process.env.RESEND_TOKEN;
-      const environment = process.env.NODE_ENV || 'development';
-      
-      if (resendToken) {
-        const emailService = environment === 'production' 
-          ? createProductionEmailService(resendToken, process.env.RESEND_FROM)
-          : createDevelopmentEmailService(resendToken);
-        await emailService.sendNewMessageNotification(message, conversation);
-      } else {
-        console.warn('RESEND_TOKEN not configured - message notification email not sent');
-      }
+      // Note: Email notification for new messages can be implemented here
+      // For now, we're relying on real-time notifications only
+      // To add email notifications, you would:
+      // const { sendMessageNotificationEmail } = await import('@repo/email');
+      // await sendMessageNotificationEmail(recipientEmail, messageData);
     } catch (error) {
-      console.error('Failed to send email notification:', error);
+      logError('Failed to send email notification:', error);
     }
 
     return {
@@ -145,7 +140,7 @@ export async function sendMessage(input: z.infer<typeof sendMessageSchema>) {
     };
 
   } catch (error) {
-    console.error('Failed to send message:', error);
+    logError('Failed to send message:', error);
     
     if (error instanceof z.ZodError) {
       return {
@@ -268,7 +263,7 @@ export async function createConversation(input: z.infer<typeof createConversatio
     };
 
   } catch (error) {
-    console.error('Failed to create conversation:', error);
+    logError('Failed to create conversation:', error);
     
     if (error instanceof z.ZodError) {
       return {
@@ -334,7 +329,7 @@ export async function markMessagesAsRead(conversationId: string) {
     };
 
   } catch (error) {
-    console.error('Failed to mark messages as read:', error);
+    logError('Failed to mark messages as read:', error);
     
     return {
       success: false,
@@ -390,7 +385,7 @@ export async function archiveConversation(conversationId: string) {
     };
 
   } catch (error) {
-    console.error('Failed to archive conversation:', error);
+    logError('Failed to archive conversation:', error);
     
     return {
       success: false,

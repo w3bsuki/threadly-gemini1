@@ -373,7 +373,7 @@ export function ProductGridClient({
         setHasMoreProducts(false);
       }
     } catch (error) {
-      console.error('Error loading more products:', error);
+      if (process.env.NODE_ENV === "development") console.error('Error loading more products:', error);
       setLoadMoreError('Failed to load more products. Please try again.');
     } finally {
       setIsLoadingMore(false);

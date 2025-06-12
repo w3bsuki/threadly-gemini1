@@ -2,6 +2,8 @@ import { database } from '@repo/database';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 // Input validation schema
 const GetProductsSchema = z.object({
@@ -186,7 +188,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    logError('Failed to fetch products:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

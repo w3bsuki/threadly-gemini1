@@ -7,6 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from '@repo/design-system/compone
 import { Button } from '@repo/design-system/components/ui/button';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const title = 'Sell New Item';
 const description = 'List your fashion item for sale on Threadly';
@@ -105,7 +107,7 @@ const SellNewItemPage = async () => {
       </div>
     );
   } catch (error) {
-    console.error('Error in SellNewItemPage:', error);
+    logError('Error in SellNewItemPage:', error);
     
     return (
       <div className="mx-auto w-full max-w-2xl p-8">

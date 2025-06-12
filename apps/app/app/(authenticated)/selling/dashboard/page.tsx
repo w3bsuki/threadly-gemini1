@@ -88,7 +88,7 @@ const SellerDashboardPage = async () => {
   }
 
   // Calculate analytics
-  const totalRevenue = dbUser.sales.reduce((sum, sale) => sum + sale.product.price, 0);
+  const totalRevenue = dbUser.sales.reduce((sum, sale) => sum + sale.product.price.toNumber(), 0);
   const totalSales = dbUser.sales.length;
   const totalListings = dbUser.listings.length;
   const activeLis = dbUser.listings.filter(listing => listing.status === 'AVAILABLE').length;
@@ -107,7 +107,7 @@ const SellerDashboardPage = async () => {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   const recentSales = dbUser.sales.filter(sale => sale.createdAt >= thirtyDaysAgo);
-  const recentRevenue = recentSales.reduce((sum, sale) => sum + sale.product.price, 0);
+  const recentRevenue = recentSales.reduce((sum, sale) => sum + sale.product.price.toNumber(), 0);
 
   // Calculate trends (mock data for demo - would integrate with PostHog for real data)
   const revenueTrend = recentRevenue > 0 ? '+12.5%' : '0%';
@@ -282,7 +282,7 @@ const SellerDashboardPage = async () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold">{formatPrice(product.price)}</div>
+                          <div className="font-semibold">{formatPrice(product.price.toNumber())}</div>
                           <Badge variant={product.status === 'SOLD' ? 'default' : 'secondary'}>
                             {product.status}
                           </Badge>

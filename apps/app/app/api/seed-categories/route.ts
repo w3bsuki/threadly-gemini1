@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🌱 Creating categories...');
+    log.info('🌱 Creating categories...');
     
     const categories = [
       { name: "Women's Clothing", slug: "womens-clothing" },
@@ -27,9 +29,9 @@ export async function POST(request: NextRequest) {
           create: category
         });
         created.push(result);
-        console.log(`✅ Created category: ${category.name}`);
+        log.info(`✅ Created category: ${category.name}`);
       } catch (error) {
-        console.error(`❌ Failed to create category ${category.name}:`, error);
+        logError(`❌ Failed to create category ${category.name}:`, error);
       }
     }
     
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error seeding categories:', error);
+    logError('Error seeding categories:', error);
     return NextResponse.json(
       { error: 'Failed to seed categories' },
       { status: 500 }

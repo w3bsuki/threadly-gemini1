@@ -79,7 +79,7 @@ export function AddToCartButton({
       toggleCart();
       
     } catch (error) {
-      console.error('Failed to add item to cart:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to add item to cart:', error);
     } finally {
       setIsAdding(false);
     }

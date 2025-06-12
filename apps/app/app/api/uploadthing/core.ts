@@ -2,6 +2,7 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { currentUser } from "@repo/auth/server";
 import { log } from "@repo/observability/log";
+import { logError } from "@repo/observability/error";
 
 const f = createUploadthing({
   /**
@@ -9,7 +10,7 @@ const f = createUploadthing({
    * @see https://docs.uploadthing.com/errors#error-formatting
    */
   errorFormatter: (err) => {
-    log.error("UploadThing error", { 
+    logError("UploadThing error", { 
       message: err.message, 
       cause: err.cause,
       stack: err.stack 
@@ -94,7 +95,7 @@ export const ourFileRouter = {
           size: file.size
         };
       } catch (error) {
-        log.error("Upload completion error", { 
+        logError("Upload completion error", { 
           error, 
           metadata,
           file: { url: file.url, name: file.name, size: file.size }

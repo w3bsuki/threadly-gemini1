@@ -1,7 +1,8 @@
+import { log } from '@repo/observability/log';
 'use server';
 
 export async function testServerAction() {
-  console.log('Test server action called');
+  log.info('Test server action called');
   
   return {
     success: true,

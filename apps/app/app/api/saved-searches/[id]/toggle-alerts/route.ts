@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function PATCH(
   request: NextRequest,
@@ -48,7 +50,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating saved search:', error);
+    logError('Error updating saved search:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

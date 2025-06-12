@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSearchService } from '@repo/search';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 let searchService: ReturnType<typeof getSearchService> | null = null;
 
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
       const indexName = process.env.ALGOLIA_INDEX_NAME;
 
       if (!appId || !apiKey || !searchOnlyApiKey || !indexName) {
-        console.error('[Search API] Missing required environment variables');
+        logError('[Search API] Missing required environment variables', new Error('Missing Algolia environment variables'));
         return NextResponse.json(
           { error: 'Search service not configured' },
           { status: 503 }
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[Search API] Error:', error);
+    logError('[Search API] Error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
       const indexName = process.env.ALGOLIA_INDEX_NAME;
 
       if (!appId || !apiKey || !searchOnlyApiKey || !indexName) {
-        console.error('[Search API] Missing required environment variables');
+        logError('[Search API] Missing required environment variables', new Error('Missing Algolia environment variables'));
         return NextResponse.json(
           { error: 'Search service not configured' },
           { status: 503 }
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[Search API] Error:', error);
+    logError('[Search API] Error:', error);
     return NextResponse.json(
       { error: 'Search failed' },
       { status: 500 }

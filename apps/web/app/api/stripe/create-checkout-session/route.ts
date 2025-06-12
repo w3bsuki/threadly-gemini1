@@ -4,6 +4,8 @@ import { database } from '@repo/database';
 import { stripe, calculatePlatformFee, isStripeConfigured } from '@repo/payments';
 import { paymentRateLimit, checkRateLimit } from '@repo/security';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const createCheckoutSessionSchema = z.object({
   productId: z.string().min(1),
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -80,6 +82,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create temporary shipping address for order
+    const tempShippingAddress = await database.address.create({
+      data: {
+        userId: user.id,
+        firstName: 'Temp',
+        lastName: 'Address',
+        streetLine1: 'TBD',
+        city: 'TBD',
+        state: 'TBD',
+        zipCode: '00000',
+        country: 'US',
+        isDefault: false,
+        type: 'SHIPPING',
+      },
+    });
+
     // Create order with PENDING status
     const order = await database.order.create({
       data: {
@@ -88,12 +106,14 @@ export async function POST(request: NextRequest) {
         productId: product.id,
         amount: product.price,
         status: 'PENDING',
+        shippingAddressId: tempShippingAddress.id,
       },
     });
 
     // Calculate fees
-    const amountInCents = Math.round(product.price * 100);
-    const platformFeeInCents = Math.round(calculatePlatformFee(product.price) * 100);
+    const priceNumber = Number(product.price);
+    const amountInCents = Math.round(priceNumber * 100);
+    const platformFeeInCents = Math.round(calculatePlatformFee(priceNumber) * 100);
     
     // Create payment intent parameters
     const paymentIntentParams: any = {
@@ -122,10 +142,14 @@ export async function POST(request: NextRequest) {
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
-    // Update order with payment intent ID
-    await database.order.update({
-      where: { id: order.id },
-      data: { paymentIntentId: paymentIntent.id },
+    // Create payment record with Stripe payment intent ID
+    await database.payment.create({
+      data: {
+        orderId: order.id,
+        stripePaymentId: paymentIntent.id,
+        amount: order.amount,
+        status: 'PENDING',
+      },
     });
 
     // Mark product as RESERVED to prevent double purchases
@@ -140,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Checkout session creation error:', error);
+    logError('Checkout session creation error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

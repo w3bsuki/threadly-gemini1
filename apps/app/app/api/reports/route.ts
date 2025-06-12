@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, reportId: report.id });
   } catch (error) {
-    console.error('Error creating report:', error);
+    logError('Error creating report:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -165,7 +167,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ reports });
   } catch (error) {
-    console.error('Error fetching reports:', error);
+    logError('Error fetching reports:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

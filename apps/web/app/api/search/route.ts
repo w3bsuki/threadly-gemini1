@@ -1,6 +1,8 @@
 import { database } from '@repo/database';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -119,7 +121,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(products);
   } catch (error) {
-    console.error('Search error:', error);
+    logError('Search error:', error);
     return NextResponse.json(
       { error: 'Failed to search products' },
       { status: 500 }

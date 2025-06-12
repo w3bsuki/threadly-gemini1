@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@repo/database';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
+import { logError } from '@repo/observability/error';
 
 // Initialize cache service
 const cache = getCacheService({
@@ -129,7 +130,7 @@ export async function GET(
       data: result,
     }, { headers });
   } catch (error) {
-    console.error('Get following error:', error);
+    logError('Get following error:', error);
     return NextResponse.json(
       { 
         success: false, 

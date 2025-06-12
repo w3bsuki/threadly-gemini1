@@ -4,6 +4,8 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const createOrderSchema = z.object({
   items: z.array(z.object({
@@ -76,7 +78,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     // Verify prices haven't changed
     for (const orderItem of validatedInput.items) {
       const product = products.find(p => p.id === orderItem.productId);
-      if (!product || Math.abs(product.price - orderItem.price) > 0.01) {
+      if (!product || Math.abs(product.price.toNumber() - orderItem.price) > 0.01) {
         return {
           success: false,
           error: 'Product prices have changed. Please refresh your cart.',
@@ -130,7 +132,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
           });
         }
       } catch (error) {
-        console.error('Failed to save shipping address:', error);
+        logError('Failed to save shipping address:', error);
         // Don't fail the order if address saving fails
       }
     }
@@ -141,6 +143,37 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     for (const item of validatedInput.items) {
       const product = products.find(p => p.id === item.productId)!;
       
+      // Get or create the shipping address
+      let shippingAddress = await database.address.findFirst({
+        where: {
+          userId: dbUser.id,
+          firstName: validatedInput.shippingAddress.firstName,
+          lastName: validatedInput.shippingAddress.lastName,
+          streetLine1: validatedInput.shippingAddress.address,
+          city: validatedInput.shippingAddress.city,
+          state: validatedInput.shippingAddress.state,
+          zipCode: validatedInput.shippingAddress.zipCode,
+          type: 'SHIPPING',
+        },
+      });
+
+      if (!shippingAddress) {
+        shippingAddress = await database.address.create({
+          data: {
+            userId: dbUser.id,
+            firstName: validatedInput.shippingAddress.firstName,
+            lastName: validatedInput.shippingAddress.lastName,
+            streetLine1: validatedInput.shippingAddress.address,
+            city: validatedInput.shippingAddress.city,
+            state: validatedInput.shippingAddress.state,
+            zipCode: validatedInput.shippingAddress.zipCode,
+            country: validatedInput.shippingAddress.country,
+            type: 'SHIPPING',
+            isDefault: validatedInput.saveAddress || false,
+          },
+        });
+      }
+
       // Create individual order for each product
       const order = await database.order.create({
         data: {
@@ -149,7 +182,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
           productId: item.productId,
           amount: item.price * item.quantity,
           status: 'PENDING',
-          // TODO: Add shipping details to a separate table or extend Order model
+          shippingAddressId: shippingAddress.id,
         },
         include: {
           product: {
@@ -175,29 +208,24 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
 
     // Send confirmation email to buyer
     try {
-      const { createProductionEmailService, createDevelopmentEmailService } = await import('@repo/notifications/src');
-      const resendToken = process.env.RESEND_TOKEN;
-      const environment = process.env.NODE_ENV || 'development';
-      
-      if (resendToken) {
-        const emailService = environment === 'production' 
-          ? createProductionEmailService(resendToken, process.env.RESEND_FROM)
-          : createDevelopmentEmailService(resendToken);
-        await emailService.sendOrderConfirmation({
-          ...orders[0],
-          items: orders.map(o => ({
-            product: o.product,
-            quantity: 1,
-            price: o.amount,
-          })),
-          total: validatedInput.total,
-          estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        });
-      } else {
-        console.warn('RESEND_TOKEN not configured - order confirmation email not sent');
+      const { sendOrderConfirmationEmail } = await import('@repo/email');
+      if (user.emailAddresses?.[0]?.emailAddress && orders.length > 0) {
+        const primaryOrder = orders[0];
+        await sendOrderConfirmationEmail(
+          user.emailAddresses[0].emailAddress,
+          {
+            firstName: dbUser.firstName || 'Customer',
+            orderId: primaryOrder.id,
+            productTitle: primaryOrder.product.title,
+            productImage: primaryOrder.product.images[0]?.imageUrl,
+            price: primaryOrder.amount.toNumber(),
+            sellerName: primaryOrder.seller.firstName || 'Seller',
+            orderUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/buying/orders/${primaryOrder.id}`,
+          }
+        );
       }
     } catch (error) {
-      console.error('Failed to send confirmation email:', error);
+      logError('Failed to send confirmation email:', error);
     }
 
     // Send notifications to sellers
@@ -210,7 +238,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     //     await notificationService.notifyNewOrder(order);
     //   }
     // } catch (error) {
-    //   console.error('Failed to send seller notifications:', error);
+    //   logError('Failed to send seller notifications:', error);
     // }
 
     // Return the first order with virtual properties to match expected format
@@ -251,7 +279,7 @@ export async function createOrder(input: z.infer<typeof createOrderSchema>) {
     };
 
   } catch (error) {
-    console.error('Failed to create order:', error);
+    logError('Failed to create order:', error);
     
     if (error instanceof z.ZodError) {
       return {

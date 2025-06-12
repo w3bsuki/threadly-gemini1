@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@repo/database';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
-import { currentUser } from '@clerk/nextjs';
+import { currentUser } from '@repo/auth/server';
+import { logError } from '@repo/observability/error';
 
 // Initialize cache service
 const cache = getCacheService({
@@ -156,7 +157,7 @@ export async function GET(
       },
     }, { headers });
   } catch (error) {
-    console.error('Get user profile error:', error);
+    logError('Get user profile error:', error);
     return NextResponse.json(
       { 
         success: false, 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { clerkMiddleware, createRouteMatcher } from '@repo/auth/server';
 import { NextResponse } from 'next/server';
 

@@ -1,6 +1,7 @@
 import { database } from '@repo/database';
 import { getCacheService } from '@repo/cache';
 import { ProductGridClient } from './product-grid-client';
+import { logError } from '@repo/observability/error';
 
 // Get time ago string
 function getTimeAgo(date: Date): string {
@@ -141,7 +142,7 @@ export async function ProductGridServer({
       />
     );
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    logError('Failed to fetch products:', error);
     
     // Return empty state component
     return (

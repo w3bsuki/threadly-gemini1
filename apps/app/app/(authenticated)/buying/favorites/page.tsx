@@ -163,7 +163,7 @@ const FavoritesPage = async () => {
                   </CardTitle>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-green-600">
-                      {formatPrice(favorite.product.price)}
+                      {formatPrice(favorite.product.price.toNumber())}
                     </span>
                     <Badge variant="outline">
                       {favorite.product.category.name}

@@ -1,5 +1,6 @@
 import { searchIndexing } from '@repo/search/search-webhook-client';
 import { env } from '@/env';
+import { logError } from '@repo/observability/error';
 
 // Initialize search webhook client
 const initializeSearch = () => {
@@ -13,9 +14,9 @@ const initializeSearch = () => {
 
     searchIndexing.init(baseUrl);
     
-    console.log('Search indexing client initialized with base URL:', baseUrl);
+    console.info('Search indexing client initialized with base URL:', baseUrl);
   } catch (error) {
-    console.warn('Failed to initialize search indexing client:', error);
+    logError('Failed to initialize search indexing client:', error);
   }
 };
 

@@ -2,6 +2,7 @@ import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 const toggleFavoriteSchema = z.object({
   productId: z.string().min(1),
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error toggling favorite:', error);
+    logError('Error toggling favorite:', error);
     return NextResponse.json(
       { error: 'Failed to toggle favorite' },
       { status: 500 }

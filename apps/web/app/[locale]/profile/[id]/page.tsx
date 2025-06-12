@@ -1,7 +1,7 @@
 import { database } from '@repo/database';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { Star, MapPin, Package, Calendar } from 'lucide-react';
+import { Star, MapPin, Package, Calendar, Heart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/design-system/components/ui/card';
 import { Badge } from '@repo/design-system/components/ui/badge';
 import { Button } from '@repo/design-system/components/ui/button';
@@ -33,7 +33,7 @@ export default async function UserProfilePage({ params }: Props) {
   const user = await database.user.findUnique({
     where: { id },
     include: {
-      products: {
+      listings: {
         where: { status: 'AVAILABLE' },
         include: {
           images: { take: 1 },
@@ -44,14 +44,14 @@ export default async function UserProfilePage({ params }: Props) {
       },
       reviews: {
         include: {
-          buyer: { select: { firstName: true, lastName: true } }
+          reviewer: { select: { firstName: true, lastName: true } }
         },
         orderBy: { createdAt: 'desc' },
         take: 5
       },
       _count: {
         select: {
-          products: true,
+          listings: true,
           reviews: true,
           followers: true,
           following: true
@@ -65,7 +65,7 @@ export default async function UserProfilePage({ params }: Props) {
   }
 
   const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous User';
-  const joinDate = new Date(user.createdAt).toLocaleDateString('en-US', {
+  const joinDate = new Date(user.joinedAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long'
   });
@@ -135,7 +135,7 @@ export default async function UserProfilePage({ params }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{user._count.products}</div>
+              <div className="text-2xl font-bold text-gray-900">{user._count.listings}</div>
               <div className="text-sm text-gray-600">Items Listed</div>
             </CardContent>
           </Card>
@@ -166,7 +166,7 @@ export default async function UserProfilePage({ params }: Props) {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Listed Items</h2>
-            {user.products.length > 12 && (
+            {user.listings.length > 12 && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/products?seller=${user.id}`}>
                   View All
@@ -175,7 +175,7 @@ export default async function UserProfilePage({ params }: Props) {
             )}
           </div>
           
-          {user.products.length === 0 ? (
+          {user.listings.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -185,7 +185,7 @@ export default async function UserProfilePage({ params }: Props) {
             </Card>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {user.products.map((product) => (
+              {user.listings.map((product) => (
                 <Link key={product.id} href={`/product/${product.id}`}>
                   <Card className="hover:shadow-lg transition-shadow">
                     <div className="aspect-square relative bg-gray-100">
@@ -204,7 +204,7 @@ export default async function UserProfilePage({ params }: Props) {
                     
                     <CardContent className="p-3">
                       <h3 className="font-medium text-sm truncate">{product.title}</h3>
-                      <p className="text-lg font-bold text-gray-900">${product.price}</p>
+                      <p className="text-lg font-bold text-gray-900">${Number(product.price)}</p>
                       <div className="flex items-center justify-between mt-2">
                         <Badge variant="secondary" className="text-xs">
                           {product.condition}
@@ -247,7 +247,7 @@ export default async function UserProfilePage({ params }: Props) {
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">
-                          by {review.buyer.firstName} {review.buyer.lastName}
+                          by {review.reviewer.firstName} {review.reviewer.lastName}
                         </span>
                       </div>
                       <span className="text-sm text-gray-500">

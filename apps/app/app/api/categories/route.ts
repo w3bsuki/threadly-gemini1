@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET() {
   try {
@@ -20,7 +22,7 @@ export async function GET() {
       count: categories.length,
     });
   } catch (error) {
-    console.error('Categories fetch error:', error);
+    logError('Categories fetch error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -126,10 +126,10 @@ export function ProfileContent({ user, stats }: ProfileContentProps) {
       if (result.success) {
         router.refresh();
       } else {
-        console.error('Failed to update profile:', result.error);
+        if (process.env.NODE_ENV === "development") console.error('Failed to update profile:', result.error);
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      if (process.env.NODE_ENV === "development") console.error('Error updating profile:', error);
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -143,10 +143,10 @@ export function ProfileContent({ user, stats }: ProfileContentProps) {
       if (result.success) {
         // Show success message
       } else {
-        console.error('Failed to update notifications:', result.error);
+        if (process.env.NODE_ENV === "development") console.error('Failed to update notifications:', result.error);
       }
     } catch (error) {
-      console.error('Error updating notifications:', error);
+      if (process.env.NODE_ENV === "development") console.error('Error updating notifications:', error);
     } finally {
       setIsUpdatingNotifications(false);
     }

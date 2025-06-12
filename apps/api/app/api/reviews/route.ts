@@ -2,6 +2,7 @@ import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for creating a review
 const createReviewSchema = z.object({
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logError('Error fetching reviews:', error);
     return NextResponse.json(
       { error: 'Failed to fetch reviews' },
       { status: 500 }
@@ -221,7 +222,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating review:', error);
+    logError('Error creating review:', error);
     return NextResponse.json(
       { error: 'Failed to create review' },
       { status: 500 }

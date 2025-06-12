@@ -160,13 +160,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
     id: product.id,
     title: product.title,
     description: product.description,
-    price: product.price,
+    price: Number(product.price),
     condition: product.condition,
-    brand: product.brand,
-    size: product.size,
-    color: product.color,
-    images: product.images,
-    seller: product.seller,
+    brand: product.brand || undefined,
+    size: product.size || undefined,
+    color: product.color || undefined,
+    images: product.images.map(image => ({
+      imageUrl: image.imageUrl,
+      alt: image.alt || undefined,
+    })),
+    seller: {
+      firstName: product.seller.firstName || undefined,
+      lastName: product.seller.lastName || undefined,
+    },
     category: product.category,
   });
 
@@ -176,6 +182,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
     { name: product.category.name, url: `https://threadly.com/products?category=${product.category.slug}` },
     { name: product.title, url: `https://threadly.com/product/${product.id}` },
   ]);
+
+  // Transform product for component (keep null values as interface expects string | null)
+  const transformedProduct = {
+    ...product,
+    price: Number(product.price),
+  };
+
+  // Transform similar products for component
+  const transformedSimilarProducts = similarProducts.map(similar => ({
+    ...similar,
+    price: Number(similar.price),
+  }));
 
   return (
     <>
@@ -192,8 +210,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         }}
       />
       <ProductDetail
-        product={product}
-        similarProducts={similarProducts}
+        product={transformedProduct}
+        similarProducts={transformedSimilarProducts}
       />
     </>
   );

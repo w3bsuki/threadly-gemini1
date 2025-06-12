@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { database } from '@repo/database';
 import { getCacheService } from '@repo/cache';
+import { logError } from '@repo/observability/error';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -208,7 +209,7 @@ export const NewArrivals = async () => {
     </section>
   );
   } catch (error) {
-    console.error('Failed to fetch new arrivals:', error);
+    logError('Failed to fetch new arrivals:', error);
     return (
       <section className="w-full py-16 lg:py-24">
         <div className="container mx-auto px-4 text-center">

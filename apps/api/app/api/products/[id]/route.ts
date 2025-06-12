@@ -5,6 +5,7 @@ import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { searchIndexing } from '@/lib/search-init';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 import { 
   updateProductSchema,
   productConditionSchema,
@@ -200,7 +201,7 @@ export async function GET(
       data: { product },
     }, { headers });
   } catch (error) {
-    console.error('Error fetching product:', error);
+    logError('Error fetching product:', error);
     return NextResponse.json(
       {
         success: false,
@@ -382,8 +383,8 @@ export async function PUT(
     await cache.invalidateProduct(id);
 
     // Trigger search re-indexing (async, don't block response)
-    searchIndexing.productUpdated(product.id).catch((error) => {
-      console.error('Failed to reindex updated product:', error);
+    searchIndexing.productUpdated(product.id).catch((error: unknown) => {
+      logError('Failed to reindex updated product:', error);
     });
 
     return NextResponse.json({
@@ -392,7 +393,7 @@ export async function PUT(
       message: 'Product updated successfully',
     });
   } catch (error) {
-    console.error('Error updating product:', error);
+    logError('Error updating product:', error);
     
     return NextResponse.json(
       {
@@ -526,8 +527,8 @@ export async function DELETE(
     await cache.invalidateProduct(id);
 
     // Remove from search index (async, don't block response)
-    searchIndexing.productDeleted(id).catch((error) => {
-      console.error('Failed to remove deleted product from search index:', error);
+    searchIndexing.productDeleted(id).catch((error: unknown) => {
+      logError('Failed to remove deleted product from search index:', error);
     });
 
     return NextResponse.json({
@@ -535,7 +536,7 @@ export async function DELETE(
       message: 'Product deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting product:', error);
+    logError('Error deleting product:', error);
     return NextResponse.json(
       {
         success: false,

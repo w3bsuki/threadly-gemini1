@@ -2,6 +2,7 @@ import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for updating a message
 const updateMessageSchema = z.object({
@@ -121,7 +122,7 @@ export async function PATCH(
       message: `Message marked as ${validatedData.read ? 'read' : 'unread'}`,
     });
   } catch (error) {
-    console.error('Error updating message:', error);
+    logError('Error updating message:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -215,7 +216,7 @@ export async function DELETE(
       message: 'Message deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting message:', error);
+    logError('Error deleting message:', error);
     
     return NextResponse.json(
       {

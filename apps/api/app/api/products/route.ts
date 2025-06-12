@@ -4,6 +4,7 @@ import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { searchIndexing } from '@/lib/search-init';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 import { 
   createProductSchema,
   productConditionSchema,
@@ -246,7 +247,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
+    logError('Error fetching products:', error);
     
     return NextResponse.json(
       {
@@ -389,8 +390,8 @@ export const POST = withValidation(
       });
 
       // Trigger search indexing (async, don't block response)
-      searchIndexing.productCreated(product.id).catch((error) => {
-        console.error('Failed to index new product:', error);
+      searchIndexing.productCreated(product.id).catch((error: unknown) => {
+        logError('Failed to index new product:', error);
       });
 
       return NextResponse.json(
@@ -402,7 +403,7 @@ export const POST = withValidation(
         { status: 201 }
       );
     } catch (error) {
-      console.error('Error creating product:', error);
+      logError('Error creating product:', error);
       
       return NextResponse.json(
         {

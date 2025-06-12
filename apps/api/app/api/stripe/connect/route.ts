@@ -3,9 +3,10 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import Stripe from 'stripe';
 import { env } from '@/env';
+import { logError } from '@repo/observability/error';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2025-05-28.basil',
 });
 
 // POST /api/stripe/connect - Create Stripe Connect onboarding link
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: accountLink.url });
   } catch (error) {
-    console.error('Stripe Connect error:', error);
+    logError('Stripe Connect error:', error);
     return NextResponse.json(
       { error: 'Failed to create Stripe Connect link' },
       { status: 500 }
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Stripe Connect status error:', error);
+    logError('Stripe Connect status error:', error);
     return NextResponse.json(
       { error: 'Failed to get Stripe Connect status' },
       { status: 500 }

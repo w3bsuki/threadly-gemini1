@@ -10,7 +10,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { SignInCTA } from "../../../../../components/sign-in-cta";
 import { Card, CardContent } from "@repo/design-system/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@repo/design-system";
 import { useRouter } from "next/navigation";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -37,6 +37,7 @@ import {
   Truck,
 } from "lucide-react";
 import { cn } from "@repo/design-system/lib/utils";
+import { logError } from '@repo/observability/error';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -146,7 +147,7 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
   const handleToggleFavorite = async () => {
     const result = await toggleFavorite(product.id);
     if (!result.success) {
-      console.error('Failed to toggle favorite:', result.error);
+      logError('Failed to toggle favorite:', result.error);
     } else {
       // Track favorite action
       trackProductFavorite({
@@ -154,7 +155,7 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
         title: product.title,
         price: product.price / 100,
         category: product.category.name,
-      }, result.isFavorited);
+      }, isFavorited(product.id));
     }
   };
 
@@ -172,7 +173,7 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
         sellerId: product.seller.id,
         sellerName,
         condition: product.condition,
-        size: product.size,
+        size: product.size || undefined,
       });
       
       // Track add to cart
@@ -534,8 +535,8 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
                   onClick={handleToggleFavorite}
                   disabled={isPending}
                 >
-                  <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} />
-                  {isFavorited ? "Saved" : "Save"}
+                  <Heart className={cn("mr-2 h-4 w-4", isFavorited(product.id) && "fill-current")} />
+                  {isFavorited(product.id) ? "Saved" : "Save"}
                 </Button>
                 <Button variant="outline" className="w-full h-10">
                   <Share2 className="mr-2 h-4 w-4" />
@@ -609,8 +610,8 @@ export function ProductDetail({ product, similarProducts }: ProductDetailProps) 
             onClick={handleToggleFavorite}
             disabled={isPending}
           >
-            <Heart className={cn("mr-2 h-4 w-4", isFavorited && "fill-current")} />
-            {isFavorited ? "Saved" : "Save"}
+            <Heart className={cn("mr-2 h-4 w-4", isFavorited(product.id) && "fill-current")} />
+            {isFavorited(product.id) ? "Saved" : "Save"}
           </Button>
           <Button variant="outline" className="h-12 px-4 border-gray-300">
             <Share2 className="h-4 w-4" />

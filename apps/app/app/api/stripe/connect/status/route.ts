@@ -3,9 +3,11 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import Stripe from 'stripe';
 import { env } from '@/env';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2025-05-28.basil',
 });
 
 export async function GET(request: NextRequest) {
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Stripe Connect status error:', error);
+    logError('Stripe Connect status error:', error);
 
     if (error instanceof Stripe.errors.StripeError) {
       // Handle specific Stripe errors

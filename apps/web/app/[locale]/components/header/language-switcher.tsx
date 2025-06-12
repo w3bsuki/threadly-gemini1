@@ -39,7 +39,7 @@ export const LanguageSwitcher = () => {
 
     // Replace current locale with the selected one
     newPathname = newPathname.replace(`/${params.locale}`, `/${locale}`);
-    console.log(newPathname);
+    if (process.env.NODE_ENV === "development") console.log(newPathname);
 
     router.push(newPathname);
   };

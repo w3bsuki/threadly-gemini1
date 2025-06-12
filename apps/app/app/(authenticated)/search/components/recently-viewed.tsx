@@ -35,7 +35,7 @@ export function RecentlyViewed({ className }: RecentlyViewedProps) {
           viewedAt: new Date(item.viewedAt)
         })));
       } catch (error) {
-        console.error('Failed to load recently viewed:', error);
+        if (process.env.NODE_ENV === "development") console.error('Failed to load recently viewed:', error);
       }
     }
   }, []);

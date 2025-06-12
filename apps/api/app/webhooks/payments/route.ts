@@ -2,8 +2,7 @@ import { env } from '@/env';
 import { analytics } from '@repo/analytics/posthog/server';
 import { clerkClient } from '@repo/auth/server';
 import { database } from '@repo/database';
-import { parseError } from '@repo/observability/error';
-import { log } from '@repo/observability/log';
+import { parseError, logError } from '@repo/observability/error';
 import { stripe } from '@repo/payments';
 import type { Stripe } from '@repo/payments';
 import { headers } from 'next/headers';
@@ -66,7 +65,7 @@ const handlePaymentIntentSucceeded = async (
   paymentIntent: Stripe.PaymentIntent
 ) => {
   try {
-    log.info('Payment intent succeeded', { 
+    console.info('Payment intent succeeded', { 
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount,
       metadata: paymentIntent.metadata 
@@ -74,14 +73,14 @@ const handlePaymentIntentSucceeded = async (
 
     // Validate and extract order details from metadata
     if (!paymentIntent.metadata) {
-      log.error('No metadata in payment intent', { paymentIntentId: paymentIntent.id });
+      console.error('No metadata in payment intent', { paymentIntentId: paymentIntent.id });
       return;
     }
 
     const { buyerId, productId, sellerId, orderId } = paymentIntent.metadata;
     
     if (!buyerId || !orderId) {
-      log.error('Missing required metadata in payment intent', { 
+      console.error('Missing required metadata in payment intent', { 
         paymentIntentId: paymentIntent.id,
         metadata: paymentIntent.metadata,
         missing: {
@@ -99,7 +98,7 @@ const handlePaymentIntentSucceeded = async (
     });
 
     if (!dbUser) {
-      log.error('Database user not found for Clerk ID', { 
+      console.error('Database user not found for Clerk ID', { 
         clerkId: buyerId, 
         paymentIntentId: paymentIntent.id 
       });
@@ -150,17 +149,14 @@ const handlePaymentIntentSucceeded = async (
       },
     });
 
-    log.info('Order payment processed successfully', { 
+    console.info('Order payment processed successfully', { 
       orderId: result.order.id,
       productId,
       buyerId,
       sellerId 
     });
   } catch (error) {
-    log.error('Error processing payment intent', { 
-      error, 
-      paymentIntentId: paymentIntent.id 
-    });
+    logError('Error processing payment intent', error);
     throw error;
   }
 };
@@ -199,7 +195,7 @@ export const POST = async (request: Request): Promise<Response> => {
         break;
       }
       default: {
-        log.warn(`Unhandled event type ${event.type}`);
+        console.warn(`Unhandled event type ${event.type}`);
       }
     }
 
@@ -209,7 +205,7 @@ export const POST = async (request: Request): Promise<Response> => {
   } catch (error) {
     const message = parseError(error);
 
-    log.error(message);
+    logError('Webhook processing error', error);
 
     return NextResponse.json(
       {

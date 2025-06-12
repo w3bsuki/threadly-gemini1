@@ -314,7 +314,7 @@ const MyOrdersPage = async () => {
               <CardContent className="p-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold">
-                    ${orders.reduce((sum, o) => sum + o.amount, 0).toFixed(2)}
+                    ${orders.reduce((sum, o) => sum + o.amount.toNumber(), 0).toFixed(2)}
                   </p>
                   <p className="text-sm text-muted-foreground">Total Spent</p>
                 </div>

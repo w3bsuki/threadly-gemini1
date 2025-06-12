@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSearchService } from '@repo/search';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 let searchService: ReturnType<typeof getSearchService> | null = null;
 
@@ -13,7 +15,7 @@ export async function GET(request: NextRequest) {
       const indexName = process.env.ALGOLIA_INDEX_NAME;
 
       if (!appId || !apiKey || !searchOnlyApiKey || !indexName) {
-        console.error('[Search Suggestions API] Missing required environment variables');
+        logError('[Search Suggestions API] Missing required environment variables', new Error('Missing Algolia environment variables'));
         return NextResponse.json(
           { error: 'Search service not configured' },
           { status: 503 }
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest) {
     const suggestions = await searchService.getSearchSuggestions(query, limit);
     return NextResponse.json(suggestions);
   } catch (error) {
-    console.error('[Search Suggestions API] Error:', error);
+    logError('[Search Suggestions API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to get suggestions' },
       { status: 500 }

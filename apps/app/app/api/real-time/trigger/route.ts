@@ -2,6 +2,8 @@ import { currentUser } from '@repo/auth/server';
 import { getPusherServer } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const triggerSchema = z.object({
   channel: z.string(),
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[RealTime Trigger] Error:', error);
+    logError('[RealTime Trigger] Error:', error);
     return NextResponse.json(
       { error: 'Failed to trigger event' },
       { status: 500 }

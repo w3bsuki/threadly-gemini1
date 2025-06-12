@@ -3,6 +3,7 @@ import { database } from '@repo/database';
 import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 const deliverOrderSchema = z.object({
   deliveryNotes: z.string().optional(),
@@ -169,7 +170,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Deliver order error:', error);
+    logError('Deliver order error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

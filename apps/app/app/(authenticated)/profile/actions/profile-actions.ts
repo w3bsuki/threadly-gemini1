@@ -4,6 +4,8 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const updateProfileSchema = z.object({
   firstName: z.string().min(1).max(50),
@@ -73,7 +75,7 @@ export async function updateUserProfile(input: z.infer<typeof updateProfileSchem
     };
 
   } catch (error) {
-    console.error('Failed to update user profile:', error);
+    logError('Failed to update user profile:', error);
     
     if (error instanceof z.ZodError) {
       return {
@@ -106,14 +108,14 @@ export async function updateShippingAddress(input: z.infer<typeof updateAddressS
     // For now, we'll update the user record with the default shipping address
     // TODO: Implement address storage once the User model has address fields
     // For now, we'll just return success without storing the address
-    console.log('Address update requested:', validatedInput);
+    log.info('Address update requested:', validatedInput);
 
     return {
       success: true,
     };
 
   } catch (error) {
-    console.error('Failed to update shipping address:', error);
+    logError('Failed to update shipping address:', error);
     
     if (error instanceof z.ZodError) {
       return {
@@ -161,7 +163,7 @@ export async function updateNotificationSettings(input: z.infer<typeof updateNot
     };
 
   } catch (error) {
-    console.error('Failed to update notification settings:', error);
+    logError('Failed to update notification settings:', error);
     
     if (error instanceof z.ZodError) {
       return {

@@ -97,6 +97,26 @@ export class TestDatabase {
     productId: string,
     data?: Partial<Prisma.OrderUncheckedCreateInput>
   ) {
+    // Create a default shipping address if none provided
+    let shippingAddressId = data?.shippingAddressId;
+    if (!shippingAddressId) {
+      const address = await database.address.create({
+        data: {
+          userId: buyerId,
+          firstName: 'Test',
+          lastName: 'User',
+          streetLine1: '123 Test St',
+          city: 'Test City',
+          state: 'Test State',
+          zipCode: '12345',
+          country: 'US',
+          isDefault: true,
+          type: 'SHIPPING',
+        },
+      });
+      shippingAddressId = address.id;
+    }
+
     return database.order.create({
       data: {
         buyerId,
@@ -104,6 +124,7 @@ export class TestDatabase {
         productId,
         amount: 2999,
         status: 'PENDING',
+        shippingAddressId: shippingAddressId!, // We know this is defined after the check above
         ...data,
       },
     });

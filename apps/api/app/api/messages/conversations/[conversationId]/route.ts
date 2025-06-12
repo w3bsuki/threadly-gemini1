@@ -2,6 +2,7 @@ import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for updating conversation
 const updateConversationSchema = z.object({
@@ -147,7 +148,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching conversation:', error);
+    logError('Error fetching conversation:', error);
     
     return NextResponse.json(
       {
@@ -242,7 +243,7 @@ export async function PATCH(
       message: `Conversation ${validatedData.status === 'ARCHIVED' ? 'archived' : 'reactivated'} successfully`,
     });
   } catch (error) {
-    console.error('Error updating conversation:', error);
+    logError('Error updating conversation:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -310,7 +311,7 @@ export async function DELETE(
       message: 'Conversation deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting conversation:', error);
+    logError('Error deleting conversation:', error);
     
     return NextResponse.json(
       {

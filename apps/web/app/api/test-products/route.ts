@@ -1,5 +1,7 @@
 import { database } from '@repo/database';
 import { NextResponse } from 'next/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET() {
   try {
@@ -45,7 +47,7 @@ export async function GET() {
       products,
     });
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    logError('Failed to fetch products:', error);
     return NextResponse.json(
       { 
         success: false, 

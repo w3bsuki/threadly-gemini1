@@ -23,6 +23,8 @@ import {
   isAllowedImageUrl,
   isPriceInRange,
 } from '@repo/validation/validators';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const updateProductSchema = z.object({
   title: z.string()
@@ -159,7 +161,7 @@ export async function updateProduct(productId: string, input: z.infer<typeof upd
     };
 
   } catch (error) {
-    console.error('Failed to update product:', error);
+    logError('Failed to update product:', error);
     
     if (error instanceof z.ZodError) {
       return {
@@ -247,7 +249,7 @@ export async function deleteProduct(productId: string) {
     };
 
   } catch (error) {
-    console.error('Failed to delete product:', error);
+    logError('Failed to delete product:', error);
     
     return {
       success: false,

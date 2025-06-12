@@ -3,6 +3,8 @@ import { env } from '@/env';
 import { blog, legal } from '@repo/cms';
 import { database } from '@repo/database';
 import type { MetadataRoute } from 'next';
+import { log } from '@repo/observability/log';
+import { logError, parseError } from '@repo/observability/error';
 
 const appFolders = fs.readdirSync('app', { withFileTypes: true });
 const pages = appFolders
@@ -31,10 +33,10 @@ const getBlogSlugs = async (): Promise<Array<{ slug: string; lastModified: Date 
     const posts = await blog.getPosts();
     return posts.map((post) => ({
       slug: post._slug,
-      lastModified: new Date(post._sys.lastModifiedAt || Date.now())
+      lastModified: new Date((post as any)._sys?.lastModifiedAt || Date.now())
     }));
   } catch (error) {
-    console.warn('Failed to fetch blog posts for sitemap:', error);
+    log.warn(`Failed to fetch blog posts for sitemap: ${parseError(error)}`);
     return [];
   }
 };
@@ -44,10 +46,10 @@ const getLegalSlugs = async (): Promise<Array<{ slug: string; lastModified: Date
     const posts = await legal.getPosts();
     return posts.map((post) => ({
       slug: post._slug,
-      lastModified: new Date(post._sys.lastModifiedAt || Date.now())
+      lastModified: new Date((post as any)._sys?.lastModifiedAt || Date.now())
     }));
   } catch (error) {
-    console.warn('Failed to fetch legal posts for sitemap:', error);
+    log.warn(`Failed to fetch legal posts for sitemap: ${parseError(error)}`);
     return [];
   }
 };
@@ -61,7 +63,7 @@ const getProductUrls = async (): Promise<Array<{ id: string; lastModified: Date 
       },
       select: {
         id: true,
-        updatedAt: true,
+        createdAt: true,
       },
       orderBy: {
         createdAt: 'desc'
@@ -71,10 +73,10 @@ const getProductUrls = async (): Promise<Array<{ id: string; lastModified: Date 
 
     return products.map(product => ({
       id: product.id,
-      lastModified: product.updatedAt
+      lastModified: product.createdAt
     }));
   } catch (error) {
-    console.warn('Failed to fetch products for sitemap:', error);
+    log.warn(`Failed to fetch products for sitemap: ${parseError(error)}`);
     return [];
   }
 };
@@ -86,7 +88,6 @@ const getCategoryUrls = async (): Promise<Array<{ slug: string; name: string; la
       select: {
         slug: true,
         name: true,
-        updatedAt: true,
         _count: {
           select: {
             products: {
@@ -111,10 +112,10 @@ const getCategoryUrls = async (): Promise<Array<{ slug: string; name: string; la
       .map(category => ({
         slug: category.slug,
         name: category.name,
-        lastModified: category.updatedAt
+        lastModified: new Date()
       }));
   } catch (error) {
-    console.warn('Failed to fetch categories for sitemap:', error);
+    log.warn(`Failed to fetch categories for sitemap: ${parseError(error)}`);
     return [];
   }
 };
@@ -124,25 +125,25 @@ const getUserProfileUrls = async (): Promise<Array<{ id: string; lastModified: D
   try {
     const users = await database.user.findMany({
       where: {
-        products: {
+        listings: {
           some: {
-            status: 'AVAILABLE' // Only users with available products
+            status: 'AVAILABLE' // Only users with available listings
           }
         }
       },
       select: {
         id: true,
-        updatedAt: true,
+        joinedAt: true,
       },
       take: 1000 // Limit to prevent sitemap from being too large
     });
 
     return users.map(user => ({
       id: user.id,
-      lastModified: user.updatedAt
+      lastModified: user.joinedAt
     }));
   } catch (error) {
-    console.warn('Failed to fetch user profiles for sitemap:', error);
+    log.warn(`Failed to fetch user profiles for sitemap: ${parseError(error)}`);
     return [];
   }
 };
@@ -284,11 +285,11 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
       },
     ];
 
-    console.log(`Generated sitemap with ${sitemapEntries.length} URLs`);
+    log.info(`Generated sitemap with ${sitemapEntries.length} URLs`);
     return sitemapEntries;
 
   } catch (error) {
-    console.error('Error generating sitemap:', error);
+    logError('Error generating sitemap:', error);
     
     // Fallback minimal sitemap
     return [

@@ -2,6 +2,7 @@ import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 const createAddressSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ addresses });
   } catch (error) {
-    console.error('Error fetching addresses:', error);
+    logError('Error fetching addresses:', error);
     return NextResponse.json(
       { error: 'Failed to fetch addresses' },
       { status: 500 }
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating address:', error);
+    logError('Error creating address:', error);
     return NextResponse.json(
       { error: 'Failed to create address' },
       { status: 500 }

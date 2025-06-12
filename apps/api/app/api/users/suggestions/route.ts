@@ -3,6 +3,7 @@ import { database } from '@repo/database';
 import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
+import { logError } from '@repo/observability/error';
 
 // Initialize cache service
 const cache = getCacheService({
@@ -137,7 +138,7 @@ export async function GET(request: NextRequest) {
       data: suggestions,
     });
   } catch (error) {
-    console.error('Get suggestions error:', error);
+    logError('Get suggestions error:', error);
     return NextResponse.json(
       { 
         success: false, 

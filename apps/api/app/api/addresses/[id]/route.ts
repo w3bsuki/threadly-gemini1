@@ -2,6 +2,7 @@ import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 const updateAddressSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -45,7 +46,7 @@ export async function GET(
 
     return NextResponse.json({ address });
   } catch (error) {
-    console.error('Error fetching address:', error);
+    logError('Error fetching address:', error);
     return NextResponse.json(
       { error: 'Failed to fetch address' },
       { status: 500 }
@@ -109,7 +110,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating address:', error);
+    logError('Error updating address:', error);
     return NextResponse.json(
       { error: 'Failed to update address' },
       { status: 500 }
@@ -148,7 +149,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Address deleted successfully' });
   } catch (error) {
-    console.error('Error deleting address:', error);
+    logError('Error deleting address:', error);
     return NextResponse.json(
       { error: 'Failed to delete address' },
       { status: 500 }

@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { database } from "@repo/database";
 import { generalApiLimit, checkRateLimit } from '@repo/security';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function POST(request: NextRequest) {
   try {
@@ -168,7 +170,7 @@ export async function POST(request: NextRequest) {
       products: createdProducts,
     });
   } catch (error) {
-    console.error("Error seeding products:", error);
+    logError("Error seeding products:", error);
     return NextResponse.json(
       { success: false, error: "Failed to seed products" },
       { status: 500 }

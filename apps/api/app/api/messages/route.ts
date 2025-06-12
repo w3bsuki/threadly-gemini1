@@ -4,6 +4,7 @@ import { messageRateLimit, checkRateLimit } from '@repo/security';
 import { sanitizeForDisplay } from '@repo/validation/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for listing messages
 const listMessagesSchema = z.object({
@@ -174,7 +175,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logError('Error fetching messages:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -284,7 +285,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error sending message:', error);
+    logError('Error sending message:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

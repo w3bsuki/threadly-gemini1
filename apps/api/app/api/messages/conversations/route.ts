@@ -2,6 +2,7 @@ import { auth } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for listing conversations
 const listConversationsSchema = z.object({
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    logError('Error fetching conversations:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -374,7 +375,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    logError('Error creating conversation:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -66,7 +66,7 @@ const ProductCard = ({ product }: {
     e.stopPropagation();
     const result = await toggleFavorite(product.id);
     if (!result.success) {
-      console.error('Failed to toggle favorite:', result.error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to toggle favorite:', result.error);
     }
   };
 
@@ -335,7 +335,7 @@ export function ProductGridClient({
         setProducts(freshProducts);
       }
     } catch (error) {
-      console.error('Failed to refresh products:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to refresh products:', error);
     }
   }, [defaultCategory]);
 
@@ -370,7 +370,7 @@ export function ProductGridClient({
       // const newProducts = await response.json();
       // setProducts(prev => [...prev, ...newProducts]);
     } catch (error) {
-      console.error('Failed to load more products:', error);
+      if (process.env.NODE_ENV === "development") console.error('Failed to load more products:', error);
     } finally {
       setIsLoading(false);
     }

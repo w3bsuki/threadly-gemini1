@@ -4,6 +4,8 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 // SECURITY: Enhanced validation schema with stricter rules
 const createProductSchema = z.object({
@@ -104,7 +106,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
     
     return { success: true, productId: product.id };
   } catch (error) {
-    console.error('Error creating product:', error);
+    logError('Error creating product:', error);
     
     if (error instanceof z.ZodError) {
       return { 

@@ -1,6 +1,7 @@
 import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { logError } from '@repo/observability/error';
 
 // GET /api/favorites/check - Check if products are favorited
 export async function GET(request: NextRequest) {
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ favorites: favoriteStatus });
   } catch (error) {
-    console.error('Error checking favorites:', error);
+    logError('Error checking favorites:', error);
     return NextResponse.json(
       { error: 'Failed to check favorites' },
       { status: 500 }

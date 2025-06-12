@@ -3,6 +3,8 @@
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function createProductMinimal(formData: FormData) {
   try {
@@ -55,7 +57,7 @@ export async function createProductMinimal(formData: FormData) {
     };
 
   } catch (error) {
-    console.error('Minimal create product error:', error);
+    logError('Minimal create product error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create product',

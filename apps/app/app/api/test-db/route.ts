@@ -1,6 +1,8 @@
 import { database } from '@repo/database';
 import { NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET() {
   // SECURITY: Only allow in development mode and for authenticated admin users
@@ -39,7 +41,7 @@ export async function GET() {
     });
   } catch (error) {
     // SECURITY: Generic error messages, no sensitive information
-    console.error('Database test failed:', error);
+    logError('Database test failed:', error);
     return NextResponse.json({
       success: false,
       error: 'Database connection failed',

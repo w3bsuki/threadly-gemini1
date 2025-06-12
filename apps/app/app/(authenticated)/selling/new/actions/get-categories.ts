@@ -1,6 +1,8 @@
 'use server';
 
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export interface CategoryOption {
   id: string;
@@ -33,7 +35,7 @@ export async function getCategories(): Promise<CategoryOption[]> {
 
     return tree;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logError('Error fetching categories:', error);
     return [];
   }
 }
@@ -56,7 +58,7 @@ export async function getCategoriesFlat(): Promise<CategoryOption[]> {
 
     return categories;
   } catch (error) {
-    console.error('Error fetching flat categories:', error);
+    logError('Error fetching flat categories:', error);
     return [];
   }
 }

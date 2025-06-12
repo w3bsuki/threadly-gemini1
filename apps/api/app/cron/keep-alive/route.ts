@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logError } from '@repo/observability/error';
 import { log } from '@repo/observability/log';
 
 export const POST = async (request: NextRequest): Promise<Response> => {
@@ -17,7 +18,7 @@ export const POST = async (request: NextRequest): Promise<Response> => {
       timestamp: new Date().toISOString() 
     });
   } catch (error) {
-    log.error('Keep-alive cron job failed:', { error });
+    logError('Keep-alive cron job failed:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

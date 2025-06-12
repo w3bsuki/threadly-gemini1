@@ -59,7 +59,10 @@ const EditProductPage = async ({ params }: EditProductPageProps) => {
             </p>
           </div>
           
-          <EditProductForm product={product} userId={user.id} />
+          <EditProductForm product={{
+            ...product,
+            price: product.price.toNumber()
+          }} userId={user.id} />
         </div>
       </div>
     </>

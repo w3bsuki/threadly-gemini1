@@ -4,6 +4,8 @@ import { database } from '@repo/database';
 import { stripe, calculatePlatformFee, isStripeConfigured } from '@repo/payments';
 import { paymentRateLimit, checkRateLimit } from '@repo/security';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const createCheckoutSessionSchema = z.object({
   productId: z.string().min(1),
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     // SECURITY: Get database user to ensure proper ID comparison
     const user = await database.user.findUnique({
       where: { clerkId: clerkUser.id },
-      select: { id: true }
+      select: { id: true, firstName: true, lastName: true }
     });
 
     if (!user) {
@@ -80,6 +82,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get or create a default shipping address for the user
+    let defaultAddress = await database.address.findFirst({
+      where: {
+        userId: user.id,
+        isDefault: true,
+        type: 'SHIPPING',
+      },
+    });
+
+    if (!defaultAddress) {
+      // Create a placeholder address that will be updated during checkout
+      defaultAddress = await database.address.create({
+        data: {
+          userId: user.id,
+          firstName: user.firstName || 'TBD',
+          lastName: user.lastName || 'TBD',
+          streetLine1: 'To be provided during checkout',
+          city: 'TBD',
+          state: 'TBD',
+          zipCode: '00000',
+          country: 'US',
+          isDefault: true,
+          type: 'SHIPPING',
+        },
+      });
+    }
+
     // Create order with PENDING status
     const order = await database.order.create({
       data: {
@@ -88,12 +117,13 @@ export async function POST(request: NextRequest) {
         productId: product.id,
         amount: product.price,
         status: 'PENDING',
+        shippingAddressId: defaultAddress.id,
       },
     });
 
     // Calculate fees
-    const amountInCents = Math.round(product.price * 100);
-    const platformFeeInCents = Math.round(calculatePlatformFee(product.price) * 100);
+    const amountInCents = Math.round(product.price.toNumber() * 100);
+    const platformFeeInCents = Math.round(calculatePlatformFee(product.price.toNumber()) * 100);
     
     // Create payment intent parameters
     const paymentIntentParams: any = {
@@ -134,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Checkout session creation error:', error);
+    logError('Checkout session creation error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -2,19 +2,21 @@
 
 import { currentUser } from '@repo/auth/server';
 import { redirect } from 'next/navigation';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function createProductSimple(input: any) {
-  console.log('Simple create product called with:', input);
+  log.info('Simple create product called with:', input);
   
   try {
     // Just verify authentication works
     const user = await currentUser();
     if (!user) {
-      console.log('No user found, redirecting...');
+      log.info('No user found, redirecting...');
       redirect('/sign-in');
     }
     
-    console.log('Clerk user authenticated:', user.id);
+    log.info('Clerk user authenticated:', { userId: user.id });
     
     // Return success without database call
     return {
@@ -25,7 +27,7 @@ export async function createProductSimple(input: any) {
     };
     
   } catch (error) {
-    console.error('Error in simple create product:', error);
+    logError('Error in simple create product:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -16,6 +16,8 @@ import {
   EyeIcon,
   HeartIcon
 } from 'lucide-react';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const title = 'Dashboard - Threadly';
 const description = 'Manage your listings, orders, and account.';
@@ -54,7 +56,7 @@ const App = async () => {
       });
     }
   } catch (error) {
-    console.error('Database error:', error);
+    logError('Database error:', error);
     return (
       <div className="space-y-6">
         <div>
@@ -67,7 +69,7 @@ const App = async () => {
 
   // Simplified queries for better performance with error handling
   let activeListings = 0;
-  let totalSales = { _sum: { amount: null as number | null }, _count: 0 };
+  let totalSales: any = { _sum: { amount: null }, _count: 0 };
   let recentOrders: any[] = [];
 
   try {
@@ -114,14 +116,14 @@ const App = async () => {
       })
     ]);
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    logError('Error fetching dashboard data:', error);
     // Use default values if queries fail
   }
 
   // Simplified unread messages count - just set to 0 for now to avoid complex query
   const unreadMessages = 0;
 
-  const totalRevenue = totalSales?._sum?.amount || 0;
+  const totalRevenue = totalSales?._sum?.amount ? totalSales._sum.amount.toNumber() : 0;
   const completedSales = totalSales?._count || 0;
 
   return (

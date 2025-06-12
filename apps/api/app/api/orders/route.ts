@@ -3,19 +3,14 @@ import { currentUser } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for creating an order
 const createOrderSchema = z.object({
   productId: z.string().min(1),
   buyerId: z.string().min(1),
   amount: z.number().positive(),
-  shippingAddress: z.object({
-    street: z.string().min(1),
-    city: z.string().min(1),
-    state: z.string().min(1),
-    postalCode: z.string().min(1),
-    country: z.string().min(1),
-  }),
+  shippingAddressId: z.string().min(1),
 });
 
 // GET /api/orders - List orders (for buyer or seller)
@@ -116,7 +111,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    // TODO: Add proper error tracking service
+    logError('Error fetching orders:', error);
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }
@@ -178,6 +173,7 @@ export async function POST(request: NextRequest) {
           sellerId: product.sellerId,
           productId: product.id,
           amount: validatedData.amount,
+          shippingAddressId: validatedData.shippingAddressId,
           status: 'PENDING', // Will be updated to PAID by payment webhook
         },
         include: {
@@ -226,7 +222,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Add proper error tracking service
+    logError('Error creating order:', error);
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }

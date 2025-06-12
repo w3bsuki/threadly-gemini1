@@ -8,6 +8,8 @@ import { PostHogIdentifier } from './components/posthog-identifier';
 import { ToastProvider } from '@/components/toast';
 import { AppLayout } from './components/app-layout';
 import { redirect } from 'next/navigation';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -25,7 +27,7 @@ const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
   try {
     betaFeature = await showBetaFeature();
   } catch (error) {
-    console.error('Feature flag error:', error);
+    logError('Feature flag error:', error);
   }
 
   // Check if user is admin with error handling
@@ -37,7 +39,7 @@ const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
     });
     isAdmin = dbUser?.role === 'ADMIN';
   } catch (error) {
-    console.error('Database user check failed:', error);
+    logError('Database user check failed:', error);
   }
 
   return (

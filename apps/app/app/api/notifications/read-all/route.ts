@@ -2,6 +2,8 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -26,7 +28,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Notifications Mark All Read] Error:', error);
+    logError('[Notifications Mark All Read] Error:', error);
     return NextResponse.json(
       { error: 'Failed to mark all notifications as read' },
       { status: 500 }

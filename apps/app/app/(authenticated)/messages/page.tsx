@@ -133,11 +133,20 @@ const MessagesPage = async ({ searchParams }: MessagesPageProps) => {
       </div>
       
       <MessagesContent 
-        conversations={conversations}
+        conversations={conversations.map(conv => ({
+          ...conv,
+          product: {
+            ...conv.product,
+            price: conv.product.price.toNumber()
+          }
+        }))}
         currentUserId={dbUser.id}
         filterType={type}
         targetUser={targetUser}
-        targetProduct={targetProduct}
+        targetProduct={targetProduct ? {
+          ...targetProduct,
+          price: targetProduct.price.toNumber()
+        } : targetProduct}
         existingConversation={existingConversation}
       />
     </div>

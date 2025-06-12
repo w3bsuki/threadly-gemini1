@@ -83,9 +83,9 @@ const ProfilePage = async () => {
 
   const stats = {
     products_sold: productsSold,
-    total_earnings: totalEarnings._sum?.amount || 0,
+    total_earnings: totalEarnings._sum?.amount ? totalEarnings._sum.amount.toNumber() : 0,
     products_bought: productsBought,
-    total_spent: totalSpent._sum?.amount || 0,
+    total_spent: totalSpent._sum?.amount ? totalSpent._sum.amount.toNumber() : 0,
     active_listings: activeListings,
     followers_count: followersCount,
     following_count: followingCount,

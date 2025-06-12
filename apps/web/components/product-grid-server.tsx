@@ -7,6 +7,7 @@ import type {
   Category,
   Condition
 } from '@repo/database';
+import { logError } from '@repo/observability/error';
 
 // Type for our transformed product data
 interface TransformedProduct {
@@ -63,7 +64,7 @@ function transformProduct(
     id: product.id,
     title: product.title,
     brand: product.brand || 'Unknown',
-    price: product.price,
+    price: Number(product.price),
     originalPrice: undefined, // Not in our schema yet
     size: product.size || 'One Size',
     condition: product.condition,
@@ -238,7 +239,7 @@ export async function ProductGridServer({
     );
 
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    logError('Failed to fetch products:', error);
     
     // Return empty state on error
     return (

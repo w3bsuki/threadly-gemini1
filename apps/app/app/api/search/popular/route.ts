@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSearchService } from '@repo/search';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 let searchService: any;
 
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
     const products = await searchService.getPopularProducts(limit);
     return NextResponse.json(products);
   } catch (error) {
-    console.error('[Search Popular API] Error:', error);
+    logError('[Search Popular API] Error:', error);
     return NextResponse.json(
       { error: 'Failed to get popular products' },
       { status: 500 }

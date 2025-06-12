@@ -3,6 +3,8 @@ import { database } from '@repo/database';
 import { getNotificationService } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(255),
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
       limit,
     });
   } catch (error) {
-    console.error('[Notifications GET] Error:', error);
+    logError('[Notifications GET] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(notification);
   } catch (error) {
-    console.error('[Notifications POST] Error:', error);
+    logError('[Notifications POST] Error:', error);
     return NextResponse.json(
       { error: 'Failed to create notification' },
       { status: 500 }

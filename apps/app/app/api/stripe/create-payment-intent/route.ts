@@ -5,9 +5,11 @@ import { paymentRateLimit, checkRateLimit } from '@repo/security';
 import Stripe from 'stripe';
 import { env } from '@/env';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-04-30.basil',
+  apiVersion: '2025-05-28.basil',
 });
 
 const createPaymentIntentSchema = z.object({
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Payment intent creation error:', error);
+    logError('Payment intent creation error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

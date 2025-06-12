@@ -3,6 +3,7 @@ import { currentUser } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for toggling favorites
 const toggleFavoriteSchema = z.object({
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching favorites:', error);
+    logError('Error fetching favorites:', error);
     return NextResponse.json(
       { error: 'Failed to fetch favorites' },
       { status: 500 }
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error adding favorite:', error);
+    logError('Error adding favorite:', error);
     return NextResponse.json(
       { error: 'Failed to add favorite' },
       { status: 500 }
@@ -236,7 +237,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.error('Error removing favorite:', error);
+    logError('Error removing favorite:', error);
     return NextResponse.json(
       { error: 'Failed to remove favorite' },
       { status: 500 }

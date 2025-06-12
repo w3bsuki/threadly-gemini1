@@ -28,7 +28,7 @@ interface ProductWithDetails {
   id: string;
   title: string;
   description: string | null;
-  price: number;
+  price: { toNumber(): number };
   status: string;
   createdAt: Date;
   views: number;
@@ -89,7 +89,7 @@ function ProductTable({ products }: { products: ProductWithDetails[] }) {
       // Use router.refresh() instead of window.location.reload()
       router.refresh();
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      if (process.env.NODE_ENV === "development") console.error('Bulk action failed:', error);
     } finally {
       setIsUpdating(false);
     }
@@ -205,7 +205,7 @@ function ProductTable({ products }: { products: ProductWithDetails[] }) {
                   </Badge>
                 </td>
                 <td className="p-2">
-                  <p className="font-medium">${product.price.toFixed(2)}</p>
+                  <p className="font-medium">${product.price.toNumber().toFixed(2)}</p>
                 </td>
                 <td className="p-2">
                   <div className="text-sm">

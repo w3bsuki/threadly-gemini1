@@ -104,7 +104,7 @@ const OrdersPage = async () => {
     paid: orders.filter(o => o.status === 'PAID').length,
     shipped: orders.filter(o => o.status === 'SHIPPED').length,
     delivered: orders.filter(o => o.status === 'DELIVERED').length,
-    revenue: orders.filter(o => o.status !== 'CANCELLED').reduce((sum, o) => sum + o.amount, 0),
+    revenue: orders.filter(o => o.status !== 'CANCELLED').reduce((sum, o) => sum + o.amount.toNumber(), 0),
   };
 
   return (

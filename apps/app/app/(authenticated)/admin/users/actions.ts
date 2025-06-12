@@ -3,6 +3,8 @@
 import { requireAdmin } from '@/lib/auth/admin';
 import { database } from '@repo/database';
 import { revalidatePath } from 'next/cache';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function updateUserRole(userId: string, role: 'USER' | 'ADMIN' | 'MODERATOR') {
   await requireAdmin();
@@ -322,7 +324,7 @@ export async function bulkUpdateUsers({
         
         results.success++;
       } catch (error) {
-        console.error(`Failed to ${action} user ${user.id}:`, error);
+        logError(`Failed to ${action} user ${user.id}:`, error);
         results.errors++;
       }
     }
@@ -334,7 +336,7 @@ export async function bulkUpdateUsers({
       message: `Bulk ${action}: ${results.success} successful, ${results.skipped} skipped, ${results.errors} errors`
     };
   } catch (error) {
-    console.error('Bulk update failed:', error);
+    logError('Bulk update failed:', error);
     throw new Error(`Failed to ${action} users`);
   }
 }

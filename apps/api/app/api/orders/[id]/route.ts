@@ -2,6 +2,7 @@ import { database } from '@repo/database';
 import { currentUser } from '@repo/auth/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logError } from '@repo/observability/error';
 
 // Schema for updating an order
 const updateOrderSchema = z.object({
@@ -77,7 +78,7 @@ export async function GET(
 
     return NextResponse.json({ order });
   } catch (error) {
-    console.error('Error fetching order:', error);
+    logError('Error fetching order:', error);
     return NextResponse.json(
       { error: 'Failed to fetch order' },
       { status: 500 }
@@ -181,7 +182,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating order:', error);
+    logError('Error updating order:', error);
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }
@@ -249,7 +250,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Order cancelled successfully' });
   } catch (error) {
-    console.error('Error cancelling order:', error);
+    logError('Error cancelling order:', error);
     return NextResponse.json(
       { error: 'Failed to cancel order' },
       { status: 500 }

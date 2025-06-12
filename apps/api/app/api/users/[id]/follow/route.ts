@@ -3,6 +3,7 @@ import { database } from '@repo/database';
 import { auth } from '@repo/auth/server';
 import { generalApiLimit, checkRateLimit } from '@repo/security';
 import { getCacheService } from '@repo/cache';
+import { logError } from '@repo/observability/error';
 
 // Initialize cache service
 const cache = getCacheService({
@@ -144,10 +145,8 @@ export async function POST(
 
     // Invalidate cache
     await Promise.all([
-      cache.delete(`user:${user.id}:following`),
-      cache.delete(`user:${user.id}:following:count`),
-      cache.delete(`user:${userToFollowId}:followers`),
-      cache.delete(`user:${userToFollowId}:followers:count`),
+      cache.invalidateUser(user.id),
+      cache.invalidateUser(userToFollowId),
     ]);
 
     return NextResponse.json({
@@ -155,7 +154,7 @@ export async function POST(
       data: follow,
     });
   } catch (error) {
-    console.error('Follow error:', error);
+    logError('Follow error:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -246,10 +245,8 @@ export async function DELETE(
 
     // Invalidate cache
     await Promise.all([
-      cache.delete(`user:${user.id}:following`),
-      cache.delete(`user:${user.id}:following:count`),
-      cache.delete(`user:${userToUnfollowId}:followers`),
-      cache.delete(`user:${userToUnfollowId}:followers:count`),
+      cache.invalidateUser(user.id),
+      cache.invalidateUser(userToUnfollowId),
     ]);
 
     return NextResponse.json({
@@ -257,7 +254,7 @@ export async function DELETE(
       message: 'Successfully unfollowed user',
     });
   } catch (error) {
-    console.error('Unfollow error:', error);
+    logError('Unfollow error:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -338,7 +335,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Check follow error:', error);
+    logError('Check follow error:', error);
     return NextResponse.json(
       { 
         success: false, 

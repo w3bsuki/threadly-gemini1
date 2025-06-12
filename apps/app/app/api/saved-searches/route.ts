@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ savedSearches });
   } catch (error) {
-    console.error('Error fetching saved searches:', error);
+    logError('Error fetching saved searches:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ savedSearch });
   } catch (error) {
-    console.error('Error creating saved search:', error);
+    logError('Error creating saved search:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -125,7 +127,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting saved search:', error);
+    logError('Error deleting saved search:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

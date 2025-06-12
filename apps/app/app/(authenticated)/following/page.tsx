@@ -189,7 +189,7 @@ const FollowingPage = async () => {
                       )}
                       <div className="absolute top-2 right-2">
                         <Badge className="bg-black/50 text-white border-0">
-                          {formatPrice(item.price)}
+                          {formatPrice(item.price.toNumber())}
                         </Badge>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ const FollowingPage = async () => {
                               </div>
                             )}
                             <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b-md">
-                              {formatPrice(product.price)}
+                              {formatPrice(product.price.toNumber())}
                             </div>
                           </div>
                         ))}

@@ -1,6 +1,8 @@
 import { currentUser } from '@repo/auth/server';
 import { getPusherServer } from '@repo/real-time/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 // Initialize on first request to avoid build-time errors
 let pusherServer: any;
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(authResponse);
   } catch (error) {
-    console.error('[RealTime Auth] Error:', error);
+    logError('[RealTime Auth] Error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }

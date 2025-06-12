@@ -8,7 +8,7 @@ import type {
   UserJSON,
   WebhookEvent,
 } from '@repo/auth/server';
-import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { Webhook } from 'svix';
@@ -61,10 +61,10 @@ const handleUserCreated = async (data: UserJSON) => {
       distinctId: data.id,
     });
 
-    log.info('User created in database', { userId: data.id, email });
+    console.info('User created in database', { userId: data.id, email });
     return new Response('User created', { status: 201 });
   } catch (error) {
-    log.error('Error creating user in database', { error, userId: data.id });
+    logError('Error creating user in database', error);
     return new Response('Error creating user', { status: 500 });
   }
 };
@@ -105,10 +105,10 @@ const handleUserUpdated = async (data: UserJSON) => {
       distinctId: data.id,
     });
 
-    log.info('User updated in database', { userId: data.id, email });
+    console.info('User updated in database', { userId: data.id, email });
     return new Response('User updated', { status: 201 });
   } catch (error) {
-    log.error('Error updating user in database', { error, userId: data.id });
+    logError('Error updating user in database', error);
     return new Response('Error updating user', { status: 500 });
   }
 };
@@ -144,10 +144,10 @@ const handleUserDeleted = async (data: DeletedObjectJSON) => {
       distinctId: data.id,
     });
 
-    log.info('User deleted from database', { userId: data.id, userFound: !!user });
+    console.info('User deleted from database', { userId: data.id, userFound: !!user });
     return new Response('User deleted', { status: 201 });
   } catch (error) {
-    log.error('Error deleting user in database', { error, userId: data.id });
+    logError('Error deleting user in database', error);
     return new Response('Error deleting user', { status: 500 });
   }
 };
@@ -259,7 +259,7 @@ export const POST = async (request: Request): Promise<Response> => {
       'svix-signature': svixSignature,
     }) as WebhookEvent;
   } catch (error) {
-    log.error('Error verifying webhook:', { error });
+    console.error('Error verifying webhook:', error);
     return new Response('Error occured', {
       status: 400,
     });
@@ -269,7 +269,7 @@ export const POST = async (request: Request): Promise<Response> => {
   const { id } = event.data;
   const eventType = event.type;
 
-  log.info('Webhook', { id, eventType, body });
+  console.info('Webhook', { id, eventType, body });
 
   let response: Response = new Response('', { status: 201 });
 

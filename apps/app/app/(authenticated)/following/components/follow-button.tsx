@@ -29,7 +29,7 @@ export function FollowButton({ userId, className, size = 'sm' }: FollowButtonPro
           setIsFollowing(data.data?.isFollowing || false);
         }
       } catch (error) {
-        console.error('Error checking follow status:', error);
+        if (process.env.NODE_ENV === "development") console.error('Error checking follow status:', error);
       } finally {
         setIsCheckingStatus(false);
       }
@@ -56,12 +56,12 @@ export function FollowButton({ userId, className, size = 'sm' }: FollowButtonPro
 
       if (data.success) {
         setIsFollowing(!isFollowing);
-        console.log(isFollowing ? 'Unfollowed user' : 'Following user');
+        if (process.env.NODE_ENV === "development") console.log(isFollowing ? 'Unfollowed user' : 'Following user');
       } else {
         throw new Error(data.error || 'Something went wrong');
       }
     } catch (error) {
-      console.error('Follow toggle error:', error);
+      if (process.env.NODE_ENV === "development") console.error('Follow toggle error:', error);
     } finally {
       setIsLoading(false);
     }

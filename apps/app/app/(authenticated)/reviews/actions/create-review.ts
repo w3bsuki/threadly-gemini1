@@ -4,6 +4,8 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { log } from '@repo/observability/log';
+import { logError } from '@repo/observability/error';
 
 const createReviewSchema = z.object({
   orderId: z.string().min(1, 'Order ID is required'),
@@ -135,7 +137,7 @@ export async function createReview(input: z.infer<typeof createReviewSchema>) {
     };
 
   } catch (error) {
-    console.error('Failed to create review:', error);
+    logError('Failed to create review:', error);
     
     if (error instanceof z.ZodError) {
       return {
