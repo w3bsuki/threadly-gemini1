@@ -454,9 +454,7 @@ export function SingleProductCheckout(props: SingleProductCheckoutProps) {
         },
       }}
     >
-      <Form>
-        <CheckoutForm {...props} />
-      </Form>
+      <CheckoutForm {...props} />
     </Elements>
   );
 }
