@@ -21,8 +21,8 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@repo/design-system/lib/utils';
+import { toast } from '@repo/design-system';
 import { useCartStore } from '../../../lib/stores/cart-store';
-import { toast } from 'sonner';
 
 interface ProductQuickViewProps {
   product: {

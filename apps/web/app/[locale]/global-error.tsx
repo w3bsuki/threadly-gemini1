@@ -16,11 +16,18 @@ const GlobalError = ({ error, reset }: GlobalErrorProperties) => {
     captureException(error);
   }, [error]);
 
+  // Convert NextError to standard Error for ErrorPage
+  const standardError: Error = {
+    name: 'Error',
+    message: 'An unexpected error occurred',
+    stack: undefined,
+  };
+
   return (
     <html lang="en" className={fonts}>
       <body>
         <ErrorPage
-          error={error}
+          error={standardError}
           errorId={error.digest || null}
           level="app"
           onReset={reset}

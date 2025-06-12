@@ -46,6 +46,7 @@ export { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupActio
 export { Skeleton } from './components/ui/skeleton';
 export { Slider } from './components/ui/slider';
 export { Toaster } from './components/ui/sonner';
+export { toast } from 'sonner';
 export { Switch } from './components/ui/switch';
 export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './components/ui/table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
