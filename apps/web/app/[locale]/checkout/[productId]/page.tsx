@@ -69,9 +69,6 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const lastOrder = await database.order.findFirst({
     where: { buyerId: user.id },
     orderBy: { createdAt: 'desc' },
-    include: {
-      shippingAddress: true,
-    },
   });
 
   return (
@@ -88,7 +85,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
           <SingleProductCheckout 
             user={user} 
             product={product}
-            savedAddress={lastOrder?.shippingAddress || null}
+            savedAddress={null}
           />
         </div>
       </div>
