@@ -146,7 +146,11 @@ export default async function BrowsePage() {
             ...product,
             price: Number(product.price),
             category: product.category?.name || 'Other',
-            brand: product.brand || undefined
+            brand: product.brand || undefined,
+            images: product.images.map(img => ({
+              ...img,
+              alt: img.alt || undefined
+            }))
           }))} />
         </section>
 
