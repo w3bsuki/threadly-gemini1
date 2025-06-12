@@ -19,7 +19,7 @@ export default async function BrowsePage() {
       images: { take: 1, orderBy: { displayOrder: 'asc' } },
       seller: { select: { firstName: true, lastName: true, id: true } },
       category: { select: { name: true } },
-      _count: { select: { favorites: true, views: true } }
+      _count: { select: { favorites: true } }
     },
     orderBy: [
       { views: 'desc' },
@@ -42,18 +42,18 @@ export default async function BrowsePage() {
   // Fetch top sellers
   const topSellers = await database.user.findMany({
     where: {
-      products: { some: { status: 'AVAILABLE' } }
+      listings: { some: { status: 'AVAILABLE' } }
     },
     include: {
       _count: { 
         select: { 
-          products: { where: { status: 'AVAILABLE' } },
-          reviews: true 
+          listings: { where: { status: 'AVAILABLE' } },
+          receivedReviews: true 
         } 
       }
     },
     orderBy: {
-      products: { _count: 'desc' }
+      listings: { _count: 'desc' }
     },
     take: 6
   });
@@ -142,7 +142,11 @@ export default async function BrowsePage() {
             </Link>
           </div>
           
-          <ProductGrid products={trendingProducts} />
+          <ProductGrid products={trendingProducts.map(product => ({
+            ...product,
+            price: Number(product.price),
+            category: product.category?.name || 'Other'
+          }))} />
         </section>
 
         {/* Top Sellers */}
@@ -174,7 +178,7 @@ export default async function BrowsePage() {
                           {seller.firstName} {seller.lastName}
                         </h3>
                         <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                          <span>{seller._count.products} items</span>
+                          <span>{seller._count.listings} items</span>
                           {seller.averageRating && (
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -187,7 +191,7 @@ export default async function BrowsePage() {
                     
                     <div className="text-center">
                       <Badge variant="secondary">
-                        {seller._count.reviews} reviews
+                        {seller._count.receivedReviews} reviews
                       </Badge>
                     </div>
                   </CardContent>
