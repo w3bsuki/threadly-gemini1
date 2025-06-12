@@ -11,11 +11,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import type { Dictionary } from '@repo/internationalization';
-
-interface CheckoutContentProps {
-  dictionary: Dictionary;
-}
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -24,12 +19,8 @@ const formatCurrency = (amount: number) => {
   }).format(amount / 100);
 };
 
-export const CheckoutContent = ({ dictionary }: CheckoutContentProps) => {
+export const CheckoutContent = () => {
   const router = useRouter();
-  const pathname = usePathname();
-  // Extract locale from pathname, handling cases like /en/checkout
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const locale = pathSegments[0] || 'en';
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -65,7 +56,7 @@ export const CheckoutContent = ({ dictionary }: CheckoutContentProps) => {
     setTimeout(() => {
       // Clear cart and redirect to success page
       clearCart();
-      const successUrl = `/${locale}/checkout/success`;
+      const successUrl = `/checkout/success`;
       console.log('Redirecting to:', successUrl);
       router.push(successUrl);
     }, 2000);
@@ -82,7 +73,7 @@ export const CheckoutContent = ({ dictionary }: CheckoutContentProps) => {
             Add some items to your cart to continue checkout
           </p>
           <Button asChild>
-            <Link href={`/${locale}`}>
+            <Link href="/">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Continue Shopping
             </Link>
@@ -97,7 +88,7 @@ export const CheckoutContent = ({ dictionary }: CheckoutContentProps) => {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href={`/${locale}`}
+          href="/"
           className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />

@@ -6,12 +6,7 @@ import { Search, Heart, Menu, X, User, ShoppingBag, Crown, ChevronDown, Plus } f
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Dictionary } from '@repo/internationalization';
 import { CartDropdown } from './cart-dropdown';
-
-type HeaderProps = {
-  dictionary: Dictionary;
-};
 
 const categories = [
   { name: "All", href: "/" },
@@ -46,7 +41,7 @@ interface SearchSuggestion {
   category?: string;
 }
 
-export const Header = ({ dictionary }: HeaderProps) => {
+export const Header = () => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -241,7 +236,7 @@ export const Header = ({ dictionary }: HeaderProps) => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder={dictionary.web?.marketplace?.searchPlaceholder || "Search for items, brands, or members"}
+                      placeholder="Search for items, brands, or members"
                       className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-black focus:border-black text-sm"
                     />
                     {searchQuery && (
@@ -313,7 +308,7 @@ export const Header = ({ dictionary }: HeaderProps) => {
             <div className="flex items-center space-x-2">
               {/* Mobile Actions - Simplified */}
               <div className="flex items-center space-x-2 md:hidden">
-                <CartDropdown dictionary={dictionary} />
+                <CartDropdown />
                 
                 <Button 
                   variant="ghost" 
@@ -347,7 +342,7 @@ export const Header = ({ dictionary }: HeaderProps) => {
                   </Link>
                 </Button>
                 
-                <CartDropdown dictionary={dictionary} />
+                <CartDropdown />
                 
                 <Button variant="ghost" size="sm" className="text-gray-700 hover:text-black" asChild>
                   <Link href="/favorites">
@@ -547,7 +542,7 @@ export const Header = ({ dictionary }: HeaderProps) => {
                     <ShoppingBag className="h-5 w-5 mr-3" />
                     My Cart
                   </span>
-                  <CartDropdown dictionary={dictionary} />
+                  <CartDropdown />
                 </div>
                 
                 <Button variant="ghost" className="w-full justify-start text-gray-700 min-h-[44px]" asChild>

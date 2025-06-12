@@ -4,18 +4,9 @@ import { Button } from '@repo/design-system/components/ui/button';
 import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import confetti from 'canvas-confetti';
-import type { Dictionary } from '@repo/internationalization';
 
-interface SuccessContentProps {
-  dictionary: Dictionary;
-}
-
-export const SuccessContent = ({ dictionary }: SuccessContentProps) => {
-  const pathname = usePathname();
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const locale = pathSegments[0] || 'en';
+export const SuccessContent = () => {
   
   useEffect(() => {
     // Trigger confetti animation
@@ -110,13 +101,13 @@ export const SuccessContent = ({ dictionary }: SuccessContentProps) => {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" asChild>
-            <Link href={`/${locale}`}>
+            <Link href="/">
               Continue Shopping
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <Link href={`/${locale}/orders`}>
+            <Link href="/orders">
               View Orders
             </Link>
           </Button>

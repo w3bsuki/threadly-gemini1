@@ -7,13 +7,6 @@ import { ShoppingBag, X, Plus, Minus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import type { Dictionary } from '@repo/internationalization';
-
-interface CartDropdownProps {
-  dictionary: Dictionary;
-}
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -21,12 +14,9 @@ const formatCurrency = (amount: number) => {
   }).format(amount); // Price is already in dollars
 };
 
-export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, getItemCount, getTotalPrice } = useCartStore();
+export const CartDropdown = () => {
+  const { items, isOpen, closeCart, removeItem, updateQuantity, getTotalItems, getTotalPrice } = useCartStore();
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const locale = pathSegments[0] || 'en';
 
   useEffect(() => {
     setMounted(true);
@@ -41,7 +31,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
     );
   }
 
-  const itemCount = getItemCount();
+  const itemCount = getTotalItems();
   const totalPrice = getTotalPrice();
 
   return (
@@ -79,7 +69,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                 Add items to your cart to see them here
               </p>
               <Button onClick={closeCart} asChild>
-                <Link href={`/${locale}`}>Continue Shopping</Link>
+                <Link href="/">Continue Shopping</Link>
               </Button>
             </div>
           ) : (
@@ -108,7 +98,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                         <div className="flex justify-between text-base font-medium text-gray-900">
                           <h3 className="pr-2">
                             <Link
-                              href={`/${locale}/product/${item.id}`}
+                              href={`/product/${item.id}`}
                               onClick={closeCart}
                               className="hover:underline"
                             >
@@ -171,7 +161,7 @@ export const CartDropdown = ({ dictionary }: CartDropdownProps) => {
                 </p>
                 <div className="space-y-2">
                   <Button className="w-full" asChild>
-                    <Link href={`/${locale}/checkout`} onClick={closeCart}>
+                    <Link href="/checkout" onClick={closeCart}>
                       Checkout
                     </Link>
                   </Button>
