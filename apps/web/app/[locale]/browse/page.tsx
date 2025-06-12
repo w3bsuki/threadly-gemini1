@@ -150,7 +150,11 @@ export default async function BrowsePage() {
             images: product.images.map(img => ({
               ...img,
               alt: img.alt || undefined
-            }))
+            })),
+            seller: {
+              ...product.seller,
+              firstName: product.seller.firstName || ''
+            }
           }))} />
         </section>
 
