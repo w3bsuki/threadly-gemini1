@@ -1,12 +1,12 @@
 import { env } from '@/env';
 import { auth, currentUser } from '@repo/auth/server';
-import { database } from '@repo/database';
-import { showBetaFeature } from '@repo/feature-flags';
-import { NotificationsProvider } from '@repo/notifications/components/provider';
-import { RealTimeWrapper } from './components/real-time-wrapper';
-import { secure } from '@repo/security';
+// import { database } from '@repo/database'; // Temporarily disabled
+// import { showBetaFeature } from '@repo/feature-flags'; // Temporarily disabled  
+// import { NotificationsProvider } from '@repo/notifications/components/provider'; // Temporarily disabled
+// import { RealTimeWrapper } from './components/real-time-wrapper'; // Temporarily disabled
+// import { secure } from '@repo/security'; // Temporarily disabled
 import type { ReactNode } from 'react';
-import { PostHogIdentifier } from './components/posthog-identifier';
+// import { PostHogIdentifier } from './components/posthog-identifier'; // Temporarily disabled
 import { ToastProvider } from '@/components/toast';
 import { AppLayout } from './components/app-layout';
 import { redirect } from 'next/navigation';
@@ -16,12 +16,14 @@ type AppLayoutProperties = {
 };
 
 const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
-  if (env.ARCJET_KEY) {
-    await secure(['CATEGORY:PREVIEW']);
-  }
+  // TEMPORARILY DISABLE ALL EXTERNAL CALLS FOR DEBUGGING
+  // if (env.ARCJET_KEY) {
+  //   await secure(['CATEGORY:PREVIEW']);
+  // }
 
   const user = await currentUser();
-  const betaFeature = await showBetaFeature();
+  // const betaFeature = await showBetaFeature();
+  const betaFeature = false; // Hardcode for debugging
 
   if (!user) {
     redirect('/sign-in');
@@ -46,20 +48,15 @@ const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
   // }
 
   return (
-    <RealTimeWrapper userId={user.id}>
-      <NotificationsProvider userId={user.id}>
-        <AppLayout isAdmin={isAdmin}>
-          {betaFeature && (
-            <div className="mb-4 rounded-lg bg-blue-500 p-3 text-center text-sm text-white">
-              Beta feature now available
-            </div>
-          )}
-          {children}
-          <ToastProvider />
-        </AppLayout>
-        <PostHogIdentifier />
-      </NotificationsProvider>
-    </RealTimeWrapper>
+    <AppLayout isAdmin={isAdmin}>
+      {betaFeature && (
+        <div className="mb-4 rounded-lg bg-blue-500 p-3 text-center text-sm text-white">
+          Beta feature now available
+        </div>
+      )}
+      {children}
+      <ToastProvider />
+    </AppLayout>
   );
 };
 
