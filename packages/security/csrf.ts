@@ -1,4 +1,3 @@
-import { randomBytes } from 'crypto';
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 
@@ -30,7 +29,10 @@ export interface CSRFConfig {
  * Generate a cryptographically secure CSRF token
  */
 export function generateCSRFToken(): string {
-  return randomBytes(CSRF_TOKEN_LENGTH).toString('hex');
+  // Use Web Crypto API for Edge Runtime compatibility
+  const array = new Uint8Array(CSRF_TOKEN_LENGTH);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**

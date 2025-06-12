@@ -4,9 +4,6 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-// Temporarily disable DOMPurify to debug server component error
-// import DOMPurify from 'dompurify';
-// import { JSDOM } from 'jsdom';
 
 // SECURITY: Enhanced validation schema with stricter rules
 const createProductSchema = z.object({
@@ -24,20 +21,24 @@ const createProductSchema = z.object({
   sellerId: z.string(),
 });
 
-// SECURITY: Server-side DOM sanitization utility (temporarily disabled)
-// function createSecureDOMPurify() {
-//   const window = new JSDOM('').window;
-//   return DOMPurify(window as any);
-// }
-
-// SECURITY: Comprehensive input sanitization (simplified for debugging)
+// SECURITY: Basic input sanitization without external dependencies
 function sanitizeUserInput(input: z.infer<typeof createProductSchema>) {
-  // Simplified sanitization without DOMPurify for debugging
+  // Basic HTML entity encoding for security
+  const encodeHTML = (str: string) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  };
+
   return {
     ...input,
-    title: input.title.trim(),
-    description: input.description.trim(),
-    brand: input.brand ? input.brand.trim() : null,
+    title: encodeHTML(input.title.trim()),
+    description: encodeHTML(input.description.trim()),
+    brand: input.brand ? encodeHTML(input.brand.trim()) : null,
     size: input.size ? input.size.trim() : null,
     color: input.color ? input.color.trim() : null,
   };
@@ -61,9 +62,9 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
         data: {
           clerkId: user.id,
           email: user.emailAddresses[0]?.emailAddress || '',
-          firstName: user.firstName,
-          lastName: user.lastName,
-          imageUrl: user.imageUrl,
+          firstName: user.firstName || null,
+          lastName: user.lastName || null,
+          imageUrl: user.imageUrl || null,
         }
       });
     }
@@ -96,35 +97,26 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       },
       include: {
         images: true,
-        category: true,
-        seller: true,
       },
     });
+
+    // Search indexing removed for now - can be added back later
     
-    // Product created successfully
-
-    return {
-      success: true,
-      product,
-    };
-
+    return { success: true, productId: product.id };
   } catch (error) {
-    // Log error for monitoring (replace with proper error tracking)
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Failed to create product:', error);
-    }
+    console.error('Error creating product:', error);
     
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
+      return { 
+        success: false, 
         error: 'Validation failed',
-        details: error.errors,
+        details: error.errors 
       };
     }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create product',
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create product' 
     };
   }
 }

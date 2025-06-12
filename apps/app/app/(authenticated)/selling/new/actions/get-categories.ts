@@ -2,14 +2,6 @@
 
 import { database } from '@repo/database';
 
-// Temporarily disable cache to debug server component error
-// import { getCacheService } from '@repo/cache';
-
-// const cache = getCacheService({
-//   url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || 'redis://localhost:6379',
-//   token: process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
-// });
-
 export interface CategoryOption {
   id: string;
   name: string;
@@ -19,7 +11,6 @@ export interface CategoryOption {
 
 export async function getCategories(): Promise<CategoryOption[]> {
   try {
-    // Direct database query (cache disabled for debugging)
     const categories = await database.category.findMany({
       select: {
         id: true,
@@ -49,7 +40,6 @@ export async function getCategories(): Promise<CategoryOption[]> {
 
 export async function getCategoriesFlat(): Promise<CategoryOption[]> {
   try {
-    // Direct database query (cache disabled for debugging)
     const categories = await database.category.findMany({
       where: {
         parentId: null, // Only top-level categories for now
