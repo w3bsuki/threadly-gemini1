@@ -24,8 +24,8 @@ const SellNewItemPage = async () => {
       redirect('/sign-in');
     }
 
-    // Check if user has connected Stripe account
-    const dbUser = await database.user.findUnique({
+    // Check if user exists in database, create if not
+    let dbUser = await database.user.findUnique({
       where: { clerkId: user.id },
       select: { 
         id: true,
@@ -35,61 +35,56 @@ const SellNewItemPage = async () => {
 
     if (!dbUser) {
       // Create user if doesn't exist
-      const newUser = await database.user.create({
+      dbUser = await database.user.create({
         data: {
           clerkId: user.id,
           email: user.emailAddresses[0]?.emailAddress || '',
-          firstName: user.firstName,
-          lastName: user.lastName,
-          imageUrl: user.imageUrl,
+          firstName: user.firstName || null,
+          lastName: user.lastName || null,
+          imageUrl: user.imageUrl || null,
         }
       });
-      
+    }
+
+    // Check if user has connected Stripe account - REQUIRED for receiving payments
+    if (!dbUser.stripeAccountId) {
       return (
-        <div className="mx-auto w-full max-w-2xl">
-          <ProductForm userId={newUser.id} />
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">List New Item</h1>
+              <p className="text-muted-foreground">Get ready to sell your fashion items</p>
+            </div>
+          </div>
+
+          <div className="mx-auto w-full max-w-2xl">
+            <Alert className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Seller Account Required</AlertTitle>
+              <AlertDescription>
+                You need to connect your Stripe account before you can list items for sale.
+                This allows us to process payments securely and pay you directly.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="text-center">
+              <Button asChild>
+                <Link href="/selling/onboarding">
+                  Set Up Seller Account
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       );
     }
 
-  // Check if user has connected Stripe account - REQUIRED for receiving payments
-  if (!dbUser.stripeAccountId) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold">List New Item</h1>
-            <p className="text-muted-foreground">Get ready to sell your fashion items</p>
-          </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-2xl">
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Seller Account Required</AlertTitle>
-            <AlertDescription>
-              You need to connect your Stripe account before you can list items for sale.
-              This allows us to process payments securely and pay you directly.
-            </AlertDescription>
-          </Alert>
-          
-          <div className="text-center">
-            <Button asChild>
-              <Link href="/selling/onboarding">
-                Set Up Seller Account
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+    // User has Stripe account, show product form
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -119,9 +114,9 @@ const SellNewItemPage = async () => {
           <AlertTitle>Error Loading Page</AlertTitle>
           <AlertDescription>
             Unable to load the product creation page. Please try again later.
-            {process.env.NODE_ENV === 'development' && (
-              <pre className="mt-2 text-xs">{error instanceof Error ? error.message : 'Unknown error'}</pre>
-            )}
+            <pre className="mt-2 text-xs whitespace-pre-wrap">
+              {error instanceof Error ? error.message : JSON.stringify(error, null, 2)}
+            </pre>
           </AlertDescription>
         </Alert>
         
