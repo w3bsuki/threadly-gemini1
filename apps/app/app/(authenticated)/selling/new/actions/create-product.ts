@@ -4,8 +4,9 @@ import { currentUser } from '@repo/auth/server';
 import { database } from '@repo/database';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
+// Temporarily disable DOMPurify to debug server component error
+// import DOMPurify from 'dompurify';
+// import { JSDOM } from 'jsdom';
 
 // SECURITY: Enhanced validation schema with stricter rules
 const createProductSchema = z.object({
@@ -23,26 +24,22 @@ const createProductSchema = z.object({
   sellerId: z.string(),
 });
 
-// SECURITY: Server-side DOM sanitization utility
-function createSecureDOMPurify() {
-  const window = new JSDOM('').window;
-  return DOMPurify(window as any);
-}
+// SECURITY: Server-side DOM sanitization utility (temporarily disabled)
+// function createSecureDOMPurify() {
+//   const window = new JSDOM('').window;
+//   return DOMPurify(window as any);
+// }
 
-// SECURITY: Comprehensive input sanitization
+// SECURITY: Comprehensive input sanitization (simplified for debugging)
 function sanitizeUserInput(input: z.infer<typeof createProductSchema>) {
-  const purify = createSecureDOMPurify();
-  
+  // Simplified sanitization without DOMPurify for debugging
   return {
     ...input,
-    title: purify.sanitize(input.title.trim(), { ALLOWED_TAGS: [] }),
-    description: purify.sanitize(input.description.trim(), { 
-      ALLOWED_TAGS: [], 
-      ALLOWED_ATTR: [] 
-    }),
-    brand: input.brand ? purify.sanitize(input.brand.trim(), { ALLOWED_TAGS: [] }) : null,
-    size: input.size ? purify.sanitize(input.size.trim(), { ALLOWED_TAGS: [] }) : null,
-    color: input.color ? purify.sanitize(input.color.trim(), { ALLOWED_TAGS: [] }) : null,
+    title: input.title.trim(),
+    description: input.description.trim(),
+    brand: input.brand ? input.brand.trim() : null,
+    size: input.size ? input.size.trim() : null,
+    color: input.color ? input.color.trim() : null,
   };
 }
 
