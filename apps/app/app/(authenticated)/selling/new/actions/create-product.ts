@@ -13,7 +13,7 @@ const createProductSchema = z.object({
     .refine((val) => !/[<>\"'&]/.test(val), { message: "Title contains invalid characters" }),
   description: z.string().trim().min(10).max(2000),
   price: z.number().min(1).max(99999999),
-  categoryId: z.string().uuid("Invalid category ID"),
+  categoryId: z.string().min(1, "Category is required"),
   condition: z.enum(['NEW_WITH_TAGS', 'NEW_WITHOUT_TAGS', 'VERY_GOOD', 'GOOD', 'SATISFACTORY']),
   brand: z.string().trim().max(50).optional()
     .refine((val) => !val || !/[<>\"'&]/.test(val), { message: "Brand contains invalid characters" }),
@@ -80,7 +80,7 @@ export async function createProduct(input: z.infer<typeof createProductSchema>) 
       data: {
         title: sanitizedData.title,
         description: sanitizedData.description,
-        price: sanitizedData.price, // Price is already in cents from form
+        price: sanitizedData.price / 100, // Convert cents to dollars for Decimal field
         categoryId: sanitizedData.categoryId,
         condition: sanitizedData.condition,
         brand: sanitizedData.brand,

@@ -2,7 +2,11 @@
 
 // Seed all data needed for the marketplace
 import { execSync } from 'child_process';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 console.log('🌱 Starting complete database seeding...\n');
 
