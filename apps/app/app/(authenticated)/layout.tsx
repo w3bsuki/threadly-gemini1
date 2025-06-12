@@ -31,18 +31,19 @@ const AuthenticatedLayout = async ({ children }: AppLayoutProperties) => {
   // Note: CSRF token setup moved to individual forms/actions due to Next.js 15 cookie restrictions
   // await initializeCSRFProtection();
 
-  // Check if user is admin - with error handling
+  // Check if user is admin - with error handling (temporarily disabled for debugging)
   let isAdmin = false;
-  try {
-    const dbUser = await database.user.findUnique({
-      where: { clerkId: user.id },
-      select: { role: true }
-    });
-    isAdmin = dbUser?.role === 'ADMIN';
-  } catch (error) {
-    console.error('Database user check failed:', error);
-    // Continue without admin check - don't break the whole app
-  }
+  // TODO: Re-enable admin check after fixing database connection
+  // try {
+  //   const dbUser = await database.user.findUnique({
+  //     where: { clerkId: user.id },
+  //     select: { role: true }
+  //   });
+  //   isAdmin = dbUser?.role === 'ADMIN';
+  // } catch (error) {
+  //   console.error('Database user check failed:', error);
+  //   // Continue without admin check - don't break the whole app
+  // }
 
   return (
     <RealTimeWrapper userId={user.id}>
