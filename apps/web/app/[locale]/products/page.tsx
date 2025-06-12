@@ -19,14 +19,15 @@ export async function generateMetadata({
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { 
+  searchParams: Promise<{ 
     category?: string;
     minPrice?: string;
     maxPrice?: string;
     condition?: string;
     sort?: string;
     page?: string;
-  };
+  }>;
 }) {
-  return <ProductsContent searchParams={searchParams} />;
+  const resolvedSearchParams = await searchParams;
+  return <ProductsContent searchParams={resolvedSearchParams} />;
 }

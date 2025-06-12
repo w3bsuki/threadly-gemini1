@@ -175,7 +175,7 @@ export const NewArrivals = async () => {
                 </div>
 
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="font-bold text-xl text-gray-900">{formatCurrency(item.price)}</span>
+                  <span className="font-bold text-xl text-gray-900">{formatCurrency(Number(item.price))}</span>
                   <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                     Size {item.size}
                   </span>

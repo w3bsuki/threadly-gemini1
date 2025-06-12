@@ -4,7 +4,7 @@ import { Button } from '@repo/design-system/components/ui/button';
 import type { Dictionary } from '@repo/internationalization';
 import { Search, Sparkles, Heart, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import { SignInCTA } from '../../../components/sign-in-cta';
+import { SignInCTA } from '@/components/sign-in-cta';
 import { env } from '@/env';
 
 type HeroProps = {

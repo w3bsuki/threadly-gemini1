@@ -105,7 +105,7 @@ export async function ProductGridServer({
       id: product.id,
       title: product.title,
       brand: product.brand || 'Unknown',
-      price: product.price,
+      price: Number(product.price),
       originalPrice: null, // We don't have this in our schema
       size: product.size || 'One Size',
       condition: product.condition,
