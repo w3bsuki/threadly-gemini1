@@ -145,7 +145,8 @@ export default async function BrowsePage() {
           <ProductGrid products={trendingProducts.map(product => ({
             ...product,
             price: Number(product.price),
-            category: product.category?.name || 'Other'
+            category: product.category?.name || 'Other',
+            brand: product.brand || undefined
           }))} />
         </section>
 
