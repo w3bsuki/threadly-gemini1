@@ -1,11 +1,19 @@
 # 🛍️ Threadly
 
-> Premium peer-to-peer fashion marketplace — where style meets sustainability
+This README was updated on July 10, 2025.
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)](https://www.typescriptlang.org)
-[![Turborepo](https://img.shields.io/badge/Turborepo-Latest-red?logo=turborepo)](https://turbo.build)
-[![Prisma](https://img.shields.io/badge/Prisma-ORM-green?logo=prisma)](https://www.prisma.io)
+Threadly is a premium peer-to-peer fashion marketplace — where style meets sustainability.
+
+## Quick Start
+
+1. Clone the repo
+2. Install dependencies with `pnpm install`
+3. Copy `.env.example` to `.env.local` and fill in your secrets
+4. Run `pnpm dev` to start development
+
+For more info, see the docs folder.
+
+---
 
 ## 📋 Documentation
 
