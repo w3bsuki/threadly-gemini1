@@ -176,5 +176,7 @@ Copyright © 2025 Threadly. All rights reserved.
 <div align="center">
   <strong>Built with ❤️ using Next.js and TypeScript</strong>
   <br>
+  <sub>Now Gemini CLI compliant!</sub>
+  <br>
   <sub>Need help? Check our <a href="./HANDBOOK.md">Developer Handbook</a> or <a href="./OPERATIONS.md">Operations Guide</a></sub>
 </div>
